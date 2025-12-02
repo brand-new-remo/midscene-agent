@@ -47,12 +47,12 @@ def create_midscene_action_tool(mcp_wrapper: MidsceneMCPWrapper) -> BaseTool:
         """
         try:
             result = await mcp_wrapper.call_tool("action", {"instruction": instruction})
-            if hasattr(result, 'content') and result.content:
+            if hasattr(result, "content") and result.content:
                 # Extract text from TextContent array
                 content = result.content
                 if isinstance(content, list) and len(content) > 0:
                     first_item = content[0]
-                    if hasattr(first_item, 'text'):
+                    if hasattr(first_item, "text"):
                         return first_item.text
                     else:
                         return str(first_item)
@@ -63,56 +63,6 @@ def create_midscene_action_tool(mcp_wrapper: MidsceneMCPWrapper) -> BaseTool:
             return f"执行操作时出错: {str(e)}"
 
     return midscene_action
-
-
-def create_extract_search_results_tool(mcp_wrapper: MidsceneMCPWrapper) -> BaseTool:
-    """
-    创建专门用于提取搜索结果的工具。
-
-    Args:
-        mcp_wrapper: Midscene MCP 包装器实例
-
-    Returns:
-        用于提取搜索结果的 LangChain BaseTool
-    """
-
-    @tool
-    async def extract_search_results(count: int = 1) -> str:
-        """
-        专门用于从搜索结果页面提取搜索结果标题的工具。
-
-        该工具会使用多种策略来提高提取准确性：
-        1. 多次尝试不同的查询指令
-        2. 如果失败会自动截图并重新分析
-        3. 返回格式化的结果
-
-        Args:
-            count: 要提取的搜索结果数量（默认：1）
-
-        Returns:
-            提取的搜索结果标题列表
-        """
-        try:
-            result = await mcp_wrapper.extract_search_results(count=count)
-
-            # 处理不同类型的返回结果
-            if isinstance(result, str):
-                return result
-            elif hasattr(result, 'content') and result.content:
-                content = result.content
-                if isinstance(content, list) and len(content) > 0:
-                    first_item = content[0]
-                    if hasattr(first_item, 'text'):
-                        return first_item.text
-                    else:
-                        return str(first_item)
-                else:
-                    return str(content)
-            return "未找到搜索结果"
-        except Exception as e:
-            return f"提取搜索结果时出错: {str(e)}"
-
-    return extract_search_results
 
 
 def create_midscene_query_tool(mcp_wrapper: MidsceneMCPWrapper) -> BaseTool:
@@ -147,12 +97,12 @@ def create_midscene_query_tool(mcp_wrapper: MidsceneMCPWrapper) -> BaseTool:
         """
         try:
             result = await mcp_wrapper.call_tool("query", {"question": question})
-            if hasattr(result, 'content') and result.content:
+            if hasattr(result, "content") and result.content:
                 # Extract text from TextContent array
                 content = result.content
                 if isinstance(content, list) and len(content) > 0:
                     first_item = content[0]
-                    if hasattr(first_item, 'text'):
+                    if hasattr(first_item, "text"):
                         return first_item.text
                     else:
                         return str(first_item)
@@ -183,7 +133,7 @@ class MidsceneAgent:
         temperature: float = 0,
         midscene_command: str = "npx",
         midscene_args: Optional[List[str]] = None,
-        env: Optional[Dict[str, Any]] = None
+        env: Optional[Dict[str, Any]] = None,
     ):
         """
         初始化 Midscene 智能体。
@@ -203,9 +153,7 @@ class MidsceneAgent:
         self.temperature = temperature
 
         self.mcp_wrapper = MidsceneMCPWrapper(
-            midscene_command=midscene_command,
-            midscene_args=midscene_args,
-            env=env
+            midscene_command=midscene_command, midscene_args=midscene_args, env=env
         )
 
         self.llm: Optional[Any] = None
@@ -225,9 +173,6 @@ class MidsceneAgent:
             # 创建工具 - 只包含操作工具，禁用查询功能
             tools = [
                 create_midscene_action_tool(self.mcp_wrapper),
-                # 移除查询工具以禁用查询功能
-                # create_midscene_query_tool(self.mcp_wrapper),
-                # create_extract_search_results_tool(self.mcp_wrapper)
             ]
             print(f"🔧 为智能体创建了 {len(tools)} 个工具")
 
@@ -237,7 +182,7 @@ class MidsceneAgent:
                 api_key=SecretStr(self.deepseek_api_key),
                 base_url=self.deepseek_base_url,
                 temperature=self.temperature,
-                streaming=True
+                streaming=True,
             ).bind_tools(tools)
 
             print(f"✅ 已初始化 DeepSeek LLM ({self.deepseek_model}) 并绑定工具")
@@ -252,15 +197,17 @@ class MidsceneAgent:
                 print(f"\n🤖 Agent Node: Processing {len(state['messages'])} messages")
                 for i, msg in enumerate(state["messages"]):
                     print(f"  Message {i}: {type(msg).__name__}")
-                    if hasattr(msg, 'content'):
+                    if hasattr(msg, "content"):
                         content = str(msg.content)[:100]
                         print(f"    Content: {content}...")
                 response = self.llm.invoke(state["messages"])
                 print(f"\n💬 LLM Response: {type(response).__name__}")
-                if hasattr(response, 'content'):
+                if hasattr(response, "content"):
                     print(f"  Content: {response.content}")
-                if hasattr(response, 'tool_calls'):
-                    print(f"  Tool calls: {len(response.tool_calls) if response.tool_calls else 0}")
+                if hasattr(response, "tool_calls"):
+                    print(
+                        f"  Tool calls: {len(response.tool_calls) if response.tool_calls else 0}"
+                    )
                 return {"messages": state["messages"] + [response]}
 
             # 创建图
@@ -269,15 +216,12 @@ class MidsceneAgent:
             builder.add_node("tools", ToolNode(tools))
             builder.add_edge(START, "agent")
             builder.add_conditional_edges(
-                "agent",
-                tools_condition,
-                {"tools": "tools", "__end__": END}
+                "agent", tools_condition, {"tools": "tools", "__end__": END}
             )
             builder.add_edge("tools", "agent")
 
             self.agent_executor = builder.compile(
-                interrupt_before=[],  # 可选：中断点
-                interrupt_after=[]    # 可选：中断点
+                interrupt_before=[], interrupt_after=[]  # 可选：中断点  # 可选：中断点
             )
             print("✅ 智能体执行器已初始化")
 
@@ -313,14 +257,19 @@ class MidsceneAgent:
             config = {"recursion_limit": 100}
 
             if stream:
-                async for chunk in self.agent_executor.astream(input_messages, config=config):
+                async for chunk in self.agent_executor.astream(
+                    input_messages, config=config
+                ):
                     # Yield each chunk as an event
                     yield chunk
             else:
-                result = await self.agent_executor.ainvoke(input_messages, config=config)
+                result = await self.agent_executor.ainvoke(
+                    input_messages, config=config
+                )
                 yield result
         except Exception as e:
             import traceback
+
             yield {"error": str(e), "traceback": traceback.format_exc()}
 
     async def cleanup(self) -> None:
@@ -336,4 +285,3 @@ class MidsceneAgent:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """异步上下文管理器出口。"""
         await self.cleanup()
-
