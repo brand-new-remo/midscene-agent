@@ -9,13 +9,13 @@ import os
 import sys
 from dotenv import load_dotenv
 
-# 将 src 添加到路径 - 使用绝对路径以提高可靠性
+# 将父目录添加到路径，使其可以导入 src 包
 current_dir = os.path.dirname(os.path.abspath(__file__))
-src_path = os.path.join(current_dir, "..", "src")
-sys.path.insert(0, os.path.abspath(src_path))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir)
 
-# 直接导入智能体模块
-from agent import MidsceneAgent  # pyright: ignore
+# 导入智能体模块
+from src.agent import MidsceneAgent
 
 # 加载环境变量
 load_dotenv()

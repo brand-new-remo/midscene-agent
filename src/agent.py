@@ -11,7 +11,7 @@ from langchain_deepseek import ChatDeepSeek
 from langchain_core.messages import HumanMessage
 from langgraph.graph import StateGraph, MessagesState, START, END
 from pydantic import SecretStr
-from mcp_wrapper import MidsceneMCPWrapper
+from .mcp_wrapper import MidsceneMCPWrapper
 
 
 def create_midscene_action_tool(mcp_wrapper: MidsceneMCPWrapper) -> BaseTool:

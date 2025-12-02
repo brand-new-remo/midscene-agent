@@ -1,158 +1,104 @@
 # Midscene LangGraph Agent
 
-一个强大的 AI 驱动网页自动化智能体，结合了 **LangGraph** 进行智能编排、**DeepSeek LLM** 进行推理，以及 **Midscene** 进行基于视觉的网页交互。
+一个 AI 驱动的网页自动化智能体，结合 **LangGraph** 进行智能编排、**DeepSeek LLM** 进行推理，以及 **Midscene** 进行基于视觉的网页交互。
 
-## 🌟 项目概述
+## 功能特性
 
-本项目实现了一个**自然语言驱动的网页自动化系统**，能够：
+- 通过自然语言指令控制浏览器
+- 支持点击、输入、滚动等网页操作
+- 智能提取页面信息
+- 支持多步骤复杂任务
+- 基于视觉模型的元素定位
 
-- 通过简单的英语指令导航网站
-- 与网页元素交互（点击、输入、滚动）
-- 从网页中提取信息
-- 完成复杂的多步骤任务
-- 自主测试网页应用程序
-
-### 架构设计
+## 架构
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    用户（自然语言）                          │
-└───────────────────────────┬─────────────────────────────────┘
-                            │
-┌───────────────────────────┴─────────────────────────────────┐
-│           LangGraph Agent（编排器/大脑）                     │
-│  - ReAct 推理循环                                            │
-│  - 任务分解和规划                                            │
-│  - 状态管理                                                  │
-└───────────────────────────┬─────────────────────────────────┘
-                            │
-┌───────────────────────────┴─────────────────────────────────┐
-│              DeepSeek LLM（推理引擎）                        │
-│  - 自然语言理解                                              │
-│  - 决策制定                                                  │
-│  - 行动计划                                                  │
-└───────────────────────────┬─────────────────────────────────┘
-                            │
-┌───────────────────────────┴─────────────────────────────────┐
-│              MCP 协议（通信）                                │
-│  - 基于 stdio 的 JSON-RPC                                   │
-│  - 双向通信                                                  │
-└───────────────────────────┬─────────────────────────────────┘
-                            │
-┌───────────────────────────┴─────────────────────────────────┐
-│              Midscene MCP 服务器（执行器）                   │
-│  - 视觉分析（豆包模型）                                       │
-│  - DOM 树提取                                                │
-│  - 浏览器自动化（Playwright）                                │
-│  - 基于坐标的交互                                            │
-└───────────────────────────┬─────────────────────────────────┘
-                            │
-                    ┌───────┴───────┐
-                    │ Chrome 浏览器 │
-                    └───────────────┘
+用户（自然语言）
+       ↓
+LangGraph Agent（StateGraph + ReAct）
+       ↓
+DeepSeek LLM（推理引擎）
+       ↓
+MCP 协议（JSON-RPC over stdio）
+       ↓
+Midscene MCP 服务器（视觉分析 + Playwright）
+       ↓
+Chrome 浏览器
 ```
 
-## 🚀 快速开始
+## 快速开始
 
 ### 前置要求
 
-1. **Node.js** (>= 18) - 用于运行 Midscene MCP 服务器
-2. **Python** (>= 3.10) - 用于 LangGraph 智能体
-3. **Chrome 浏览器** - Midscene 控制浏览器
-4. **DeepSeek API 密钥** - 在 [DeepSeek 平台](https://platform.deepseek.com) 获取
+- **Node.js** >= 18
+- **Python** >= 3.10
+- **Chrome 浏览器**
+- **DeepSeek API 密钥**（[获取](https://platform.deepseek.com)）
 
-### 安装步骤
-
-1. **克隆和设置**
+### 安装
 
 ```bash
+# 克隆项目
 git clone <your-repo-url>
-cd midscene
-```
+cd midscene-agent
 
-2. **安装 Python 依赖**
-
-```bash
+# 安装 Python 依赖
 pip install -r requirements.txt
-```
 
-3. **安装 Midscene CLI**
-
-```bash
+# 安装 Midscene CLI
 npm install -g @midscene/web
-```
 
-4. **配置环境**
-
-```bash
+# 配置环境变量
 cp .env.example .env
-# 编辑 .env 文件并添加你的 DEEPSEEK_API_KEY
+# 编辑 .env 添加你的 API 密钥
 ```
 
-5. **运行示例**
+### 运行
 
 ```bash
+# 交互式菜单
+python run.py
+
+# 或直接运行示例
 python examples/basic_usage.py
 ```
 
-## 📁 项目结构
+## 项目结构
 
 ```
-midscene/
-├── src/                      # 源代码目录
-│   ├── agent.py              # LangGraph 智能体实现
-│   ├── mcp_wrapper.py        # MCP 客户端包装器
-│   ├── config.py             # 配置管理
-│   └── utils/                # 工具模块
-│       ├── __init__.py
-│       ├── logging_utils.py  # 日志工具
-│       └── async_helpers.py  # 异步助手
-├── examples/                 # 示例脚本
-│   ├── basic_usage.py        # 基础使用示例
-│   └── test_ecommerce.py     # 电商测试套件
-├── docs/                     # 文档目录
-│   ├── README.md             # 项目说明
-│   ├── CLAUDE.md             # Claude Code 指导
-│   ├── UPGRADE_GUIDE.md      # 升级指南
-│   └── PROJECT_STRUCTURE.md  # 项目结构文档
-├── tests/                    # 测试目录
-│   └── test_compatibility.py # 兼容性测试
-├── requirements.txt          # Python 依赖
-├── .env.example             # 环境变量模板
-├── run.py                   # 交互式启动器
-└── README.md                # 本文件
+midscene-agent/
+├── src/
+│   ├── agent.py          # LangGraph 智能体
+│   ├── mcp_wrapper.py    # MCP 客户端
+│   ├── config.py         # 配置管理
+│   └── utils/            # 工具模块
+├── examples/
+│   ├── basic_usage.py    # 基础示例
+│   └── test_ecommerce.py # 电商测试
+├── run.py                # 交互式启动器
+├── requirements.txt      # Python 依赖
+└── .env.example          # 环境变量模板
 ```
 
-## 💡 使用示例
+## 使用示例
 
-### 基础网页自动化
+### 基础用法
 
 ```python
 import asyncio
-import sys
-sys.path.insert(0, 'src')
-
 from src.agent import MidsceneAgent
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
 
 async def main():
     agent = MidsceneAgent(
-        deepseek_api_key=os.getenv("DEEPSEEK_API_KEY"),
+        deepseek_api_key="your-api-key",
         deepseek_base_url="https://api.deepseek.com/v1",
     )
 
     async with agent:
-        task = """
-        导航到 https://www.google.com，搜索 "LangGraph"，
-        并告诉我第一个结果的标题。
-        """
-
+        task = "导航到 https://www.google.com，搜索 'LangGraph'"
         async for event in agent.execute(task):
             if "messages" in event:
-                event["messages"][-1].pretty_print()
+                print(event["messages"][-1].content)
 
 asyncio.run(main())
 ```
@@ -164,295 +110,85 @@ async with agent:
     task = """
     1. 前往 https://news.ycombinator.com
     2. 点击第一个故事链接
-    3. 阅读文章并用 2-3 句话总结
-    4. 返回主页
-    5. 报告可见的故事数量
+    3. 用 2-3 句话总结文章内容
     """
-
     async for event in agent.execute(task):
         print(event)
 ```
 
-### 查询页面信息
+## 可用工具
 
-```python
-# 从页面提取信息
-async with agent:
-    # 首先导航
-    await agent.execute("导航到 https://example.com")
+| 工具 | 说明 | 示例 |
+|------|------|------|
+| `midscene_action` | 执行浏览器操作 | "点击登录按钮"、"输入 'hello'" |
+| `midscene_query` | 提取页面信息 | "价格是多少？"、"列出所有链接" |
 
-    # 然后查询
-    query_task = """
-    这个页面是关于什么的？列出所有主要部分和关键信息。
-    """
-    async for event in agent.execute(query_task):
-        print(event)
-```
+## 配置
 
-## 🔧 可用工具
-
-智能体提供两个主要工具：
-
-### 1. `midscene_action`
-
-使用自然语言在网页上执行操作。
-
-**示例：**
-- `"点击登录按钮"`
-- `"在搜索框中输入 'hello world'"`
-- `"导航到 https://www.google.com"`
-- `"向下滚动查看更多内容"`
-- `"填写表单：name='John Doe', email='john@example.com'"`
-
-### 2. `midscene_query`
-
-从当前页面提取信息。
-
-**示例：**
-- `"这个页面的标题是什么？"`
-- `"列出所有导航菜单项"`
-- `"显示的产品价格是多少？"`
-- `"从页面中提取所有联系信息"`
-- `"可见哪些按钮或链接？"`
-
-## 📊 测试示例
-
-`examples/test_ecommerce.py` 提供了全面的测试场景：
-
-### 产品搜索测试
-测试在电商网站上搜索产品
-
-### 表单填写测试
-测试填写和提交表单
-
-### 导航测试
-测试网站导航和页面验证
-
-运行测试：
-```bash
-python examples/test_ecommerce.py
-```
-
-## ⚙️ 配置
-
-### 环境变量
-
-创建一个包含以下变量的 `.env` 文件：
+### 环境变量（.env）
 
 ```bash
 # DeepSeek API（必需）
 DEEPSEEK_API_KEY=sk-your-api-key
 DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
 DEEPSEEK_MODEL=deepseek-chat
-DEEPSEEK_TEMPERATURE=0
 
-# OpenAI 兼容 API（用于视觉模型）
-OPENAI_API_KEY=sk-your-api-key
+# 视觉模型（用于 Midscene）
+OPENAI_API_KEY=your-vision-api-key
 OPENAI_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
-
-# Midscene 配置（可选）
 MIDSCENE_MODEL=doubao-seed-1.6-vision
-MIDSCENE_COMMAND=npx
-MIDSCENE_ARGS=@midscene/web mcp
 
-# 浏览器配置（可选）
+# 浏览器（可选）
 CHROME_PATH=/path/to/chrome
 HEADLESS=false
 ```
 
-### Config 类
-
-你也可以通过编程方式进行配置：
-
-```python
-from src.agent import MidsceneAgent
-
-agent = MidsceneAgent(
-    deepseek_api_key="your-key",
-    deepseek_base_url="https://api.deepseek.com/v1",
-    deepseek_model="deepseek-chat",
-    temperature=0,
-)
-```
-
-## 🧠 工作原理
-
-### 1. 任务分解
-DeepSeek LLM 接收自然语言指令并使用 ReAct（推理+行动）模式将其分解为可执行的步骤。
-
-### 2. 工具选择
-对于每个步骤，智能体：
-- 分析当前页面状态
-- 决定使用哪个工具（`midscene_action` 或 `midscene_query`）
-- 形成具体指令
-
-### 3. 视觉驱动执行
-当调用 `midscene_action` 时：
-- Midscene 截取屏幕截图
-- 提取 DOM 树
-- 将两者发送给豆包视觉模型
-- 模型返回目标坐标
-- Playwright 执行操作
-
-### 4. 观察与迭代
-- 观察和分析结果
-- 确定下一步
-- 继续执行直到任务完成
-
-## 🎯 最佳实践
+## 最佳实践
 
 ### 编写有效指令
 
-**好的指令：**
-- `"点击右上角的蓝色 '登录' 按钮"`
-- `"导航到 https://www.example.com"`
-- `"在搜索框中输入 'Python tutorials' 并按回车"`
+**推荐**：
+- "点击右上角的蓝色 '登录' 按钮"
+- "在搜索框中输入 'Python tutorials' 并按回车"
 
-**避免：**
-- `"点击按钮"`（太模糊）
-- `"访问一个网站"`（没有具体 URL）
-- `"搜索某些东西"`（没有具体查询）
+**避免**：
+- "点击按钮"（太模糊）
+- "搜索某些东西"（没有具体内容）
 
 ### 任务结构
-
-将复杂任务分解为更小的步骤：
 
 ```python
 task = """
 1. 导航到 https://example.com
-2. 使用 username='user' 和 password='pass' 登录
+2. 使用 username='user' 登录
 3. 点击 'Dashboard' 链接
-4. 提取显示的关键指标
-5. 截图用于报告
+4. 提取显示的关键数据
 """
 ```
 
-### 错误处理
+## 故障排除
 
-```python
-try:
-    async with agent:
-        async for event in agent.execute(task):
-            # 处理事件
-except Exception as e:
-    print(f"错误: {e}")
-    # 适当处理错误
-```
+| 问题 | 解决方案 |
+|------|----------|
+| 连接 Midscene 失败 | 运行 `npm install -g @midscene/web` |
+| API 密钥错误 | 检查 `.env` 文件配置 |
+| Chrome 未找到 | 设置 `CHROME_PATH` 环境变量 |
+| 操作超时 | 简化任务或增加超时时间 |
 
-## 🔍 故障排除
+## 依赖
 
-### 常见问题
+- langchain >= 1.0.0
+- langgraph >= 1.0.0
+- langchain-deepseek >= 1.0.0
+- mcp >= 1.0.0
+- pydantic >= 2.0.0
 
-**1. 连接错误**
-```
-错误：无法连接到 Midscene MCP 服务器
-```
-**解决方案：** 确保 Midscene 已全局安装：`npm install -g @midscene/web`
-
-**2. API 密钥错误**
-```
-错误：找不到 DEEPSEEK_API_KEY
-```
-**解决方案：** 检查你的 `.env` 文件或导出环境变量
-
-**3. 未找到 Chrome**
-```
-错误：未找到 Chrome 浏览器
-```
-**解决方案：** 安装 Chrome 或在 `.env` 中设置 `CHROME_PATH`
-
-**4. 超时错误**
-```
-asyncio.TimeoutError
-```
-**解决方案：** 增加超时值或简化任务
-
-### 调试模式
-
-启用调试日志：
-
-```python
-import logging
-from src.utils.logging_utils import setup_logging
-
-setup_logging(level=logging.DEBUG)
-```
-
-## 🚦 LangGraph 集成
-
-对于使用 LangGraph 内置 UI 的高级用例：
-
-1. 创建一个 `graph.py` 文件：
-
-```python
-from src.agent import MidsceneAgent
-
-async def create_graph():
-    agent = MidsceneAgent(deepseek_api_key="your-key")
-    await agent.initialize()
-    return agent.agent_executor.graph
-```
-
-2. 运行 LangGraph 开发服务器：
-
-```bash
-langgraph dev
-```
-
-3. 在 `http://localhost:5433` 访问 UI
-
-## 📈 性能提示
-
-1. **具体明确**：更具体的指令 = 更好的结果
-2. **单一操作**：每个指令一个操作效果最佳
-3. **等待时间**：Midscene 需要时间处理视觉模型（每个操作 1-3 秒）
-4. **浏览器状态**：为一次会话中的多个操作保持浏览器打开
-5. **监控日志**：观察输出以确认操作
-
-## 🤝 贡献
-
-欢迎贡献！请：
-
-1. Fork 仓库
-2. 创建功能分支
-3. 为新功能添加测试
-4. 提交拉取请求
-
-## 📝 许可证
-
-MIT 许可证 - 可以在你的项目中使用！
-
-## 🙏 致谢
-
-- **LangGraph** - 强大的编排框架
-- **DeepSeek** - 优秀的 LLM 能力
-- **Midscene** - 创新的基于视觉的网页自动化
-- **Playwright** - 可靠的浏览器自动化
-
-## 📚 资源
+## 资源
 
 - [LangGraph 文档](https://langchain-ai.github.io/langgraph/)
-- [DeepSeek API 文档](https://platform.deepseek.com/docs)
+- [DeepSeek API](https://platform.deepseek.com/docs)
 - [Midscene 文档](https://midscene.org)
-- [LangChain 文档](https://python.langchain.com/)
 
-## 🐛 已知限制
+## 许可证
 
-1. **速度**：视觉模型处理每个操作增加 1-3 秒延迟
-2. **复杂 DOM**：在高度动态或嵌套元素上可能遇到困难
-3. **身份验证**：无法处理复杂的身份验证流程
-4. **速率限制**：受 DeepSeek API 速率限制
-
-## 🔮 未来增强
-
-- [ ] 支持移动浏览器
-- [ ] 多页面会话管理
-- [ ] 并行任务执行
-- [ ] 自定义视觉模型
-- [ ] 与测试框架集成
-- [ ] 视觉回归测试
-- [ ] API 测试能力
-
----
-
-**由 AI 自动化团队用心制作 ❤️**
+MIT License

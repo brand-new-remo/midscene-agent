@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(conda info:*)",
+      "Bash(pip uninstall:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

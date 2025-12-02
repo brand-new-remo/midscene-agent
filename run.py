@@ -57,7 +57,7 @@ def print_menu():
 
 async def run_custom_task():
     """运行用户提供的自定义任务。"""
-    from agent import MidsceneAgent
+    from src.agent import MidsceneAgent
 
     print("\n" + "=" * 70)
     print("自定义任务模式")
@@ -111,7 +111,7 @@ async def run_custom_task():
 
 def check_config():
     """检查并显示配置。"""
-    from config import Config
+    from src.config import Config
 
     print("\n" + "=" * 70)
     print("配置检查")
