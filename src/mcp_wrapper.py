@@ -132,11 +132,16 @@ class MidsceneMCPWrapper:
                 instruction = arguments.get("instruction", "") if arguments else ""
 
                 # Parse the instruction to determine which tool to use
-                if instruction.startswith("Navigate to") or instruction.startswith("navigate to"):
-                    url = instruction.replace("Navigate to", "").replace("navigate to", "").strip()
+                # Support both English and Chinese navigation instructions
+                if (instruction.startswith("Navigate to") or instruction.startswith("navigate to") or
+                    instruction.startswith("导航到") or instruction.startswith("导航到 ")):
+                    url = (instruction.replace("Navigate to", "").replace("navigate to", "")
+                           .replace("导航到", "").strip())
                     if not url.startswith("http"):
                         url = "https://" + url
+                    print(f"\n🔄 执行导航: {url}")
                     result = await self.session.call_tool("midscene_navigate", {"url": url})
+                    print(f"✅ 导航结果: {result}")
                     return result
                 elif "click" in instruction.lower():
                     # For clicks, use aiAssert to locate and click

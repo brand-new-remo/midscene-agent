@@ -15,7 +15,9 @@ class Config:
 
     # DeepSeek API Configuration
     DEEPSEEK_API_KEY: str = os.getenv("DEEPSEEK_API_KEY", "")
-    DEEPSEEK_BASE_URL: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
+    DEEPSEEK_BASE_URL: str = os.getenv(
+        "DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1"
+    )
     DEEPSEEK_MODEL: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
     DEEPSEEK_TEMPERATURE: float = float(os.getenv("DEEPSEEK_TEMPERATURE", "0"))
 
@@ -55,7 +57,9 @@ class Config:
         """
         return {
             "deepseek": {
-                "api_key": cls.DEEPSEEK_API_KEY[:10] + "..." if cls.DEEPSEEK_API_KEY else "",
+                "api_key": (
+                    cls.DEEPSEEK_API_KEY[:10] + "..." if cls.DEEPSEEK_API_KEY else ""
+                ),
                 "base_url": cls.DEEPSEEK_BASE_URL,
                 "model": cls.DEEPSEEK_MODEL,
                 "temperature": cls.DEEPSEEK_TEMPERATURE,
@@ -64,9 +68,9 @@ class Config:
                 "model": cls.MIDSCENE_MODEL,
                 "command": cls.MIDSCENE_COMMAND,
                 "args": cls.MIDSCENE_ARGS,
-            },
-            "openai": {
-                "api_key": cls.OPENAI_API_KEY[:10] + "..." if cls.OPENAI_API_KEY else "",
+                "api_key": (
+                    cls.OPENAI_API_KEY[:10] + "..." if cls.OPENAI_API_KEY else ""
+                ),
                 "base_url": cls.OPENAI_BASE_URL,
             },
             "browser": {
@@ -79,6 +83,7 @@ class Config:
     def print_config(cls):
         """Print current configuration (with sensitive data masked)."""
         import json
+
         print("\n📋 Configuration:")
         print(json.dumps(cls.to_dict(), indent=2))
 

@@ -52,7 +52,16 @@ def create_midscene_action_tool(mcp_wrapper: MidsceneMCPWrapper) -> BaseTool:
         try:
             result = await mcp_wrapper.call_tool("action", {"instruction": instruction})
             if hasattr(result, 'content') and result.content:
-                return str(result.content)
+                # Extract text from TextContent array
+                content = result.content
+                if isinstance(content, list) and len(content) > 0:
+                    first_item = content[0]
+                    if hasattr(first_item, 'text'):
+                        return first_item.text
+                    else:
+                        return str(first_item)
+                else:
+                    return str(content)
             return "操作执行成功"
         except Exception as e:
             return f"执行操作时出错: {str(e)}"
@@ -93,7 +102,16 @@ def create_midscene_query_tool(mcp_wrapper: MidsceneMCPWrapper) -> BaseTool:
         try:
             result = await mcp_wrapper.call_tool("query", {"question": question})
             if hasattr(result, 'content') and result.content:
-                return str(result.content)
+                # Extract text from TextContent array
+                content = result.content
+                if isinstance(content, list) and len(content) > 0:
+                    first_item = content[0]
+                    if hasattr(first_item, 'text'):
+                        return first_item.text
+                    else:
+                        return str(first_item)
+                else:
+                    return str(content)
             return "查询执行成功"
         except Exception as e:
             return f"执行查询时出错: {str(e)}"
@@ -183,7 +201,18 @@ class MidsceneAgent:
             def agent_node(state: MessagesState) -> MessagesState:
                 if self.llm is None:
                     raise RuntimeError("LLM 未初始化")
+                print(f"\n🤖 Agent Node: Processing {len(state['messages'])} messages")
+                for i, msg in enumerate(state["messages"]):
+                    print(f"  Message {i}: {type(msg).__name__}")
+                    if hasattr(msg, 'content'):
+                        content = str(msg.content)[:100]
+                        print(f"    Content: {content}...")
                 response = self.llm.invoke(state["messages"])
+                print(f"\n💬 LLM Response: {type(response).__name__}")
+                if hasattr(response, 'content'):
+                    print(f"  Content: {response.content}")
+                if hasattr(response, 'tool_calls'):
+                    print(f"  Tool calls: {len(response.tool_calls) if response.tool_calls else 0}")
                 return {"messages": state["messages"] + [response]}
 
             # 创建图
@@ -194,7 +223,7 @@ class MidsceneAgent:
             builder.add_conditional_edges(
                 "agent",
                 tools_condition,
-                {"tools": "tools", "end": END}
+                {"tools": "tools", "__end__": END}
             )
             builder.add_edge("tools", "agent")
 
@@ -230,13 +259,15 @@ class MidsceneAgent:
             input_messages = {"messages": [HumanMessage(content=user_input)]}
 
             if stream:
-                async for event in self.agent_executor.astream(input_messages):
-                    yield event
+                async for chunk in self.agent_executor.astream(input_messages):
+                    # Yield each chunk as an event
+                    yield chunk
             else:
                 result = await self.agent_executor.ainvoke(input_messages)
                 yield result
         except Exception as e:
-            yield {"error": str(e)}
+            import traceback
+            yield {"error": str(e), "traceback": traceback.format_exc()}
 
     async def cleanup(self) -> None:
         """清理资源。"""

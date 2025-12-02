@@ -96,8 +96,18 @@ If you don't need to use any tools, you can respond directly.""")
                     if hasattr(msg, 'tool_calls'):
                         print(f"     Tool calls: {msg.tool_calls}")
 
+            if "tool" in event:
+                print(f"\n  🔧 Tool result:")
+                print(f"     Tool: {event['tool']}")
+                if hasattr(event['tool'], 'content'):
+                    print(f"     Content: {event['tool'].content}")
+
             if "error" in event:
-                print(f"  ❌ Error: {event['error']}")
+                print(f"\n  ❌ Error: {event['error']}")
+                # Print full error details
+                import traceback
+                print("  Full traceback:")
+                traceback.print_exc()
 
         print(f"\n✅ Total events received: {event_count}")
 
