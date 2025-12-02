@@ -1,5 +1,5 @@
 """
-Async helper utilities
+异步辅助工具
 """
 
 import asyncio
@@ -13,19 +13,19 @@ async def create_task_with_timeout(
     **kwargs
 ) -> Any:
     """
-    Create and await a task with timeout.
+    创建并等待带超时的任务。
 
     Args:
-        coro: Coroutine function to execute
-        timeout: Timeout in seconds (optional)
-        *args: Positional arguments for the coroutine
-        **kwargs: Keyword arguments for the coroutine
+        coro: 要执行的协程函数
+        timeout: 超时时间（秒）（可选）
+        *args: 协程的位置参数
+        **kwargs: 协程的关键字参数
 
     Returns:
-        Result from the coroutine
+        协程的结果
 
     Raises:
-        asyncio.TimeoutError: If timeout is exceeded
+        asyncio.TimeoutError: 如果超过超时时间
     """
     task = asyncio.create_task(coro(*args, **kwargs))
 
@@ -46,19 +46,19 @@ async def run_with_timeout(
     **kwargs
 ) -> Any:
     """
-    Run a synchronous function in an executor with timeout.
+    在执行器中运行同步函数并设置超时。
 
     Args:
-        func: Synchronous function to execute
-        timeout: Timeout in seconds (optional)
-        *args: Positional arguments for the function
-        **kwargs: Keyword arguments for the function
+        func: 要执行的同步函数
+        timeout: 超时时间（秒）（可选）
+        *args: 函数的位置参数
+        **kwargs: 函数的关键字参数
 
     Returns:
-        Result from the function
+        函数的结果
 
     Raises:
-        asyncio.TimeoutError: If timeout is exceeded
+        asyncio.TimeoutError: 如果超过超时时间
     """
     loop = asyncio.get_event_loop()
 

@@ -1,4 +1,4 @@
-"""Setup script for MidsceneLangGraph Agent"""
+"""MidsceneLangGraph Agent 安装脚本"""
 
 from setuptools import setup, find_packages
 

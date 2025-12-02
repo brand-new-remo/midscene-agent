@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Quick launcher for MidsceneAgent examples
+MidsceneAgent 示例快速启动器
 
-This script provides a convenient way to run various examples
-without having to remember the full python paths.
+此脚本提供了一种便捷的方式来运行各种示例，
+无需记住完整的 python 路径。
 """
 
 import asyncio
@@ -11,10 +11,10 @@ import sys
 import os
 from dotenv import load_dotenv
 
-# Load environment variables
+# 加载环境变量
 load_dotenv()
 
-# Add current directory and src to path
+# 将当前目录和 src 添加到路径
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
 
@@ -28,60 +28,60 @@ from examples.test_ecommerce import (
 
 
 def print_banner():
-    """Print the application banner."""
+    """打印应用程序横幅。"""
     print("\n" + "=" * 70)
-    print("  🕷️  Midscene LangGraph Agent - Quick Launcher")
+    print("  🕷️  Midscene LangGraph Agent - 快速启动器")
     print("=" * 70)
-    print("\nA powerful AI-driven web automation system\n")
+    print("\n一个强大的 AI 驱动网页自动化系统\n")
 
 
 def print_menu():
-    """Print the main menu."""
-    print("Select an example to run:\n")
-    print("Basic Examples:")
-    print("  1. Basic web automation task")
-    print("  2. Interactive multi-task example")
-    print("  3. Page query example")
-    print("\nE-commerce Testing:")
-    print("  4. Product search test (Amazon)")
-    print("  5. Form filling test (httpbin.org)")
-    print("  6. Navigation test (Hacker News)")
-    print("  7. Run all e-commerce tests")
-    print("\nAdvanced:")
-    print("  8. Custom task (enter your own)")
-    print("\nOther:")
-    print("  9. Check configuration")
-    print("  0. Exit")
+    """打印主菜单。"""
+    print("选择要运行的示例:\n")
+    print("基础示例:")
+    print("  1. 基础网页自动化任务")
+    print("  2. 交互式多任务示例")
+    print("  3. 页面查询示例")
+    print("\n电商测试:")
+    print("  4. 产品搜索测试 (Amazon)")
+    print("  5. 表单填写测试 (httpbin.org)")
+    print("  6. 导航测试 (Hacker News)")
+    print("  7. 运行所有电商测试")
+    print("\n高级:")
+    print("  8. 自定义任务（输入你自己的）")
+    print("\n其他:")
+    print("  9. 检查配置")
+    print("  0. 退出")
     print()
 
 
 async def run_custom_task():
-    """Run a custom task provided by the user."""
+    """运行用户提供的自定义任务。"""
     from agent import MidsceneAgent
 
     print("\n" + "=" * 70)
-    print("Custom Task Mode")
+    print("自定义任务模式")
     print("=" * 70)
-    print("\nEnter a natural language description of what you want to do.")
-    print("Example: 'Go to https://google.com and search for AI news'\n")
+    print("\n输入你想要做的事情的自然语言描述。")
+    print("例如: '前往 https://google.com 并搜索 AI 新闻'\n")
 
-    task = input("Your task: ").strip()
+    task = input("你的任务: ").strip()
 
     if not task:
-        print("❌ No task provided")
+        print("❌ 未提供任务")
         return
 
     api_key = os.getenv("DEEPSEEK_API_KEY")
     if not api_key:
-        print("❌ Error: DEEPSEEK_API_KEY not found in environment")
-        print("Please set it in .env file or export it")
+        print("❌ 错误: 在环境中未找到 DEEPSEEK_API_KEY")
+        print("请在 .env 文件中设置或导出它")
         return
 
     print("\n" + "=" * 70)
-    print("Executing your task...")
+    print("正在执行你的任务...")
     print("=" * 70 + "\n")
 
-    # Prepare environment variables for Midscene MCP server
+    # 为 Midscene MCP 服务器准备环境变量
     midscene_env = {
         "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY", ""),
         "OPENAI_BASE_URL": os.getenv("OPENAI_BASE_URL", ""),
@@ -110,73 +110,73 @@ async def run_custom_task():
 
 
 def check_config():
-    """Check and display configuration."""
+    """检查并显示配置。"""
     from config import Config
 
     print("\n" + "=" * 70)
-    print("Configuration Check")
+    print("配置检查")
     print("=" * 70 + "\n")
 
     Config.print_config()
 
     print("\n" + "-" * 70)
-    print("\n✅ Configuration Status:")
+    print("\n✅ 配置状态:")
     if Config.validate():
-        print("   ✓ DeepSeek API key configured")
-        print("   ✓ Ready to use!")
+        print("   ✓ DeepSeek API 密钥已配置")
+        print("   ✓ 可以使用了！")
     else:
-        print("   ⚠️  Some configuration is missing")
-        print("   Please check your .env file")
+        print("   ⚠️  某些配置缺失")
+        print("   请检查你的 .env 文件")
 
     print()
 
 
 async def main():
-    """Main entry point."""
+    """主入口点。"""
     print_banner()
 
-    # Check if .env exists
+    # 检查 .env 是否存在
     if not os.path.exists(".env"):
-        print("⚠️  Warning: .env file not found")
-        print("   Copy .env.example to .env and add your DEEPSEEK_API_KEY\n")
+        print("⚠️  警告: 未找到 .env 文件")
+        print("   复制 .env.example 到 .env 并添加你的 DEEPSEEK_API_KEY\n")
 
     while True:
         print_menu()
 
         try:
-            choice = input("Enter your choice (0-9): ").strip()
+            choice = input("输入你的选择 (0-9): ").strip()
             print()
 
             if choice == "0":
-                print("👋 Goodbye!\n")
+                print("👋 再见！\n")
                 sys.exit(0)
 
             elif choice == "1":
-                print("🚀 Running basic web automation task...\n")
+                print("🚀 正在运行基础网页自动化任务...\n")
                 await basic_example()
 
             elif choice == "2":
-                print("🚀 Running interactive multi-task example...\n")
+                print("🚀 正在运行交互式多任务示例...\n")
                 await interactive_example()
 
             elif choice == "3":
-                print("🚀 Running page query example...\n")
+                print("🚀 正在运行页面查询示例...\n")
                 await query_example()
 
             elif choice == "4":
-                print("🛒 Running product search test...\n")
+                print("🛒 正在运行产品搜索测试...\n")
                 await test_product_search()
 
             elif choice == "5":
-                print("📝 Running form filling test...\n")
+                print("📝 正在运行表单填写测试...\n")
                 await test_form_filling()
 
             elif choice == "6":
-                print("🧭 Running navigation test...\n")
+                print("🧭 正在运行导航测试...\n")
                 await test_navigation()
 
             elif choice == "7":
-                print("🧪 Running all e-commerce tests...\n")
+                print("🧪 正在运行所有电商测试...\n")
                 await run_all_tests()
 
             elif choice == "8":
@@ -186,29 +186,29 @@ async def main():
                 check_config()
 
             else:
-                print("❌ Invalid choice. Please try again.\n")
+                print("❌ 无效选择。请重试。\n")
                 continue
 
-            # Pause before showing menu again
+            # 再次显示菜单前暂停
             if choice != "9" and choice != "0":
                 input("\n" + "=" * 70)
-                input("Press Enter to return to menu...")
+                input("按 Enter 键返回菜单...")
 
             print()
 
         except KeyboardInterrupt:
-            print("\n\n👋 Goodbye!\n")
+            print("\n\n👋 再见！\n")
             sys.exit(0)
         except Exception as e:
-            print(f"\n❌ Error: {e}")
+            print(f"\n❌ 错误: {e}")
             import traceback
             traceback.print_exc()
-            input("\nPress Enter to continue...")
+            input("\n按 Enter 键继续...")
 
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("\n👋 Goodbye!\n")
+        print("\n👋 再见！\n")
         sys.exit(0)

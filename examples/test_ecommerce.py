@@ -1,7 +1,7 @@
 """
-E-commerce Testing Example
+电商测试示例
 
-This example demonstrates testing an e-commerce website using natural language.
+此示例演示使用自然语言测试电商网站。
 """
 
 import asyncio
@@ -9,12 +9,12 @@ import os
 import sys
 from dotenv import load_dotenv
 
-# Add src to path - use absolute path for better reliability
+# 将 src 添加到路径 - 使用绝对路径以提高可靠性
 current_dir = os.path.dirname(os.path.abspath(__file__))
 src_path = os.path.join(current_dir, '..', 'src')
 sys.path.insert(0, os.path.abspath(src_path))
 
-# Import the agent module directly
+# 直接导入智能体模块
 from agent import MidsceneAgent  # pyright: ignore
 
 load_dotenv()
@@ -22,14 +22,14 @@ load_dotenv()
 
 async def test_product_search():
     """
-    Test the product search functionality on an e-commerce site.
+    测试电商网站上的产品搜索功能。
     """
     api_key = os.getenv("DEEPSEEK_API_KEY")
     if not api_key:
-        print("❌ Error: DEEPSEEK_API_KEY not found")
+        print("❌ 错误: 未找到 DEEPSEEK_API_KEY")
         return
 
-    # Prepare environment variables for Midscene MCP server
+    # 为 Midscene MCP 服务器准备环境变量
     midscene_env = {
         "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY", ""),
         "OPENAI_BASE_URL": os.getenv("OPENAI_BASE_URL", ""),
@@ -42,22 +42,22 @@ async def test_product_search():
         env=midscene_env,
     )
 
-    # Test product search on Amazon
+    # 在 Amazon 上测试产品搜索
     task = """
-    Let's test the product search functionality:
+    让我们测试产品搜索功能：
 
-    1. Navigate to https://www.amazon.com
-    2. Search for "wireless headphones"
-    3. Wait for search results to load
-    4. Report how many search results are shown
-    5. What is the price and rating of the first product shown?
-    6. Click on the first product to view details
-    7. What are the key features listed for this product?
+    1. 导航到 https://www.amazon.com
+    2. 搜索 "wireless headphones"
+    3. 等待搜索结果加载
+    4. 报告显示了多少个搜索结果
+    5. 显示的第一个产品的价格和评分是多少？
+    6. 点击第一个产品查看详情
+    7. 此产品列出的主要特性有哪些？
 
-    Take your time and verify each step before moving to the next.
+    请慢慢来，并在进行下一步之前验证每一步。
     """
 
-    print("🛒 E-commerce Product Search Test")
+    print("🛒 电商产品搜索测试")
     print("=" * 60)
 
     try:
@@ -71,21 +71,21 @@ async def test_product_search():
                         print(msg)
 
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"❌ 错误: {e}")
         import traceback
         traceback.print_exc()
 
 
 async def test_form_filling():
     """
-    Test form filling functionality.
+    测试表单填写功能。
     """
     api_key = os.getenv("DEEPSEEK_API_KEY")
     if not api_key:
-        print("❌ Error: DEEPSEEK_API_KEY not found")
+        print("❌ 错误: 未找到 DEEPSEEK_API_KEY")
         return
 
-    # Prepare environment variables for Midscene MCP server
+    # 为 Midscene MCP 服务器准备环境变量
     midscene_env = {
         "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY", ""),
         "OPENAI_BASE_URL": os.getenv("OPENAI_BASE_URL", ""),
@@ -101,23 +101,23 @@ async def test_form_filling():
     try:
         await agent_instance.initialize()
 
-        # Test form filling
+        # 测试表单填写
         task = """
-        Let's test form filling:
+        让我们测试表单填写：
 
-        1. Navigate to https://httpbin.org/forms/post (this is a test form)
-        2. Fill in the form with the following information:
+        1. 导航到 https://httpbin.org/forms/post（这是一个测试表单）
+        2. 用以下信息填写表单：
            - Custname: "John Doe"
            - Custtel: "123-456-7890"
            - Custemail: "john.doe@example.com"
            - Comments: "This is a test submission"
-        3. Submit the form
-        4. Report the response from the server
+        3. 提交表单
+        4. 报告服务器的响应
 
-        Describe what you see at each step and confirm the form fields are filled correctly.
+        描述你在每一步看到的内容，并确认表单字段填写正确。
         """
 
-        print("📝 Form Filling Test")
+        print("📝 表单填写测试")
         print("=" * 60)
 
         async for event in agent_instance.execute(task):
@@ -129,7 +129,7 @@ async def test_form_filling():
                     print(msg)
 
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"❌ 错误: {e}")
         import traceback
         traceback.print_exc()
     finally:
@@ -138,14 +138,14 @@ async def test_form_filling():
 
 async def test_navigation():
     """
-        Test navigation and page state verification.
+        测试导航和页面状态验证。
         """
     api_key = os.getenv("DEEPSEEK_API_KEY")
     if not api_key:
-        print("❌ Error: DEEPSEEK_API_KEY not found")
+        print("❌ 错误: 未找到 DEEPSEEK_API_KEY")
         return
 
-    # Prepare environment variables for Midscene MCP server
+    # 为 Midscene MCP 服务器准备环境变量
     midscene_env = {
         "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY", ""),
         "OPENAI_BASE_URL": os.getenv("OPENAI_BASE_URL", ""),
@@ -161,22 +161,22 @@ async def test_navigation():
     try:
         await agent_instance.initialize()
 
-        # Test navigation
+        # 测试导航
         task = """
-        Let's test website navigation:
+        让我们测试网站导航：
 
-        1. Navigate to https://news.ycombinator.com
-        2. What is the title of the page?
-        3. List all the navigation links in the header
-        4. Click on the "new" link (or similar)
-        5. Wait for the page to load and describe what's visible
-        6. Go back to the previous page
-        7. Verify you're back on the main page
+        1. 导航到 https://news.ycombinator.com
+        2. 页面的标题是什么？
+        3. 列出页眉中的所有导航链接
+        4. 点击 "new" 链接（或类似的）
+        5. 等待页面加载并描述可见内容
+        6. 返回上一页
+        7. 验证你回到了主页
 
-        Pay attention to the page structure and report any changes.
+        注意页面结构并报告任何变化。
         """
 
-        print("🧭 Navigation Test")
+        print("🧭 导航测试")
         print("=" * 60)
 
         async for event in agent_instance.execute(task):
@@ -188,7 +188,7 @@ async def test_navigation():
                     print(msg)
 
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"❌ 错误: {e}")
         import traceback
         traceback.print_exc()
     finally:
@@ -197,56 +197,56 @@ async def test_navigation():
 
 async def run_all_tests():
     """
-    Run all e-commerce tests in sequence.
+    按顺序运行所有电商测试。
     """
-    print("🧪 E-commerce Test Suite")
+    print("🧪 电商测试套件")
     print("=" * 60)
-    print("\nThis will run multiple test scenarios:")
-    print("1. Product Search Test")
-    print("2. Form Filling Test")
-    print("3. Navigation Test")
-    print("\nEach test will be run sequentially. Press Ctrl+C to skip remaining tests.\n")
+    print("\n这将运行多个测试场景:")
+    print("1. 产品搜索测试")
+    print("2. 表单填写测试")
+    print("3. 导航测试")
+    print("\n每个测试将按顺序运行。按 Ctrl+C 跳过剩余测试。\n")
 
     tests = [
-        ("Product Search", test_product_search),
-        ("Form Filling", test_form_filling),
-        ("Navigation", test_navigation),
+        ("产品搜索", test_product_search),
+        ("表单填写", test_form_filling),
+        ("导航", test_navigation),
     ]
 
     for name, test_func in tests:
         print(f"\n{'='*60}")
-        print(f"Running: {name}")
+        print(f"正在运行: {name}")
         print(f"{'='*60}\n")
 
         try:
             await test_func()
-            print(f"\n✅ {name} completed successfully")
+            print(f"\n✅ {name} 已成功完成")
         except KeyboardInterrupt:
-            print(f"\n⚠️  Skipping remaining tests")
+            print(f"\n⚠️  跳过剩余测试")
             break
         except Exception as e:
-            print(f"\n❌ {name} failed: {e}")
+            print(f"\n❌ {name} 失败: {e}")
             import traceback
             traceback.print_exc()
 
         print("\n" + "=" * 60)
-        input("Press Enter to continue to next test...")
+        input("按 Enter 键继续下一个测试...")
         print()
 
-    print("\n🎉 All tests completed!")
+    print("\n🎉 所有测试完成！")
 
 
 if __name__ == "__main__":
-    print("E-commerce Testing Examples\n")
+    print("电商测试示例\n")
 
     try:
         choice = input(
-            "Select test to run:\n"
-            "1. Product Search Test\n"
-            "2. Form Filling Test\n"
-            "3. Navigation Test\n"
-            "4. Run All Tests\n\n"
-            "Enter choice (1-4): "
+            "选择要运行的测试:\n"
+            "1. 产品搜索测试\n"
+            "2. 表单填写测试\n"
+            "3. 导航测试\n"
+            "4. 运行所有测试\n\n"
+            "输入选择 (1-4): "
         ).strip()
 
         print()
@@ -260,12 +260,12 @@ if __name__ == "__main__":
         elif choice == "4":
             asyncio.run(run_all_tests())
         else:
-            print("Running product search test...")
+            print("正在运行产品搜索测试...")
             asyncio.run(test_product_search())
 
     except KeyboardInterrupt:
-        print("\n\n👋 Goodbye!")
+        print("\n\n👋 再见！")
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\n❌ 错误: {e}")
         import traceback
         traceback.print_exc()

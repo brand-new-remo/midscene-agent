@@ -1,19 +1,22 @@
 """
-Configuration management for MidsceneAgent
+MidsceneAgent 配置管理
+
+本模块提供 MidsceneAgent 的配置管理功能，包括环境变量加载、
+配置验证和默认参数设置。
 """
 
 import os
 from typing import Dict, Any, Optional
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
+# 从 .env 文件加载环境变量
 load_dotenv()
 
 
 class Config:
-    """Configuration class for MidsceneAgent"""
+    """MidsceneAgent 配置类"""
 
-    # DeepSeek API Configuration
+    # DeepSeek API 配置
     DEEPSEEK_API_KEY: str = os.getenv("DEEPSEEK_API_KEY", "")
     DEEPSEEK_BASE_URL: str = os.getenv(
         "DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1"
@@ -21,39 +24,39 @@ class Config:
     DEEPSEEK_MODEL: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
     DEEPSEEK_TEMPERATURE: float = float(os.getenv("DEEPSEEK_TEMPERATURE", "0"))
 
-    # Midscene Configuration
+    # Midscene 配置
     MIDSCENE_MODEL: str = os.getenv("MIDSCENE_MODEL", "doubao-seed-1.6-vision")
     MIDSCENE_COMMAND: str = os.getenv("MIDSCENE_COMMAND", "npx")
     MIDSCENE_ARGS: list = os.getenv("MIDSCENE_ARGS", "-y @midscene/mcp").split()
 
-    # Browser Configuration
+    # 浏览器配置
     CHROME_PATH: Optional[str] = os.getenv("CHROME_PATH")
     HEADLESS: bool = os.getenv("HEADLESS", "false").lower() == "true"
 
-    # Additional environment variables
+    # 额外环境变量
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     OPENAI_BASE_URL: str = os.getenv("OPENAI_BASE_URL", "")
 
     @classmethod
     def validate(cls) -> bool:
         """
-        Validate configuration.
+        验证配置。
 
         Returns:
-            True if configuration is valid, False otherwise
+            如果配置有效返回 True，否则返回 False
         """
         if not cls.DEEPSEEK_API_KEY:
-            print("⚠️  Warning: DEEPSEEK_API_KEY not set")
+            print("⚠️  警告: DEEPSEEK_API_KEY 未设置")
             return False
         return True
 
     @classmethod
     def to_dict(cls) -> Dict[str, Any]:
         """
-        Convert configuration to dictionary.
+        将配置转换为字典。
 
         Returns:
-            Dictionary representation of configuration
+            配置的字典表示
         """
         return {
             "deepseek": {
@@ -81,78 +84,78 @@ class Config:
 
     @classmethod
     def print_config(cls):
-        """Print current configuration (with sensitive data masked)."""
+        """打印当前配置（敏感数据已隐藏）。"""
         import json
 
-        print("\n📋 Configuration:")
+        print("\n📋 配置:")
         print(json.dumps(cls.to_dict(), indent=2))
 
 
-# Default prompts for the agent
-SYSTEM_PROMPT = """You are an expert AI-powered web automation agent. You can interact with web pages through natural language instructions.
+# 智能体的默认提示词
+SYSTEM_PROMPT = """你是一个专业的 AI 驱动网页自动化智能体。你可以通过自然语言指令与网页进行交互。
 
-Your capabilities:
-1. Navigate to any website
-2. Click on elements (buttons, links, images, etc.)
-3. Fill in forms with text
-4. Scroll through pages
-5. Extract information from pages
-6. Search for content
-7. Wait for pages to load
+你的能力：
+1. 导航到任何网站
+2. 点击元素（按钮、链接、图片等）
+3. 填写表单文本
+4. 在页面中滚动
+5. 提取页面信息
+6. 搜索内容
+7. 等待页面加载
 
-Available tools:
-- midscene_action: Execute actions on the webpage
-- midscene_query: Query information from the webpage
+可用工具：
+- midscene_action: 在网页上执行操作
+- midscene_query: 从网页查询信息
 
-Best practices:
-1. Break complex tasks into simple steps
-2. Be specific about what you want to do
-3. Describe elements by their visual appearance (e.g., "the blue login button")
-4. Wait for pages to load after navigation
-5. Verify your actions by observing the results
-6. Report what you see at each step
+最佳实践：
+1. 将复杂任务分解为简单步骤
+2. 明确你想要做什么
+3. 通过视觉外观描述元素（例如："蓝色的登录按钮"）
+4. 导航后等待页面加载
+5. 通过观察结果验证你的操作
+6. 在每一步报告你看到的内容
 
-When you need to interact with a page:
-1. Clearly describe the action (e.g., "Click the 'Search' button in the top right")
-2. Wait for the action to complete
-3. Observe the result
-4. Proceed to the next step
+当你需要与页面交互时：
+1. 清楚描述操作（例如："点击右上角的 '搜索' 按钮"）
+2. 等待操作完成
+3. 观察结果
+4. 进行下一步
 
-Remember: You can see the page just like a human would. Describe what you see and take actions accordingly.
+记住：你能像人类一样看到页面。描述你看到的内容并相应地采取行动。
 """
 
 EXAMPLE_TASKS = [
     {
-        "name": "Search Test",
-        "description": "Navigate to a search engine and perform a search",
+        "name": "搜索测试",
+        "description": "导航到搜索引擎并执行搜索",
         "instruction": """
-        1. Navigate to https://www.google.com
-        2. In the search box, type "artificial intelligence"
-        3. Click the search button
-        4. Tell me the title of the first result
+        1. 导航到 https://www.google.com
+        2. 在搜索框中输入 "artificial intelligence"
+        3. 点击搜索按钮
+        4. 告诉我第一个结果的标题
         """,
     },
     {
-        "name": "Form Filling",
-        "description": "Fill out and submit a contact form",
+        "name": "表单填写",
+        "description": "填写并提交联系表单",
         "instruction": """
-        1. Navigate to https://httpbin.org/forms/post
-        2. Fill in the name field with "Test User"
-        3. Fill in the email field with "test@example.com"
-        4. Fill in the comments field with "This is a test"
-        5. Submit the form
-        6. Show me the response
+        1. 导航到 https://httpbin.org/forms/post
+        2. 在姓名字段填入 "Test User"
+        3. 在邮箱字段填入 "test@example.com"
+        4. 在评论字段填入 "This is a test"
+        5. 提交表单
+        6. 显示响应结果
         """,
     },
     {
-        "name": "E-commerce Browse",
-        "description": "Browse products on an e-commerce site",
+        "name": "电商浏览",
+        "description": "在电商网站上浏览产品",
         "instruction": """
-        1. Navigate to https://www.amazon.com
-        2. Search for "laptop"
-        3. List the first 3 products you see with their prices
-        4. Click on the first product
-        5. Tell me the product rating and number of reviews
+        1. 导航到 https://www.amazon.com
+        2. 搜索 "laptop"
+        3. 列出你看到的前 3 个产品及其价格
+        4. 点击第一个产品
+        5. 告诉我产品评分和评论数量
         """,
     },
 ]

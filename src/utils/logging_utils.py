@@ -1,5 +1,5 @@
 """
-Logging utilities for MidsceneAgent
+MidsceneAgent 日志工具
 """
 
 import logging
@@ -13,30 +13,30 @@ def setup_logging(
     log_file: Optional[str] = None
 ) -> None:
     """
-    Set up logging configuration.
+    设置日志配置。
 
     Args:
-        level: Logging level (default: logging.INFO)
-        format_string: Custom format string (optional)
-        log_file: Log to file (optional)
+        level: 日志级别（默认: logging.INFO）
+        format_string: 自定义格式字符串（可选）
+        log_file: 日志文件（可选）
     """
     if format_string is None:
         format_string = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
-    # Create logger
+    # 创建记录器
     logger = logging.getLogger()
     logger.setLevel(level)
 
-    # Create formatter
+    # 创建格式化器
     formatter = logging.Formatter(format_string)
 
-    # Console handler
+    # 控制台处理器
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(level)
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
 
-    # File handler (if specified)
+    # 文件处理器（如果指定）
     if log_file:
         file_handler = logging.FileHandler(log_file)
         file_handler.setLevel(level)
@@ -46,12 +46,12 @@ def setup_logging(
 
 def get_logger(name: str) -> logging.Logger:
     """
-    Get a logger instance.
+    获取记录器实例。
 
     Args:
-        name: Logger name (typically __name__)
+        name: 记录器名称（通常使用 __name__）
 
     Returns:
-        Logger instance
+        记录器实例
     """
     return logging.getLogger(name)

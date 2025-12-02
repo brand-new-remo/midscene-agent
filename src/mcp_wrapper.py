@@ -1,8 +1,8 @@
 """
-Midscene MCP Client Wrapper
+Midscene MCP 客户端包装器
 
-This module provides a Python wrapper for the Midscene MCP (Model Context Protocol) server,
-allowing LangGraph agents to interact with Midscene's AI-powered web automation capabilities.
+本模块为 Midscene MCP（Model Context Protocol）服务器提供 Python 包装器，
+允许 LangGraph 智能体与 Midscene 的 AI 驱动网页自动化功能交互。
 """
 
 import asyncio
@@ -17,10 +17,10 @@ from mcp.client.stdio import stdio_client, StdioServerParameters
 
 class MidsceneMCPWrapper:
     """
-    Wrapper for Midscene MCP Server
+    Midscene MCP 服务器包装器
 
-    This class manages the connection to Midscene's MCP server and provides
-    tools for the LangGraph agent to interact with web pages through AI.
+    此类管理与 Midscene MCP 服务器的连接，并为 LangGraph 智能体提供
+    通过 AI 与网页交互的工具。
     """
 
     def __init__(
@@ -30,19 +30,19 @@ class MidsceneMCPWrapper:
         env: Optional[Dict[str, str]] = None
     ):
         """
-        Initialize the Midscene MCP wrapper.
+        初始化 Midscene MCP 包装器。
 
         Args:
-            midscene_command: Command to run Midscene MCP server (default: "npx")
-            midscene_args: Arguments for the Midscene command (default: ["-y", "@midscene/mcp"])
-            env: Environment variables to pass to the MCP server
+            midscene_command: 运行 Midscene MCP 服务器的命令（默认："npx"）
+            midscene_args: Midscene 命令的参数（默认：["-y", "@midscene/mcp"]）
+            env: 传递给 MCP 服务器的环境变量
         """
         if midscene_args is None:
             midscene_args = ["-y", "@midscene/mcp"]
 
-        # Set default environment variables
+        # 设置默认环境变量
         default_env = os.environ.copy()
-        default_env["MCP_SERVER_REQUEST_TIMEOUT"] = "800000"  # 800 seconds timeout
+        default_env["MCP_SERVER_REQUEST_TIMEOUT"] = "800000"  # 800 秒超时
         if env:
             default_env.update(env)
 
@@ -58,51 +58,51 @@ class MidsceneMCPWrapper:
 
     async def start(self) -> None:
         """
-        Start the connection to Midscene MCP Server.
+        启动与 Midscene MCP 服务器的连接。
 
         Raises:
-            RuntimeError: If connection fails
+            RuntimeError: 如果连接失败
         """
         try:
             self.exit_stack = AsyncExitStack()
 
-            # Establish stdio connection
+            # 建立 stdio 连接
             stdio_transport = await self.exit_stack.enter_async_context(
                 stdio_client(self.server_params)
             )
             read_stream, write_stream = stdio_transport
 
-            # Create and initialize client session
+            # 创建并初始化客户端会话
             self.session = await self.exit_stack.enter_async_context(
                 ClientSession(read_stream, write_stream)
             )
 
-            # Initialize with a longer timeout for Midscene
-            print("🔌 Connecting to Midscene MCP Server...")
+            # 为 Midscene 使用更长的超时时间初始化
+            print("🔌 正在连接到 Midscene MCP 服务器...")
             await asyncio.wait_for(self.session.initialize(), timeout=120)
-            print("✅ Midscene MCP Server initialized")
+            print("✅ Midscene MCP 服务器已初始化")
 
-            # Discover available tools
+            # 发现可用工具
             tools_result = await self.session.list_tools()
             self._available_tools = [tool.name for tool in tools_result.tools]
 
-            print(f"✅ Connected to Midscene MCP Server")
-            print(f"🔧 Available tools: {', '.join(self._available_tools)}")
+            print(f"✅ 已连接到 Midscene MCP 服务器")
+            print(f"🔧 可用工具: {', '.join(self._available_tools)}")
 
         except asyncio.TimeoutError:
             if self.exit_stack:
                 await self.exit_stack.aclose()
-            raise RuntimeError("Timeout connecting to Midscene MCP Server. The server may still be starting up. Try again.")
+            raise RuntimeError("连接到 Midscene MCP 服务器超时。服务器可能仍在启动中。请重试。")
         except Exception as e:
             if self.exit_stack:
                 await self.exit_stack.aclose()
-            raise RuntimeError(f"Failed to connect to Midscene MCP Server: {e}")
+            raise RuntimeError(f"连接到 Midscene MCP 服务器失败: {e}")
 
     async def stop(self) -> None:
-        """Close the connection to Midscene MCP Server."""
+        """关闭与 Midscene MCP 服务器的连接。"""
         if self.exit_stack:
             await self.exit_stack.aclose()
-            print("🔌 Disconnected from Midscene MCP Server")
+            print("🔌 已断开与 Midscene MCP 服务器的连接")
 
     async def call_tool(
         self,
@@ -110,29 +110,29 @@ class MidsceneMCPWrapper:
         arguments: Optional[Dict[str, Any]] = None
     ) -> Any:
         """
-        Call a tool on the Midscene MCP server.
-        Maps abstract tool names to specific Midscene tools.
+        调用 Midscene MCP 服务器上的工具。
+        将抽象工具名称映射到特定的 Midscene 工具。
 
         Args:
-            tool_name: Name of the tool to call ('action' or 'query')
-            arguments: Arguments to pass to the tool
+            tool_name: 要调用的工具名称（'action' 或 'query'）
+            arguments: 传递给工具的参数
 
         Returns:
-            The result from the MCP tool
+            MCP 工具的结果
 
         Raises:
-            RuntimeError: If not connected or tool call fails
+            RuntimeError: 如果未连接或工具调用失败
         """
         if not self.session:
-            raise RuntimeError("Not connected to Midscene MCP Server")
+            raise RuntimeError("未连接到 Midscene MCP 服务器")
 
         try:
-            # Map abstract tool names to specific Midscene tools
+            # 将抽象工具名称映射到特定的 Midscene 工具
             if tool_name in ("action", "midscene_action"):
                 instruction = arguments.get("instruction", "") if arguments else ""
 
-                # Parse the instruction to determine which tool to use
-                # Support both English and Chinese navigation instructions
+                # 解析指令以确定使用哪个工具
+                # 支持英文和中文导航指令
                 if (instruction.startswith("Navigate to") or instruction.startswith("navigate to") or
                     instruction.startswith("导航到") or instruction.startswith("导航到 ")):
                     url = (instruction.replace("Navigate to", "").replace("navigate to", "")
@@ -144,17 +144,17 @@ class MidsceneMCPWrapper:
                     print(f"✅ 导航结果: {result}")
                     return result
                 elif "click" in instruction.lower():
-                    # For clicks, use aiAssert to locate and click
+                    # 对于点击，使用 aiAssert 定位并点击
                     target = instruction.replace("click", "").strip()
                     result = await self.session.call_tool("midscene_aiAssert", {"assertion": f"Click on the {target}"})
                     return result
                 elif "input" in instruction.lower() or "type" in instruction.lower():
-                    # Parse input instruction
-                    # Format: "input text 'Hello' into search box" or "type 'Hello' in field"
+                    # 解析输入指令
+                    # 格式："input text 'Hello' into search box" 或 "type 'Hello' in field"
                     import re
                     match = re.search(r"(?:input|type)\s+(?:text\s+)?['\"]([^'\"]+)['\"]", instruction, re.IGNORECASE)
                     text = match.group(1) if match else ""
-                    # Extract target
+                    # 提取目标
                     target = instruction
                     if "into" in target.lower():
                         target = target.lower().split("into")[1].strip()
@@ -175,7 +175,7 @@ class MidsceneMCPWrapper:
                     })
                     return result
                 else:
-                    # Default: use aiAssert for general actions
+                    # 默认：使用 aiAssert 执行通用操作
                     result = await self.session.call_tool("midscene_aiAssert", {
                         "assertion": instruction
                     })
@@ -189,7 +189,7 @@ class MidsceneMCPWrapper:
                 return result
 
             else:
-                # Direct tool call
+                # 直接工具调用
                 result = await self.session.call_tool(tool_name, arguments or {})
                 return result
 
@@ -202,33 +202,33 @@ class MidsceneMCPWrapper:
                 "error_message": str(e),
                 "traceback": traceback.format_exc()
             }
-            print(f"\n❌ Tool call failed:")
-            print(f"   Tool: {tool_name}")
-            print(f"   Error: {error_details['error_message']}")
-            print(f"   Type: {error_details['error_type']}")
-            raise RuntimeError(f"Failed to call tool '{tool_name}': {e}\nDetails: {json.dumps(error_details, indent=2)}")
+            print(f"\n❌ 工具调用失败:")
+            print(f"   工具: {tool_name}")
+            print(f"   错误: {error_details['error_message']}")
+            print(f"   类型: {error_details['error_type']}")
+            raise RuntimeError(f"调用工具 '{tool_name}' 失败: {e}\n详细信息: {json.dumps(error_details, indent=2)}")
 
     async def get_tools(self) -> List[str]:
         """
-        Get list of available tools.
+        获取可用工具列表。
 
         Returns:
-            List of tool names
+            工具名称列表
         """
         return self._available_tools.copy()
 
     async def health_check(self) -> bool:
         """
-        Check if the MCP server connection is healthy.
+        检查 MCP 服务器连接是否健康。
 
         Returns:
-            True if connection is healthy, False otherwise
+            如果连接健康返回 True，否则返回 False
         """
         try:
             if not self.session:
                 return False
 
-            # Try to list tools as a health check
+            # 尝试列出工具作为健康检查
             await self.session.list_tools()
             return True
         except Exception:
@@ -236,10 +236,10 @@ class MidsceneMCPWrapper:
 
 
 class MidsceneConnectionError(Exception):
-    """Raised when connection to Midscene MCP server fails."""
+    """当连接到 Midscene MCP 服务器失败时抛出。"""
     pass
 
 
 class MidsceneToolError(Exception):
-    """Raised when a tool call to Midscene fails."""
+    """当调用 Midscene 工具失败时抛出。"""
     pass

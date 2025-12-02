@@ -5,16 +5,12 @@ LangGraph Agent 与 Midscene 集成
 进行推理，使用 Midscene 进行网页自动化。
 """
 
-import asyncio
-import sys
-from typing import List, Dict, Any, Optional, AsyncGenerator, Literal
+from typing import List, Dict, Any, Optional, AsyncGenerator
 from langchain_core.tools import BaseTool, tool
 from langchain_deepseek import ChatDeepSeek
-from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
+from langchain_core.messages import HumanMessage
 from langgraph.graph import StateGraph, MessagesState, START, END
 from pydantic import SecretStr
-
-# Import mcp_wrapper from the same directory
 from mcp_wrapper import MidsceneMCPWrapper
 
 
