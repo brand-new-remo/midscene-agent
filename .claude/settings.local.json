@@ -2,9 +2,14 @@
   "permissions": {
     "allow": [
       "Bash(conda info:*)",
-      "Bash(pip uninstall:*)"
+      "Bash(pip uninstall:*)",
+      "Bash(test:*)"
     ],
     "deny": [],
     "ask": []
-  }
+  },
+  "enabledMcpjsonServers": [
+    "mcp-midscene"
+  ],
+  "enableAllProjectMcpServers": true
 }
