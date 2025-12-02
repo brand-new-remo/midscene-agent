@@ -65,6 +65,56 @@ def create_midscene_action_tool(mcp_wrapper: MidsceneMCPWrapper) -> BaseTool:
     return midscene_action
 
 
+def create_extract_search_results_tool(mcp_wrapper: MidsceneMCPWrapper) -> BaseTool:
+    """
+    创建专门用于提取搜索结果的工具。
+
+    Args:
+        mcp_wrapper: Midscene MCP 包装器实例
+
+    Returns:
+        用于提取搜索结果的 LangChain BaseTool
+    """
+
+    @tool
+    async def extract_search_results(count: int = 1) -> str:
+        """
+        专门用于从搜索结果页面提取搜索结果标题的工具。
+
+        该工具会使用多种策略来提高提取准确性：
+        1. 多次尝试不同的查询指令
+        2. 如果失败会自动截图并重新分析
+        3. 返回格式化的结果
+
+        Args:
+            count: 要提取的搜索结果数量（默认：1）
+
+        Returns:
+            提取的搜索结果标题列表
+        """
+        try:
+            result = await mcp_wrapper.extract_search_results(count=count)
+
+            # 处理不同类型的返回结果
+            if isinstance(result, str):
+                return result
+            elif hasattr(result, 'content') and result.content:
+                content = result.content
+                if isinstance(content, list) and len(content) > 0:
+                    first_item = content[0]
+                    if hasattr(first_item, 'text'):
+                        return first_item.text
+                    else:
+                        return str(first_item)
+                else:
+                    return str(content)
+            return "未找到搜索结果"
+        except Exception as e:
+            return f"提取搜索结果时出错: {str(e)}"
+
+    return extract_search_results
+
+
 def create_midscene_query_tool(mcp_wrapper: MidsceneMCPWrapper) -> BaseTool:
     """
     为 Midscene 查询和信息提取创建 LangChain 工具。
@@ -172,10 +222,12 @@ class MidsceneAgent:
             # 初始化 MCP 连接
             await self.mcp_wrapper.start()
 
-            # 创建工具
+            # 创建工具 - 只包含操作工具，禁用查询功能
             tools = [
                 create_midscene_action_tool(self.mcp_wrapper),
-                create_midscene_query_tool(self.mcp_wrapper)
+                # 移除查询工具以禁用查询功能
+                # create_midscene_query_tool(self.mcp_wrapper),
+                # create_extract_search_results_tool(self.mcp_wrapper)
             ]
             print(f"🔧 为智能体创建了 {len(tools)} 个工具")
 
@@ -223,7 +275,10 @@ class MidsceneAgent:
             )
             builder.add_edge("tools", "agent")
 
-            self.agent_executor = builder.compile()
+            self.agent_executor = builder.compile(
+                interrupt_before=[],  # 可选：中断点
+                interrupt_after=[]    # 可选：中断点
+            )
             print("✅ 智能体执行器已初始化")
 
         except Exception as e:
@@ -254,12 +309,15 @@ class MidsceneAgent:
             # 为 LangChain 1.0+ 使用 HumanMessage
             input_messages = {"messages": [HumanMessage(content=user_input)]}
 
+            # 配置最大递归次数以避免循环
+            config = {"recursion_limit": 100}
+
             if stream:
-                async for chunk in self.agent_executor.astream(input_messages):
+                async for chunk in self.agent_executor.astream(input_messages, config=config):
                     # Yield each chunk as an event
                     yield chunk
             else:
-                result = await self.agent_executor.ainvoke(input_messages)
+                result = await self.agent_executor.ainvoke(input_messages, config=config)
                 yield result
         except Exception as e:
             import traceback

@@ -54,14 +54,14 @@ async def basic_example():
             # 定义任务
             task = """
             请完成以下网页自动化任务：
-            1. 导航到 https://www.bing.com
-            2. 在搜索框中输入 "LangGraph DeepSeek Midscene"
+            1. 导航到 https://www.google.com/
+            2. 在搜索框中输入 "LangGraph DeepSeek Midscene" 直接输入内容，不要考虑那里显示的东西，那里实际显示的是一个占位文字，不影响输入
             3. 点击搜索按钮
             4. 等待结果加载
-            5. 告诉我第一个搜索结果的标题
-
-            请逐步进行并报告你在每一步看到的内容。
             """
+
+            # 注意：此示例只执行操作，不进行任何查询或验证
+            # 如果需要查询页面信息，请使用 midscene_query 工具
 
             # 执行任务
             async for event in agent_instance.execute(task):

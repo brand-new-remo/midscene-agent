@@ -141,21 +141,57 @@ class MidsceneMCPWrapper:
                         url = "https://" + url
                     print(f"\n🔄 执行导航: {url}")
                     result = await self.session.call_tool("midscene_navigate", {"url": url})
-                    print(f"✅ 导航结果: {result}")
+                    print(f"\n📦 MCP 工具返回结果 [🔄 导航]:")
+                    print(f"   {result}")
                     return result
-                elif "click" in instruction.lower():
-                    # 对于点击，使用 aiAssert 定位并点击
-                    target = instruction.replace("click", "").strip()
-                    result = await self.session.call_tool("midscene_aiAssert", {"assertion": f"Click on the {target}"})
+                elif "click" in instruction.lower() or "点击" in instruction or "按" in instruction:
+                    # 对于点击操作，支持英文 "click" 和中文 "点击"、"按"
+                    # 处理不同格式：英文 "click search button"、中文 "点击搜索按钮"、"按搜索按钮"
+                    target = instruction.lower()
+                    # 移除各种点击相关的关键词
+                    for keyword in ["click", "点击", "按"]:
+                        target = target.replace(keyword, "").strip()
+                    # 如果处理后为空，尝试使用原指令（可能是"按回车键"这样的特殊操作）
+                    if not target or target == "":
+                        target = instruction.strip()
+                    print(f"\n🖱️ 执行点击: {target}")
+                    result = await self.session.call_tool("midscene_aiTap", {"locate": target})
+                    print(f"\n📦 MCP 工具返回结果 [🖱️ 点击]:")
+                    print(f"   {result}")
                     return result
-                elif "input" in instruction.lower() or "type" in instruction.lower():
-                    # 解析输入指令
-                    # 格式："input text 'Hello' into search box" 或 "type 'Hello' in field"
+                elif "input" in instruction.lower() or "type" in instruction.lower() or "输入" in instruction:
+                    # 解析输入指令 - 支持中英文格式
+                    # 英文格式："input text 'Hello' into search box" 或 "type 'Hello' in field"
+                    # 中文格式："在搜索框中输入 'Hello'" 或 "输入文本 'Hello'"
                     import re
+
+                    # 尝试英文格式
                     match = re.search(r"(?:input|type)\s+(?:text\s+)?['\"]([^'\"]+)['\"]", instruction, re.IGNORECASE)
                     text = match.group(1) if match else ""
-                    # 提取目标
+
+                    # 如果英文格式失败，尝试中文格式
+                    if not text:
+                        # 中文格式1："在搜索框中输入 'Hello'"
+                        match = re.search(r"输入\s+['\"]([^'\"]+)['\"]", instruction)
+                        text = match.group(1) if match else ""
+
+                    # 如果仍然失败，尝试更灵活的中文格式
+                    if not text:
+                        # 中文格式2："输入文本 'Hello'" - 忽略"文本"这个词
+                        match = re.search(r"输入(?:文本)?\s*['\"]([^'\"]+)['\"]", instruction)
+                        text = match.group(1) if match else ""
+
+                    # 如果仍然没有文本，尝试没有引号的格式
+                    if not text:
+                        # 尝试："在...输入..." 格式
+                        match = re.search(r"输入\s*['\"]?([^'\"\s]+)['\"]?", instruction)
+                        if match:
+                            text = match.group(1)
+
+                    # 提取目标元素
                     target = instruction
+
+                    # 英文格式目标提取
                     if "into" in target.lower():
                         target = target.lower().split("into")[1].strip()
                     elif "in" in target.lower():
@@ -163,34 +199,137 @@ class MidsceneMCPWrapper:
                     elif "on" in target.lower():
                         target = target.lower().split("on")[1].strip()
 
-                    result = await self.session.call_tool("midscene_aiAssert", {
-                        "assertion": f"Type '{text}' into the {target}"
+                    # 中文格式目标提取
+                    if "搜索" in instruction or "search" in instruction.lower():
+                        if not any(keyword in target.lower() for keyword in ["into", "in", "on", "输入"]):
+                            target = "search box" if not text else target
+                    elif "输入" in instruction:
+                        # 提取"在"和"输入"之间的内容作为目标
+                        match = re.search(r"在([^输入]+)输入", instruction)
+                        if match:
+                            target = match.group(1).strip()
+                            # 清理目标描述
+                            if "搜索框" in target:
+                                target = "search box"
+                            elif "搜索栏" in target:
+                                target = "search bar"
+                            elif "输入框" in target:
+                                target = "input field"
+
+                    # 如果目标仍然包含"输入"相关的词，尝试提取更合适的描述
+                    if "输入" in target or "input" in target.lower():
+                        if "搜索" in instruction:
+                            target = "search box"
+
+                    # 如果目标是空的，尝试智能猜测
+                    if not target or target.strip() == "" or "输入" in target:
+                        if "搜索" in instruction:
+                            target = "search box"
+                        else:
+                            target = "input field"
+
+                    print(f"\n⌨️ 执行输入: '{text}' 到 {target}")
+                    result = await self.session.call_tool("midscene_aiInput", {
+                        "value": text,
+                        "locate": target
                     })
+                    print(f"\n📦 MCP 工具返回结果 [⌨️ 输入]:")
+                    print(f"   {result}")
                     return result
-                elif "scroll" in instruction.lower():
-                    direction = "down" if "down" in instruction.lower() else "up"
+                elif "scroll" in instruction.lower() or "滚动" in instruction:
+                    # 支持英文 "scroll" 和中文 "滚动"
+                    direction = "down"
+                    if ("down" in instruction.lower() or "下" in instruction):
+                        direction = "down"
+                    elif ("up" in instruction.lower() or "上" in instruction):
+                        direction = "up"
+                    print(f"\n📜 执行滚动: {direction}")
                     result = await self.session.call_tool("midscene_aiScroll", {
                         "direction": direction,
                         "scrollType": "once"
                     })
+                    print(f"\n📦 MCP 工具返回结果 [📜 滚动]:")
+                    print(f"   {result}")
+                    return result
+                elif ("按" in instruction and ("键" in instruction or "enter" in instruction.lower() or "return" in instruction.lower())):
+                    # 识别键盘按键操作，如"按回车键"、"按Enter键"
+                    key_name = "Enter"
+                    # 提取按键名称
+                    if "回车" in instruction:
+                        key_name = "Enter"
+                    elif "空格" in instruction or "space" in instruction.lower():
+                        key_name = " "
+                    elif "tab" in instruction.lower():
+                        key_name = "Tab"
+                    elif "esc" in instruction.lower():
+                        key_name = "Escape"
+
+                    print(f"\n⌨️ 执行按键: {key_name}")
+                    result = await self.session.call_tool("midscene_aiKeyboardPress", {
+                        "key": key_name
+                    })
+                    print(f"\n📦 MCP 工具返回结果 [⌨️ 按键]:")
+                    print(f"   {result}")
                     return result
                 else:
-                    # 默认：使用 aiAssert 执行通用操作
+                    # 默认：对于未分类的操作，使用 aiAssert 进行验证（不执行操作）
+                    print(f"\n⚠️ 无法识别的操作指令: {instruction}")
+                    print("💡 支持的操作类型:")
+                    print("   - 导航: 'navigate to' / '导航到' + URL")
+                    print("   - 点击: 'click' / '点击' / '按' + 目标元素")
+                    print("   - 输入: 'input' / 'type' / '输入' + 文本内容")
+                    print("   - 滚动: 'scroll' / '滚动' + 'up'/'down'/'上'/'下'")
+                    print("   - 按键: '按' + '回车键'/'空格键'/'Tab键'")
+                    print(f"\n✅ 执行验证: {instruction[:100]}...")
                     result = await self.session.call_tool("midscene_aiAssert", {
-                        "assertion": instruction
+                        "assertion": f"验证页面状态: {instruction}"
                     })
+                    print(f"\n📦 MCP 工具返回结果 [✅ 验证]:")
+                    print(f"   {result}")
                     return result
 
             elif tool_name in ("query", "midscene_query"):
                 question = arguments.get("question", "") if arguments else ""
-                result = await self.session.call_tool("midscene_aiAssert", {
-                    "assertion": question
-                })
-                return result
+
+                # 优先尝试使用专门的查询工具
+                try:
+                    # 使用 aiAssert 进行信息提取
+                    print(f"\n🔍 执行查询: {question[:100]}...")
+                    result = await self.session.call_tool("midscene_aiAssert", {
+                        "assertion": question
+                    })
+                    print(f"\n📦 MCP 工具返回结果 [🔍 查询]:")
+                    print(f"   {result}")
+                    return result
+                except Exception as e:
+                    print(f"⚠️ aiAssert 查询失败，尝试其他方法: {e}")
+
+                    # 备用方案：使用截图 + 查询
+                    try:
+                        # 先截图
+                        print(f"\n📸 执行查询 (策略2): 截图 + AI分析")
+                        screenshot_result = await self.session.call_tool("midscene_screenshot", {
+                            "name": "query_screenshot"
+                        })
+                        print(f"✅ 截图完成")
+
+                        # 使用更详细的查询指令
+                        detailed_query = f"{question}\n\n请仔细分析页面截图，提取准确的信息。"
+                        result = await self.session.call_tool("midscene_aiAssert", {
+                            "assertion": detailed_query
+                        })
+                        print(f"\n📦 MCP 工具返回结果 [🔍 查询 - 重试]:")
+                        print(f"   {result}")
+                        return result
+                    except Exception as e2:
+                        print(f"⚠️ 所有查询方法都失败: {e2}")
+                        raise RuntimeError(f"无法执行查询 '{question}': {e2}")
 
             else:
                 # 直接工具调用
                 result = await self.session.call_tool(tool_name, arguments or {})
+                print(f"\n📦 MCP 工具返回结果 [{tool_name}]:")
+                print(f"   {result}")
                 return result
 
         except Exception as e:
