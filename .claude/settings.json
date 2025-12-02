@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod:*)",
+      "Bash(tree:*)",
+      "Bash(python3 -c:*)",
+      "Bash(python:*)",
+      "Bash(pip install:*)",
+      "Bash(pip show:*)",
+      "Bash(pip search langchain-deepseek)",
+      "Bash(npx @midscene/web:*)",
+      "Bash(lsof -ti:5800)",
+      "Bash(kill:*)",
+      "Bash(npx --version)",
+      "Bash(npx:*)",
+      "Bash(cat:*)",
+      "Bash(PYTHONPATH=/Users/duangangqiang/github/midscene/src:$PYTHONPATH python:*)",
+      "Bash(timeout 5 npx:*)",
+      "Bash(tee:*)",
+      "Bash(timeout 60 python:*)"
+    ],
+    "deny": [],
+    "ask": []
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "mcp-midscene"
+  ]
+}
