@@ -3,13 +3,14 @@
     "allow": [
       "Bash(conda info:*)",
       "Bash(pip uninstall:*)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "mcp-midscene"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }
