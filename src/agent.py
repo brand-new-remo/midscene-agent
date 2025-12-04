@@ -6,113 +6,12 @@ LangGraph Agent 与 Midscene 集成
 """
 
 from typing import List, Dict, Any, Optional, AsyncGenerator
-from langchain_core.tools import BaseTool, tool
+from langchain_core.tools import BaseTool
 from langchain_deepseek import ChatDeepSeek
 from langchain_core.messages import HumanMessage
 from langgraph.graph import StateGraph, MessagesState, START, END
 from pydantic import SecretStr
 from .mcp_wrapper import MidsceneMCPWrapper
-
-
-def create_midscene_action_tool(mcp_wrapper: MidsceneMCPWrapper) -> BaseTool:
-    """
-    为 Midscene 操作执行创建 LangChain 工具。
-
-    Args:
-        mcp_wrapper: Midscene MCP 包装器实例
-
-    Returns:
-        用于执行网页操作的 LangChain BaseTool
-    """
-
-    @tool
-    async def midscene_action(instruction: str) -> str:
-        """
-        使用 Midscene 的 AI 能力执行浏览器操作。
-
-        该工具允许使用自然语言指令与网页进行交互。
-        Midscene 将分析页面状态并执行请求的操作。
-
-        Args:
-            instruction: 要执行的清晰自然语言描述。
-                        示例：
-                        - "点击登录按钮"
-                        - "在搜索框中输入 'hello world'"
-                        - "向下滚动查看更多内容"
-                        - "导航到 https://www.google.com"
-                        - "填写表单 name='John Doe' 和 email='john@example.com'"
-
-        Returns:
-            详细描述执行内容和观察结果
-        """
-        try:
-            result = await mcp_wrapper.call_tool("action", {"instruction": instruction})
-            if hasattr(result, "content") and result.content:
-                # Extract text from TextContent array
-                content = result.content
-                if isinstance(content, list) and len(content) > 0:
-                    first_item = content[0]
-                    if hasattr(first_item, "text"):
-                        return first_item.text
-                    else:
-                        return str(first_item)
-                else:
-                    return str(content)
-            return "操作执行成功"
-        except Exception as e:
-            return f"执行操作时出错: {str(e)}"
-
-    return midscene_action
-
-
-def create_midscene_query_tool(mcp_wrapper: MidsceneMCPWrapper) -> BaseTool:
-    """
-    为 Midscene 查询和信息提取创建 LangChain 工具。
-
-    Args:
-        mcp_wrapper: Midscene MCP 包装器实例
-
-    Returns:
-        用于查询页面信息的 LangChain BaseTool
-    """
-
-    @tool
-    async def midscene_query(question: str) -> str:
-        """
-        使用 Midscene 的 AI 从当前网页提取信息。
-
-        询问页面上可见的内容，Midscene 将分析截图并提供答案。
-
-        Args:
-            question: 关于页面内容的问题。
-                     示例：
-                     - "这个页面的标题是什么？"
-                     - "列出所有导航菜单项"
-                     - "显示的产品价格是多少？"
-                     - "从页面中提取联系信息"
-                     - "页面上可见哪些按钮或链接？"
-
-        Returns:
-            提取的信息或问题的答案
-        """
-        try:
-            result = await mcp_wrapper.call_tool("query", {"question": question})
-            if hasattr(result, "content") and result.content:
-                # Extract text from TextContent array
-                content = result.content
-                if isinstance(content, list) and len(content) > 0:
-                    first_item = content[0]
-                    if hasattr(first_item, "text"):
-                        return first_item.text
-                    else:
-                        return str(first_item)
-                else:
-                    return str(content)
-            return "查询执行成功"
-        except Exception as e:
-            return f"执行查询时出错: {str(e)}"
-
-    return midscene_query
 
 
 class MidsceneAgent:
@@ -134,6 +33,7 @@ class MidsceneAgent:
         midscene_command: str = "npx",
         midscene_args: Optional[List[str]] = None,
         env: Optional[Dict[str, Any]] = None,
+        tool_set: str = "full",
     ):
         """
         初始化 Midscene 智能体。
@@ -146,11 +46,13 @@ class MidsceneAgent:
             midscene_command: 运行 Midscene MCP 服务器的命令
             midscene_args: Midscene 命令的参数
             env: 环境变量
+            tool_set: 工具集选择：'basic'（基础）、'advanced'（高级）、'full'（完整）
         """
         self.deepseek_api_key = deepseek_api_key
         self.deepseek_base_url = deepseek_base_url
         self.deepseek_model = deepseek_model
         self.temperature = temperature
+        self.tool_set = tool_set
 
         self.mcp_wrapper = MidsceneMCPWrapper(
             midscene_command=midscene_command, midscene_args=midscene_args, env=env
@@ -170,11 +72,10 @@ class MidsceneAgent:
             # 初始化 MCP 连接
             await self.mcp_wrapper.start()
 
-            # 创建工具 - 只包含操作工具，禁用查询功能
-            tools = [
-                create_midscene_action_tool(self.mcp_wrapper),
-            ]
-            print(f"🔧 为智能体创建了 {len(tools)} 个工具")
+            # 使用新的工具系统获取工具
+            print(f"\n🔧 正在创建工具集: {self.tool_set}")
+            tools = await self.mcp_wrapper.get_langchain_tools(tool_set=self.tool_set)
+            print(f"✅ 为智能体创建了 {len(tools)} 个工具")
 
             # 初始化 LLM（绑定工具）
             self.llm = ChatDeepSeek(
@@ -185,7 +86,7 @@ class MidsceneAgent:
                 streaming=True,
             ).bind_tools(tools)
 
-            print(f"✅ 已初始化 DeepSeek LLM ({self.deepseek_model}) 并绑定工具")
+            print(f"\n✅ 已初始化 DeepSeek LLM ({self.deepseek_model}) 并绑定 {len(tools)} 个工具")
 
             # 使用 StateGraph 创建智能体执行器
             from langgraph.prebuilt import ToolNode, tools_condition
@@ -194,20 +95,25 @@ class MidsceneAgent:
             def agent_node(state: MessagesState) -> MessagesState:
                 if self.llm is None:
                     raise RuntimeError("LLM 未初始化")
-                print(f"\n🤖 Agent Node: Processing {len(state['messages'])} messages")
-                for i, msg in enumerate(state["messages"]):
-                    print(f"  Message {i}: {type(msg).__name__}")
-                    if hasattr(msg, "content"):
-                        content = str(msg.content)[:100]
-                        print(f"    Content: {content}...")
+
+                # 简化的日志输出：只显示消息数量和工具调用
+                num_messages = len(state['messages'])
+                # print(f"🤖 Agent Node: {num_messages} messages")
+
                 response = self.llm.invoke(state["messages"])
-                print(f"\n💬 LLM Response: {type(response).__name__}")
-                if hasattr(response, "content"):
-                    print(f"  Content: {response.content}")
-                if hasattr(response, "tool_calls"):
-                    print(
-                        f"  Tool calls: {len(response.tool_calls) if response.tool_calls else 0}"
-                    )
+
+                # 只在有工具调用时显示详细信息
+                if hasattr(response, "tool_calls") and response.tool_calls:
+                    print(f"💬 LLM Response: {response.content}")
+                    # print(f"🔧 Tool calls: {len(response.tool_calls)}")
+                elif hasattr(response, "content") and response.content:
+                    # 显示非工具调用的响应内容（截断）
+                    content = str(response.content)
+                    if len(content) > 100:
+                        print(f"💬 LLM Response: {content[:100]}...")
+                    else:
+                        print(f"💬 LLM Response: {content}")
+
                 return {"messages": state["messages"] + [response]}
 
             # 创建图

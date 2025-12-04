@@ -4,7 +4,11 @@
       "Bash(conda info:*)",
       "Bash(pip uninstall:*)",
       "Bash(test:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(npm view:*)",
+      "Bash(npm info:*)",
+      "Bash(npm pack:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []
