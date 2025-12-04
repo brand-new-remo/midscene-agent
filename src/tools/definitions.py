@@ -11,7 +11,6 @@ from typing import Dict, List, Literal
 TOOL_CATEGORY_NAVIGATION = "navigation"
 TOOL_CATEGORY_INTERACTION = "interaction"
 TOOL_CATEGORY_QUERY = "query"
-TOOL_CATEGORY_DATA = "data"
 TOOL_CATEGORY_TEST = "test"
 
 # 完整的工具定义
@@ -49,9 +48,9 @@ TOOL_DEFINITIONS = {
     "midscene_aiScroll": {
         "description": "使用 AI 执行页面滚动操作，可以指定滚动方向和距离",
         "params": {
-            "direction": "滚动方向，向上或向下滚动",
-            "scrollType": "滚动类型：'once'表示固定距离，'untilBottom'表示滚动到底部",
-            "distance?": "滚动距离（像素），默认 500"
+            "direction": "滚动方向，必须为英文值：'up'(向上)、'down'(向下)、'left'(向左)、'right'(向右)",
+            "scrollType": "滚动类型：'once'表示固定距离，'untilBottom'表示滚动到底部，'untilTop'表示滚动到顶部",
+            "distance?": "滚动距离（数字类型，像素），默认 500"
         },
         "category": TOOL_CATEGORY_INTERACTION,
         "required": True,
@@ -84,6 +83,16 @@ TOOL_DEFINITIONS = {
             "checkIntervalMs?": "检查间隔时间（毫秒），默认 1000（1 秒）"
         },
         "category": TOOL_CATEGORY_INTERACTION,
+        "required": True,
+    },
+
+    # ========== 标签页管理工具 ==========
+    "midscene_set_active_tab": {
+        "description": "切换到指定的浏览器标签页",
+        "params": {
+            "tabId": "要切换到的标签页 ID"
+        },
+        "category": TOOL_CATEGORY_NAVIGATION,
         "required": True,
     },
 
@@ -140,87 +149,10 @@ TOOL_DEFINITIONS = {
         "required": False,
     },
 
-    # ========== 数据获取工具 ==========
-    "midscene_get": {
-        "description": "获取页面指定元素的属性值，如文本内容、链接地址、图片源等",
-        "params": {
-            "locate": "要获取数据的元素描述",
-            "attribute?": "可选，指定要获取的属性名，默认获取文本内容"
-        },
-        "category": TOOL_CATEGORY_DATA,
-        "required": True,
-    },
-
-    "midscene_element": {
-        "description": "获取页面元素的详细信息，包括位置、大小、属性等",
-        "params": {
-            "locate": "要获取信息的元素描述"
-        },
-        "category": TOOL_CATEGORY_DATA,
-        "required": True,
-    },
-
-    "midscene_set": {
-        "description": "设置页面指定元素的值，比 aiInput 更精细的控制",
-        "params": {
-            "locate": "要设置的元素描述",
-            "value": "要设置的值"
-        },
-        "category": TOOL_CATEGORY_DATA,
-        "required": True,
-    },
-
     # ========== 测试和调试工具 ==========
-    "midscene_playwright": {
-        "description": "直接执行 Playwright 代码，用于高级用户进行底层浏览器控制",
-        "params": {
-            "code": "要执行的 Playwright JavaScript 代码"
-        },
-        "category": TOOL_CATEGORY_TEST,
-        "required": True,
-    },
-
-    "midscene_define": {
-        "description": "定义测试场景，用于创建可重复执行的自动化测试",
-        "params": {
-            "definition": "测试场景的定义描述"
-        },
-        "category": TOOL_CATEGORY_TEST,
-        "required": True,
-    },
-
-    "midscene_run": {
-        "description": "运行指定的测试场景",
-        "params": {
-            "testName": "要运行的测试名称"
-        },
-        "category": TOOL_CATEGORY_TEST,
-        "required": True,
-    },
-
-    "midscene_retrieve": {
-        "description": "检索测试执行的结果",
-        "params": {
-            "query": "查询条件或测试名称"
-        },
-        "category": TOOL_CATEGORY_TEST,
-        "required": True,
-    },
-
-    "midscene_replay": {
-        "description": "回放测试执行的完整过程",
-        "params": {
-            "sessionId": "测试会话 ID"
-        },
-        "category": TOOL_CATEGORY_TEST,
-        "required": True,
-    },
-
-    "midscene_report": {
-        "description": "生成测试报告",
-        "params": {
-            "format?": "报告格式，如 'html'、'json' 等"
-        },
+    "midscene_playwright_example": {
+        "description": "获取 Playwright 使用示例，帮助了解如何编写网页自动化测试",
+        "params": {},
         "category": TOOL_CATEGORY_TEST,
         "required": False,
     },
@@ -230,8 +162,8 @@ TOOL_DEFINITIONS = {
 TOOL_CATEGORIES = {
     TOOL_CATEGORY_NAVIGATION: {
         "name": "导航工具",
-        "description": "页面导航和 URL 操作",
-        "tools": ["midscene_navigate"]
+        "description": "页面导航和标签页操作",
+        "tools": ["midscene_navigate", "midscene_set_active_tab"]
     },
     TOOL_CATEGORY_INTERACTION: {
         "name": "交互工具",
@@ -257,25 +189,11 @@ TOOL_CATEGORIES = {
             "midscene_get_console_logs"
         ]
     },
-    TOOL_CATEGORY_DATA: {
-        "name": "数据工具",
-        "description": "获取和设置页面元素数据",
-        "tools": [
-            "midscene_get",
-            "midscene_element",
-            "midscene_set"
-        ]
-    },
     TOOL_CATEGORY_TEST: {
         "name": "测试工具",
         "description": "自动化测试和调试",
         "tools": [
-            "midscene_playwright",
-            "midscene_define",
-            "midscene_run",
-            "midscene_retrieve",
-            "midscene_replay",
-            "midscene_report"
+            "midscene_playwright_example"
         ]
     }
 }
@@ -310,8 +228,9 @@ RECOMMENDED_TOOL_SETS = {
             "midscene_aiWaitFor",
             "midscene_aiAssert",
             "midscene_location",
-            "midscene_get",
-            "midscene_element",
+            "midscene_screenshot",
+            "midscene_get_tabs",
+            "midscene_set_active_tab",
         ]
     }
 }
