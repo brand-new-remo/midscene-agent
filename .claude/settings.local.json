@@ -20,7 +20,8 @@
       "Bash(lsof:*)",
       "Bash(timeout 30 python:*)",
       "Bash(node:*)",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []

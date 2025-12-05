@@ -87,7 +87,7 @@ TOOL_DEFINITIONS = {
     },
 
     # ========== 标签页管理工具 ==========
-    "midscene_set_active_tab": {
+    "midscene_setActiveTab": {
         "description": "切换到指定的浏览器标签页",
         "params": {
             "tabId": "要切换到的标签页 ID"
@@ -107,46 +107,100 @@ TOOL_DEFINITIONS = {
     },
 
     "midscene_location": {
-        "description": "获取当前页面的 URL 地址和页面标题",
-        "params": {},
-        "category": TOOL_CATEGORY_QUERY,
-        "required": False,
-    },
-
-    "midscene_screenshot": {
-        "description": "截取当前页面的屏幕截图，支持全页面截图或指定元素截图",
+        "description": "通过自然语言定位页面元素，获取元素的坐标和大小信息",
         "params": {
-            "name?": "截图名称，用于标识截图文件",
-            "element?": "可选，指定要截图的页面元素",
-            "fullPage?": "是否截取完整页面，默认 False"
+            "locate": "用自然语言描述的元素定位",
+            "options?": "可选配置项"
         },
         "category": TOOL_CATEGORY_QUERY,
-        "required": False,
+        "required": True,
     },
 
-    "midscene_get_tabs": {
+    "midscene_getTabs": {
         "description": "获取所有浏览器标签页的信息，包括标签页 ID、标题和 URL",
         "params": {},
         "category": TOOL_CATEGORY_QUERY,
         "required": False,
     },
 
-    "midscene_get_screenshot": {
-        "description": "获取已保存的截图文件",
-        "params": {
-            "name": "截图名称"
-        },
-        "category": TOOL_CATEGORY_QUERY,
-        "required": True,
-    },
-
-    "midscene_get_console_logs": {
+    "midscene_getConsoleLogs": {
         "description": "获取浏览器控制台日志，包括错误信息和调试信息",
         "params": {
             "msgType?": "日志类型过滤，如 'error'、'warn'、'info' 等"
         },
         "category": TOOL_CATEGORY_QUERY,
         "required": False,
+    },
+
+    "midscene_aiAsk": {
+        "description": "使用 AI 模型对当前页面发起提问，获得字符串形式的回答",
+        "params": {
+            "prompt": "用自然语言描述的询问内容",
+            "options?": "可选配置项，包含 domIncluded 和 screenshotIncluded"
+        },
+        "category": TOOL_CATEGORY_QUERY,
+        "required": True,
+    },
+
+    "midscene_aiQuery": {
+        "description": "直接从 UI 提取结构化数据，支持字符串、数字、JSON、数组等格式",
+        "params": {
+            "dataDemand": "描述预期的返回值和格式",
+            "options?": "可选配置项，包含 domIncluded 和 screenshotIncluded"
+        },
+        "category": TOOL_CATEGORY_QUERY,
+        "required": True,
+    },
+
+    "midscene_aiBoolean": {
+        "description": "从 UI 中提取一个布尔值",
+        "params": {
+            "prompt": "用自然语言描述的期望值",
+            "options?": "可选配置项，包含 domIncluded 和 screenshotIncluded"
+        },
+        "category": TOOL_CATEGORY_QUERY,
+        "required": True,
+    },
+
+    "midscene_aiNumber": {
+        "description": "从 UI 中提取一个数字",
+        "params": {
+            "prompt": "用自然语言描述的期望值",
+            "options?": "可选配置项，包含 domIncluded 和 screenshotIncluded"
+        },
+        "category": TOOL_CATEGORY_QUERY,
+        "required": True,
+    },
+
+    "midscene_aiString": {
+        "description": "从 UI 中提取一个字符串",
+        "params": {
+            "prompt": "用自然语言描述的期望值",
+            "options?": "可选配置项，包含 domIncluded 和 screenshotIncluded"
+        },
+        "category": TOOL_CATEGORY_QUERY,
+        "required": True,
+    },
+
+    "midscene_aiLocate": {
+        "description": "通过自然语言定位页面元素，获取元素的坐标和大小信息",
+        "params": {
+            "locate": "用自然语言描述的元素定位",
+            "options?": "可选配置项"
+        },
+        "category": TOOL_CATEGORY_QUERY,
+        "required": True,
+    },
+
+    "midscene_aiWaitFor": {
+        "description": "等待某个条件达成，支持自定义超时时间和检查间隔",
+        "params": {
+            "assertion": "用自然语言描述的断言条件",
+            "timeoutMs?": "超时时间（毫秒），默认为 15000",
+            "checkIntervalMs?": "检查间隔（毫秒），默认为 3000"
+        },
+        "category": TOOL_CATEGORY_INTERACTION,
+        "required": True,
     },
 
     # ========== 测试和调试工具 ==========
@@ -158,7 +212,7 @@ TOOL_DEFINITIONS = {
     },
 
     # ========== AI 自动规划工具 ==========
-    "midscene_ai_action": {
+    "midscene_aiAction": {
         "description": "使用 AI 自动规划并执行一系列 UI 动作。这是 Midscene 的核心 API，AI 会自动分解任务并执行",
         "params": {
             "prompt": "要执行的 UI 动作描述，可以使用自然语言，如'在搜索框中输入 JavaScript，然后点击搜索按钮'",
@@ -168,7 +222,7 @@ TOOL_DEFINITIONS = {
         "required": True,
     },
 
-    "midscene_evaluate_javascript": {
+    "midscene_evaluateJavaScript": {
         "description": "在当前页面上下文中执行 JavaScript 表达式，并返回结果",
         "params": {
             "script": "要执行的 JavaScript 代码，如'document.title'、'window.innerWidth' 等"
@@ -177,7 +231,7 @@ TOOL_DEFINITIONS = {
         "required": True,
     },
 
-    "midscene_log_screenshot": {
+    "midscene_logScreenshot": {
         "description": "截取当前页面的屏幕截图并在报告中记录，支持添加标题和描述",
         "params": {
             "title?": "截图的标题，如'登录页面'、'搜索结果'等",
@@ -187,21 +241,21 @@ TOOL_DEFINITIONS = {
         "required": False,
     },
 
-    "midscene_freeze_page_context": {
+    "midscene_freezePageContext": {
         "description": "冻结当前页面上下文，使后续操作复用相同的页面快照，提高大量并发操作的性能",
         "params": {},
         "category": TOOL_CATEGORY_TEST,
         "required": False,
     },
 
-    "midscene_unfreeze_page_context": {
+    "midscene_unfreezePageContext": {
         "description": "解冻页面上下文，恢复使用实时页面状态",
         "params": {},
         "category": TOOL_CATEGORY_TEST,
         "required": False,
     },
 
-    "midscene_run_yaml": {
+    "midscene_runYaml": {
         "description": "执行 YAML 格式的自动化脚本，返回所有 .aiQuery 调用的结果",
         "params": {
             "yaml_script": "YAML 格式的自动化脚本内容，包含 tasks 和 flow 配置"
@@ -210,7 +264,7 @@ TOOL_DEFINITIONS = {
         "required": True,
     },
 
-    "midscene_set_ai_action_context": {
+    "midscene_setAIActionContext": {
         "description": "设置 AI 动作上下文背景知识，会在调用 agent.aiAction() 时发送给 AI 模型",
         "params": {
             "context": "背景知识描述，如'如果存在 Cookie 同意对话框，请先关闭它'"
@@ -225,7 +279,7 @@ TOOL_CATEGORIES = {
     TOOL_CATEGORY_NAVIGATION: {
         "name": "导航工具",
         "description": "页面导航和标签页操作",
-        "tools": ["midscene_navigate", "midscene_set_active_tab"]
+        "tools": ["midscene_navigate", "midscene_setActiveTab"]
     },
     TOOL_CATEGORY_INTERACTION: {
         "name": "交互工具",
@@ -241,14 +295,18 @@ TOOL_CATEGORIES = {
     },
     TOOL_CATEGORY_QUERY: {
         "name": "查询工具",
-        "description": "页面信息提取、验证和截图",
+        "description": "页面信息提取、验证和数据查询",
         "tools": [
             "midscene_aiAssert",
-            "midscene_location",
-            "midscene_screenshot",
-            "midscene_get_tabs",
-            "midscene_get_screenshot",
-            "midscene_get_console_logs"
+            "midscene_aiAsk",
+            "midscene_aiQuery",
+            "midscene_aiBoolean",
+            "midscene_aiNumber",
+            "midscene_aiString",
+            "midscene_aiLocate",
+            "midscene_getTabs",
+            "midscene_getConsoleLogs",
+            "midscene_playwright_example"
         ]
     },
     TOOL_CATEGORY_TEST: {
@@ -256,12 +314,12 @@ TOOL_CATEGORIES = {
         "description": "自动化测试和调试",
         "tools": [
             "midscene_playwright_example",
-            "midscene_evaluate_javascript",
-            "midscene_log_screenshot",
-            "midscene_freeze_page_context",
-            "midscene_unfreeze_page_context",
-            "midscene_run_yaml",
-            "midscene_set_ai_action_context"
+            "midscene_evaluateJavaScript",
+            "midscene_logScreenshot",
+            "midscene_freezePageContext",
+            "midscene_unfreezePageContext",
+            "midscene_runYaml",
+            "midscene_setAIActionContext"
         ]
     }
 }
@@ -298,11 +356,12 @@ RECOMMENDED_TOOL_SETS = {
             "midscene_aiWaitFor",
             "midscene_aiAssert",
             "midscene_aiAction",
-            "midscene_location",
-            "midscene_screenshot",
-            "midscene_log_screenshot",
-            "midscene_get_tabs",
-            "midscene_set_active_tab",
+            "midscene_aiLocate",
+            "midscene_logScreenshot",
+            "midscene_getTabs",
+            "midscene_setActiveTab",
+            "midscene_aiQuery",
+            "midscene_aiAsk",
         ]
     }
 }

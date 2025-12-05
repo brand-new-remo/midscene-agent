@@ -11,11 +11,6 @@ const http = require("http");
 const WebSocket = require("ws");
 const cors = require("cors");
 const { MidsceneOrchestrator } = require("./orchestrator");
-const {
-  httpMetricsMiddleware,
-  getMetrics,
-  startMetricsCollection,
-} = require("./metrics");
 
 const app = express();
 const server = http.createServer(app);
@@ -24,7 +19,6 @@ const wss = new WebSocket.Server({ server });
 // 中间件
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
-app.use(httpMetricsMiddleware());
 
 // 初始化 orchestrator
 const orchestrator = new MidsceneOrchestrator();
@@ -220,27 +214,6 @@ app.post("/api/sessions/:sessionId/query", async (req, res) => {
   }
 });
 
-// 截取屏幕截图
-app.get("/api/sessions/:sessionId/screenshot", async (req, res) => {
-  const { sessionId } = req.params;
-
-  try {
-    const screenshot = await orchestrator.takeScreenshot(sessionId, req.query);
-    res.json({
-      success: true,
-      screenshot,
-      timestamp: Date.now(),
-    });
-  } catch (error) {
-    console.error(`Failed to take screenshot for session ${sessionId}:`, error);
-    res.status(500).json({
-      success: false,
-      error: error.message,
-      timestamp: Date.now(),
-    });
-  }
-});
-
 // 获取活跃会话列表
 app.get("/api/sessions", (req, res) => {
   try {
@@ -301,19 +274,6 @@ app.delete("/api/sessions/:sessionId", async (req, res) => {
   }
 });
 
-// Prometheus 指标端点
-app.get("/metrics", async (req, res) => {
-  try {
-    const metrics = await getMetrics();
-    res.set("Content-Type", register.contentType);
-    res.end(metrics);
-  } catch (error) {
-    res.status(500).json({
-      error: error.message,
-    });
-  }
-});
-
 // 根路径
 app.get("/", (req, res) => {
   res.json({
@@ -326,10 +286,8 @@ app.get("/", (req, res) => {
       "GET /api/sessions - List sessions",
       "POST /api/sessions/:sessionId/action - Execute action",
       "POST /api/sessions/:sessionId/query - Query page",
-      "GET /api/sessions/:sessionId/screenshot - Take screenshot",
       "GET /api/sessions/:sessionId/history - Get session history",
       "DELETE /api/sessions/:sessionId - Destroy session",
-      "GET /metrics - Prometheus metrics",
       "WebSocket /ws - WebSocket connection",
     ],
     timestamp: Date.now(),
@@ -351,9 +309,6 @@ const PORT = process.env.PORT || 3000;
 
 async function startServer() {
   try {
-    // 启动指标收集
-    startMetricsCollection(orchestrator);
-
     server.listen(PORT, () => {
       console.log("\n" + "=".repeat(70));
       console.log("🚀 Midscene Node.js Server v2.0.0");
@@ -362,7 +317,6 @@ async function startServer() {
       console.log(`✅ WebSocket server ready`);
       console.log(`✅ Orchestrator initialized`);
       console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
-      console.log(`📈 Metrics: http://localhost:${PORT}/metrics`);
       console.log("=".repeat(70) + "\n");
     });
 

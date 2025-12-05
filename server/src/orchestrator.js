@@ -8,7 +8,6 @@
 const { PlaywrightAgent } = require('@midscene/web');
 const { v4: uuidv4 } = require('uuid');
 const winston = require('winston');
-const { registerMetrics, incrementActionCounter, observeActionDuration } = require('./metrics');
 const { chromium } = require('playwright');
 
 class MidsceneOrchestrator {
@@ -103,7 +102,6 @@ class MidsceneOrchestrator {
         duration: Date.now() - startTime
       });
 
-      incrementActionCounter('session_create', 'success');
       return sessionId;
 
     } catch (error) {
@@ -113,7 +111,6 @@ class MidsceneOrchestrator {
         stack: error.stack
       });
 
-      incrementActionCounter('session_create', 'error');
       throw new Error(`Failed to create session: ${error.message}`);
     }
   }
@@ -133,7 +130,6 @@ class MidsceneOrchestrator {
     if (!session) {
       const error = new Error(`Session ${sessionId} not found`);
       this.logger.error('Session not found', { sessionId, action });
-      incrementActionCounter('action', 'error');
       throw error;
     }
 
@@ -176,9 +172,6 @@ class MidsceneOrchestrator {
         duration
       });
 
-      incrementActionCounter(action, 'success');
-      observeActionDuration(action, duration / 1000);
-
       return result;
 
     } catch (error) {
@@ -200,9 +193,6 @@ class MidsceneOrchestrator {
         error: error.message,
         duration
       });
-
-      incrementActionCounter(action, 'error');
-      observeActionDuration(action, duration / 1000);
 
       if (options.stream && options.websocket) {
         options.websocket.send(JSON.stringify({
@@ -240,7 +230,7 @@ class MidsceneOrchestrator {
         await agent.aiScroll({
           direction: params.direction,
           scrollType: params.scrollType || 'once',
-          distance: params.distance || 500
+          distance: typeof params.distance === 'string' ? parseInt(params.distance, 10) : (params.distance || 500)
         }, params.locate);
         return { success: true, action: 'scroll', direction: params.direction };
 
@@ -269,41 +259,41 @@ class MidsceneOrchestrator {
 
       case 'aiAction':
         await agent.aiAction(params.prompt, params.options);
-        return { success: true, action: 'ai_action', prompt: params.prompt };
+        return { success: true, action: 'aiAction', prompt: params.prompt };
 
-      case 'set_active_tab':
+      case 'setActiveTab':
         const pages = agent.interface.underlyingPage.context().pages();
         const targetPage = pages[params.tabId];
         if (targetPage) {
           await targetPage.bringToFront();
-          return { success: true, action: 'set_active_tab', tabId: params.tabId };
+          return { success: true, action: 'setActiveTab', tabId: params.tabId };
         } else {
           throw new Error(`Tab ${params.tabId} not found`);
         }
 
-      case 'evaluate_javascript':
-        result = await agent.evaluateJavaScript(params.script);
-        return { success: true, action: 'evaluate_javascript', result };
+      case 'evaluateJavaScript':
+        const result1 = await agent.evaluateJavaScript(params.script);
+        return { success: true, action: 'evaluateJavaScript', result: result1 };
 
-      case 'log_screenshot':
-        result = await agent.logScreenshot(params.title || 'screenshot', params.options || {});
-        return { success: true, action: 'log_screenshot', title: params.title, result };
+      case 'logScreenshot':
+        const result2 = await agent.logScreenshot(params.title || 'screenshot', params.options || {});
+        return { success: true, action: 'logScreenshot', title: params.title, result: result2 };
 
-      case 'freeze_page_context':
+      case 'freezePageContext':
         await agent.freezePageContext();
-        return { success: true, action: 'freeze_page_context' };
+        return { success: true, action: 'freezePageContext' };
 
-      case 'unfreeze_page_context':
+      case 'unfreezePageContext':
         await agent.unfreezePageContext();
-        return { success: true, action: 'unfreeze_page_context' };
+        return { success: true, action: 'unfreezePageContext' };
 
-      case 'run_yaml':
-        result = await agent.runYaml(params.yamlScript);
-        return { success: true, action: 'run_yaml', result };
+      case 'runYaml':
+        const result3 = await agent.runYaml(params.yamlScript);
+        return { success: true, action: 'runYaml', result: result3 };
 
-      case 'set_ai_action_context':
+      case 'setAIActionContext':
         agent.setAIActionContext(params.context);
-        return { success: true, action: 'set_ai_action_context', context: params.context };
+        return { success: true, action: 'setAIActionContext', context: params.context };
 
       default:
         throw new Error(`Unknown action: ${action}`);
@@ -367,7 +357,6 @@ class MidsceneOrchestrator {
     if (!session) {
       const error = new Error(`Session ${sessionId} not found`);
       this.logger.error('Session not found for query', { sessionId, query });
-      incrementActionCounter('query', 'error');
       throw error;
     }
 
@@ -385,38 +374,12 @@ class MidsceneOrchestrator {
           result = { success: true, assertion: params.assertion };
           break;
 
-        case 'location':
-          result = await agent.aiLocate(params.locate, params.options);
-          break;
-
-        case 'screenshot':
-          result = await agent.screenshot(params.name, params.fullPage);
-          break;
-
-        case 'get_tabs':
-          // 使用 Playwright 的方法获取标签页
-          const pages = agent.interface.underlyingPage.context().pages();
-          result = pages.map((page, index) => ({
-            id: index,
-            url: page.url(),
-            title: page.title()
-          }));
-          break;
-
-        case 'get_screenshot':
-          result = await agent.getScreenshot(params.name);
-          break;
-
-        case 'consoleLogs':
-          result = await agent.getConsoleLogs(params.msgType);
+        case 'aiAsk':
+          result = await agent.aiAsk(params.prompt, params.options);
           break;
 
         case 'aiQuery':
           result = await agent.aiQuery(params.dataDemand, params.options);
-          break;
-
-        case 'aiAsk':
-          result = await agent.aiAsk(params.prompt, params.options);
           break;
 
         case 'aiBoolean':
@@ -431,15 +394,39 @@ class MidsceneOrchestrator {
           result = await agent.aiString(params.prompt, params.options);
           break;
 
+        case 'aiLocate':
+          result = await agent.aiLocate(params.locate, params.options);
+          break;
+
+        case 'location':
+          // 获取当前页面位置信息
+          result = {
+            url: agent.interface.underlyingPage.url(),
+            title: await agent.interface.underlyingPage.title(),
+            path: new URL(agent.interface.underlyingPage.url()).pathname
+          };
+          break;
+
+        case 'getTabs':
+          // 使用 Playwright 的方法获取标签页
+          const pages = agent.interface.underlyingPage.context().pages();
+          result = pages.map((page, index) => ({
+            id: index,
+            url: page.url(),
+            title: page.title()
+          }));
+          break;
+
+        case 'getConsoleLogs':
+          result = await agent.getConsoleLogs(params.msgType);
+          break;
+
         default:
           throw new Error(`Unknown query: ${query}`);
       }
 
       const duration = Date.now() - startTime;
       this.logger.info('Query completed', { sessionId, query, duration });
-
-      incrementActionCounter(`query_${query}`, 'success');
-      observeActionDuration(`query_${query}`, duration / 1000);
 
       return result;
 
@@ -452,23 +439,8 @@ class MidsceneOrchestrator {
         duration
       });
 
-      incrementActionCounter(`query_${query}`, 'error');
-      observeActionDuration(`query_${query}`, duration / 1000);
-
       throw new Error(`Query failed: ${error.message}`);
     }
-  }
-
-  /**
-   * 截取屏幕截图
-   */
-  async takeScreenshot(sessionId, options = {}) {
-    const session = this.sessions.get(sessionId);
-    if (!session) {
-      throw new Error(`Session ${sessionId} not found`);
-    }
-
-    return await session.agent.logScreenshot(options.title || 'screenshot', options);
   }
 
   /**

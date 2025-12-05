@@ -224,15 +224,15 @@ class MidsceneAgent:
                 action_apis = {
                     "navigate", "aiTap", "aiDoubleClick", "aiRightClick",
                     "aiInput", "aiScroll", "aiKeyboardPress", "aiHover",
-                    "aiWaitFor", "aiAction", "set_active_tab",
-                    "evaluate_javascript", "log_screenshot", "freeze_page_context",
-                    "unfreeze_page_context", "run_yaml", "set_ai_action_context"
+                    "aiWaitFor", "aiAction", "setActiveTab",
+                    "evaluateJavaScript", "logScreenshot", "freezePageContext",
+                    "unfreezePageContext", "runYaml", "setAIActionContext"
                 }
 
                 # 查询类 API - 通过 executeQuery 调用
                 query_apis = {
-                    "aiAssert", "location", "screenshot", "get_tabs",
-                    "get_screenshot", "get_console_logs", "playwright_example"
+                    "aiAssert", "aiAsk", "aiQuery", "aiBoolean", "aiNumber", "aiString",
+                    "aiLocate", "getTabs", "getConsoleLogs", "playwrightExample"
                 }
 
                 if midscene_api_name in action_apis:
@@ -368,8 +368,23 @@ class MidsceneAgent:
             yield {"error": error_msg, "traceback": traceback.format_exc()}
 
     async def take_screenshot(self, **kwargs) -> Dict[str, Any]:
-        """截取屏幕截图的便捷方法"""
-        return await self.http_client.take_screenshot(**kwargs)
+        """截取屏幕截图的便捷方法（使用 logScreenshot API）"""
+        # 使用 logScreenshot action
+        title = kwargs.get("name", "screenshot")
+        options = {
+            "fullPage": kwargs.get("fullPage", False),
+            "content": kwargs.get("content")
+        }
+
+        async for event in self.http_client.execute_action(
+            "logScreenshot", {"title": title, "options": options}, stream=False
+        ):
+            if "result" in event:
+                return event["result"]
+            elif "error" in event:
+                raise RuntimeError(f"截图失败: {event['error']}")
+
+        return {"success": True}
 
     async def get_session_info(self) -> Dict[str, Any]:
         """获取会话信息"""

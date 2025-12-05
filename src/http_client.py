@@ -109,6 +109,8 @@ class MidsceneHTTPClient:
         if not self.session:
             await self.connect()
 
+        assert self.session is not None, "HTTP session should be initialized"
+
         config = config or SessionConfig()
 
         try:
@@ -118,9 +120,10 @@ class MidsceneHTTPClient:
             ) as response:
                 if response.status == 200:
                     data = await response.json()
-                    self.session_id = data["sessionId"]
-                    logger.info(f"✅ 创建会话成功: {self.session_id}")
-                    return self.session_id
+                    session_id = data["sessionId"]
+                    self.session_id = session_id
+                    logger.info(f"✅ 创建会话成功: {session_id}")
+                    return session_id
                 else:
                     error_text = await response.text()
                     error_msg = f"创建会话失败 ({response.status}): {error_text}"
@@ -148,6 +151,11 @@ class MidsceneHTTPClient:
         Yields:
             执行结果或进度事件
         """
+        if not self.session:
+            await self.connect()
+
+        assert self.session is not None, "HTTP session should be initialized"
+
         if not self.session_id:
             raise RuntimeError("未创建会话")
 
@@ -231,6 +239,11 @@ class MidsceneHTTPClient:
         Returns:
             查询结果
         """
+        if not self.session:
+            await self.connect()
+
+        assert self.session is not None, "HTTP session should be initialized"
+
         if not self.session_id:
             raise RuntimeError("未创建会话")
 
@@ -264,40 +277,13 @@ class MidsceneHTTPClient:
                 "timestamp": int(asyncio.get_event_loop().time() * 1000)
             }
 
-    async def take_screenshot(self, **options) -> Dict[str, Any]:
-        """截取屏幕截图"""
-        if not self.session_id:
-            raise RuntimeError("未创建会话")
-
-        params = "&".join([f"{k}={v}" for k, v in options.items()])
-        url = f"{self.base_url}/api/sessions/{self.session_id}/screenshot?{params}"
-
-        try:
-            async with self.session.get(url) as response:
-                if response.status == 200:
-                    result = await response.json()
-                    logger.info("✅ 截图成功")
-                    return result
-                else:
-                    error_text = await response.text()
-                    error_msg = f"截图失败 ({response.status}): {error_text}"
-                    logger.error(error_msg)
-                    return {
-                        "success": False,
-                        "error": error_msg,
-                        "timestamp": int(asyncio.get_event_loop().time() * 1000)
-                    }
-        except Exception as e:
-            error_msg = f"截图时出错: {str(e)}"
-            logger.error(error_msg)
-            return {
-                "success": False,
-                "error": error_msg,
-                "timestamp": int(asyncio.get_event_loop().time() * 1000)
-            }
-
     async def get_sessions(self) -> List[Dict[str, Any]]:
         """获取活跃会话列表"""
+        if not self.session:
+            await self.connect()
+
+        assert self.session is not None, "HTTP session should be initialized"
+
         try:
             async with self.session.get(f"{self.base_url}/api/sessions") as response:
                 if response.status == 200:
@@ -312,6 +298,11 @@ class MidsceneHTTPClient:
 
     async def get_session_history(self) -> List[Dict[str, Any]]:
         """获取会话历史"""
+        if not self.session:
+            await self.connect()
+
+        assert self.session is not None, "HTTP session should be initialized"
+
         if not self.session_id:
             raise RuntimeError("未创建会话")
 
@@ -331,6 +322,11 @@ class MidsceneHTTPClient:
 
     async def connect_websocket(self) -> bool:
         """连接 WebSocket 以支持流式响应"""
+        if not self.session:
+            await self.connect()
+
+        assert self.session is not None, "HTTP session should be initialized"
+
         if not self.session_id:
             raise RuntimeError("未创建会话")
 
@@ -367,6 +363,11 @@ class MidsceneHTTPClient:
 
     async def health_check(self) -> Dict[str, Any]:
         """健康检查"""
+        if not self.session:
+            await self.connect()
+
+        assert self.session is not None, "HTTP session should be initialized"
+
         try:
             async with self.session.get(f"{self.base_url}/api/health") as response:
                 if response.status == 200:

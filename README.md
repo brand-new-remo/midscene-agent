@@ -8,7 +8,6 @@
 - **🌐 HTTP + WebSocket**: 更稳定的通信协议
 - **📡 流式响应**: 实时查看执行进度
 - **🔧 完整功能**: 充分利用 Midscene.js 所有 API
-- **📊 监控指标**: 内置 Prometheus 监控
 
 ## 功能特性
 
@@ -81,13 +80,6 @@ npm start
 python examples/basic_usage.py
 ```
 
-### 监控
-
-```bash
-# Prometheus 指标
-curl http://localhost:3000/metrics
-```
-
 ## 项目结构
 
 ```
@@ -100,8 +92,7 @@ midscene-agent/
 ├── server/               # Node.js 服务
 │   ├── src/
 │   │   ├── index.js      # 主服务器
-│   │   ├── orchestrator.js # Midscene 协调器
-│   │   └── metrics.js    # 监控指标
+│   │   └── orchestrator.js # Midscene 协调器
 │   └── package.json      # Node.js 依赖
 ├── examples/
 │   ├── basic_usage.py    # 基础示例
@@ -261,7 +252,6 @@ task = """
 - ws >= 8.18.3
 - playwright >= 1.57.0
 - winston >= 3.18.3
-- prom-client >= 15.1.3
 
 ## 文档
 

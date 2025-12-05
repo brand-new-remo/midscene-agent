@@ -64,6 +64,8 @@ node_modules/
 **/node_modules/
 .npm/
 
+**/midscene_run/
+
 # Midscene.js dump files
 midscene_run/dump
 midscene_run/report
