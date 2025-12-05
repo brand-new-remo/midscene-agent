@@ -222,9 +222,10 @@ class MidsceneOrchestrator {
    * 直接执行动作（无流式）
    */
   async executeActionDirect(agent, action, params) {
+    // 直接使用 Midscene 官方 API 名称，移除所有映射
     switch (action) {
       case 'navigate':
-        await agent.goto(params.url);
+        await agent.interface.underlyingPage.goto(params.url, { waitUntil: 'networkidle' });
         return { success: true, url: params.url };
 
       case 'aiTap':
@@ -270,35 +271,37 @@ class MidsceneOrchestrator {
         await agent.aiAction(params.prompt, params.options);
         return { success: true, action: 'ai_action', prompt: params.prompt };
 
-      case 'ai':
-        await agent.ai(params.prompt);
-        return { success: true, action: 'ai', prompt: params.prompt };
+      case 'set_active_tab':
+        const pages = agent.interface.underlyingPage.context().pages();
+        const targetPage = pages[params.tabId];
+        if (targetPage) {
+          await targetPage.bringToFront();
+          return { success: true, action: 'set_active_tab', tabId: params.tabId };
+        } else {
+          throw new Error(`Tab ${params.tabId} not found`);
+        }
 
-      case 'setActiveTab':
-        await agent.setActiveTab(params.tabId);
-        return { success: true, action: 'set_active_tab', tabId: params.tabId };
-
-      case 'evaluateJavaScript':
+      case 'evaluate_javascript':
         result = await agent.evaluateJavaScript(params.script);
         return { success: true, action: 'evaluate_javascript', result };
 
-      case 'logScreenshot':
-        await agent.logScreenshot(params.title, params.options);
-        return { success: true, action: 'log_screenshot', title: params.title };
+      case 'log_screenshot':
+        result = await agent.logScreenshot(params.title || 'screenshot', params.options || {});
+        return { success: true, action: 'log_screenshot', title: params.title, result };
 
-      case 'freezePageContext':
+      case 'freeze_page_context':
         await agent.freezePageContext();
         return { success: true, action: 'freeze_page_context' };
 
-      case 'unfreezePageContext':
+      case 'unfreeze_page_context':
         await agent.unfreezePageContext();
         return { success: true, action: 'unfreeze_page_context' };
 
-      case 'runYaml':
+      case 'run_yaml':
         result = await agent.runYaml(params.yamlScript);
         return { success: true, action: 'run_yaml', result };
 
-      case 'setAIActionContext':
+      case 'set_ai_action_context':
         agent.setAIActionContext(params.context);
         return { success: true, action: 'set_ai_action_context', context: params.context };
 
@@ -387,11 +390,21 @@ class MidsceneOrchestrator {
           break;
 
         case 'screenshot':
-          result = await agent.takeScreenshot(params.options || {});
+          result = await agent.screenshot(params.name, params.fullPage);
           break;
 
-        case 'tabs':
-          result = await agent.getTabs();
+        case 'get_tabs':
+          // 使用 Playwright 的方法获取标签页
+          const pages = agent.interface.underlyingPage.context().pages();
+          result = pages.map((page, index) => ({
+            id: index,
+            url: page.url(),
+            title: page.title()
+          }));
+          break;
+
+        case 'get_screenshot':
+          result = await agent.getScreenshot(params.name);
           break;
 
         case 'consoleLogs':
@@ -455,7 +468,7 @@ class MidsceneOrchestrator {
       throw new Error(`Session ${sessionId} not found`);
     }
 
-    return await session.agent.takeScreenshot(options);
+    return await session.agent.logScreenshot(options.title || 'screenshot', options);
   }
 
   /**

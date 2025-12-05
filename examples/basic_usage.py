@@ -38,7 +38,7 @@ async def basic_example():
         "base_url": os.getenv("OPENAI_BASE_URL"),
         "headless": False,  # 显示浏览器窗口以便观察
         "viewport_width": 1280,
-        "viewport_height": 768
+        "viewport_height": 768,
     }
 
     # 创建 Agent
@@ -48,7 +48,7 @@ async def basic_example():
         midscene_server_url=os.getenv("MIDSCENE_SERVER_URL", "http://localhost:3000"),
         midscene_config=midscene_config,
         tool_set="full",  # 使用完整工具集
-        enable_websocket=True  # 启用 WebSocket 流式响应
+        enable_websocket=True,  # 启用 WebSocket 流式响应
     )
 
     try:
@@ -57,12 +57,11 @@ async def basic_example():
             print("\n✅ Agent 初始化成功")
 
             # 示例任务：访问 GitHub 并执行操作
-            task = """访问 https://github.com 并执行以下操作：
-            1. 导航到 GitHub 首页
-            2. 在搜索框中搜索 "midscene"
-            3. 等待搜索结果加载
-            4. 截取一张屏幕截图
-            5. 验证是否显示了搜索结果
+            task = """请完成以下网页自动化任务：
+            1. 导航到 https://midscenejs.com/zh/index.html
+            2. 等待页面完全加载
+            3. 点击左侧导航菜单中的"MCP 服务"菜单项
+            4. 告诉我使用场景这个区域下面描述的场景内容是什么
             """
 
             print(f"\n📝 执行任务: {task}")
@@ -93,6 +92,7 @@ async def basic_example():
     except Exception as e:
         print(f"\n❌ 执行失败: {e}")
         import traceback
+
         traceback.print_exc()
 
 
@@ -118,10 +118,10 @@ async def query_example():
         midscene_server_url=os.getenv("MIDSCENE_SERVER_URL", "http://localhost:3000"),
         midscene_config={
             "headless": False,
-            "model": os.getenv("MIDSCENE_MODEL_NAME", "doubao-seed-1.6-vision")
+            "model": os.getenv("MIDSCENE_MODEL_NAME", "doubao-seed-1.6-vision"),
         },
         tool_set="full",
-        enable_websocket=True
+        enable_websocket=True,
     )
 
     try:
@@ -156,18 +156,17 @@ async def query_example():
                     "dataDemand": {
                         "title": "页面标题",
                         "searchBoxExists": "是否存在搜索输入框",
-                        "mainLinks": "页面上主要链接的文本, string[]"
+                        "mainLinks": "页面上主要链接的文本, string[]",
                     },
-                    "options": {
-                        "domIncluded": True
-                    }
-                }
+                    "options": {"domIncluded": True},
+                },
             )
             print(f"📋 查询结果: {query_result}")
 
     except Exception as e:
         print(f"\n❌ 执行失败: {e}")
         import traceback
+
         traceback.print_exc()
 
 
@@ -191,10 +190,10 @@ async def interactive_example():
         midscene_server_url=os.getenv("MIDSCENE_SERVER_URL", "http://localhost:3000"),
         midscene_config={
             "headless": False,
-            "model": os.getenv("MIDSCENE_MODEL_NAME", "doubao-seed-1.6-vision")
+            "model": os.getenv("MIDSCENE_MODEL_NAME", "doubao-seed-1.6-vision"),
         },
         tool_set="full",
-        enable_websocket=True
+        enable_websocket=True,
     )
 
     try:
@@ -207,7 +206,7 @@ async def interactive_example():
                 "找到页面上的输入框并输入测试数据",
                 "截取当前页面的屏幕截图",
                 "验证输入是否成功",
-                "获取页面的控制台日志"
+                "获取页面的控制台日志",
             ]
 
             for i, task in enumerate(tasks, 1):
@@ -236,6 +235,7 @@ async def interactive_example():
     except Exception as e:
         print(f"\n❌ 执行失败: {e}")
         import traceback
+
         traceback.print_exc()
 
 
@@ -259,10 +259,10 @@ async def test_new_features():
         midscene_server_url=os.getenv("MIDSCENE_SERVER_URL", "http://localhost:3000"),
         midscene_config={
             "headless": False,
-            "model": os.getenv("MIDSCENE_MODEL_NAME", "doubao-seed-1.6-vision")
+            "model": os.getenv("MIDSCENE_MODEL_NAME", "doubao-seed-1.6-vision"),
         },
         tool_set="full",
-        enable_websocket=True
+        enable_websocket=True,
     )
 
     try:
@@ -298,6 +298,7 @@ async def test_new_features():
     except Exception as e:
         print(f"\n❌ 执行失败: {e}")
         import traceback
+
         traceback.print_exc()
 
 
@@ -310,6 +311,7 @@ async def main():
 
     # 检查 Node.js 服务是否运行
     import aiohttp
+
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get("http://localhost:3000/api/health") as response:
@@ -354,4 +356,5 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n❌ 发生错误: {e}")
         import traceback
+
         traceback.print_exc()

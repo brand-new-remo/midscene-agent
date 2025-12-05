@@ -214,112 +214,31 @@ class MidsceneAgent:
         async def midscene_tool_wrapper(**kwargs):
             """Midscene 工具包装器"""
             try:
-                # 映射工具名到 HTTP API 端点
-                # 构建 logScreenshot 的 options 参数
-                log_screenshot_options = {}
-                if kwargs.get("content"):
-                    log_screenshot_options["content"] = kwargs.get("content")
+                # 直接使用 Midscene 官方 API 名称
+                # 移除映射，使用工具名直接作为 API 调用名
+                midscene_api_name = tool_name.replace("midscene_", "")
 
-                action_map = {
-                    "midscene_navigate": ("navigate", {"url": kwargs.get("url")}),
-                    "midscene_aiTap": ("aiTap", {"locate": kwargs.get("locate")}),
-                    "midscene_aiDoubleClick": ("aiDoubleClick", {"locate": kwargs.get("locate")}),
-                    "midscene_aiRightClick": ("aiRightClick", {"locate": kwargs.get("locate")}),
-                    "midscene_aiInput": (
-                        "aiInput",
-                        {"locate": kwargs.get("locate"), "value": kwargs.get("value")},
-                    ),
-                    "midscene_aiScroll": (
-                        "aiScroll",
-                        {
-                            "direction": kwargs.get("direction"),
-                            "scrollType": kwargs.get("scrollType", "once"),
-                            "distance": kwargs.get("distance", 500),
-                        },
-                    ),
-                    "midscene_aiKeyboardPress": (
-                        "aiKeyboardPress",
-                        {"key": kwargs.get("key"), "locate": kwargs.get("locate")},
-                    ),
-                    "midscene_aiHover": ("aiHover", {"locate": kwargs.get("locate")}),
-                    "midscene_aiWaitFor": (
-                        "aiWaitFor",
-                        {
-                            "assertion": kwargs.get("assertion"),
-                            "timeoutMs": kwargs.get("timeoutMs"),
-                            "checkIntervalMs": kwargs.get("checkIntervalMs"),
-                        },
-                    ),
-                    "midscene_aiAssert": (
-                        "aiAssert",
-                        {"assertion": kwargs.get("assertion")},
-                    ),
-                    "midscene_aiAction": (
-                        "aiAction",
-                        {"prompt": kwargs.get("prompt"), "options": {"cacheable": kwargs.get("cacheable", True)}},
-                    ),
-                    "midscene_set_active_tab": (
-                        "setActiveTab",
-                        {"tabId": kwargs.get("tabId")},
-                    ),
-                    "midscene_evaluate_javascript": (
-                        "evaluateJavaScript",
-                        {"script": kwargs.get("script")},
-                    ),
-                    "midscene_log_screenshot": (
-                        "logScreenshot",
-                        {"title": kwargs.get("title"), "options": log_screenshot_options},
-                    ),
-                    "midscene_freeze_page_context": ("freezePageContext", {}),
-                    "midscene_unfreeze_page_context": ("unfreezePageContext", {}),
-                    "midscene_run_yaml": (
-                        "runYaml",
-                        {"yamlScript": kwargs.get("yaml_script")},
-                    ),
-                    "midscene_set_ai_action_context": (
-                        "setAIActionContext",
-                        {"context": kwargs.get("context")},
-                    ),
-                    "midscene_location": ("location", {}),
-                    "midscene_screenshot": (
-                        "screenshot",
-                        {
-                            "name": kwargs.get("name"),
-                            "fullPage": kwargs.get("fullPage"),
-                        },
-                    ),
-                    "midscene_get_tabs": ("tabs", {}),
-                    "midscene_get_console_logs": (
-                        "consoleLogs",
-                        {"msgType": kwargs.get("msgType")},
-                    ),
-                    "midscene_get_screenshot": (
-                        "screenshot",
-                        {"name": kwargs.get("name")},
-                    ),
-                    "midscene_playwright_example": ("playwright_example", {}),
+                logger.info(f"🔧 执行工具: {tool_name}, 参数: {kwargs}")
+
+                # 动作类 API - 通过 executeAction 调用
+                action_apis = {
+                    "navigate", "aiTap", "aiDoubleClick", "aiRightClick",
+                    "aiInput", "aiScroll", "aiKeyboardPress", "aiHover",
+                    "aiWaitFor", "aiAction", "set_active_tab",
+                    "evaluate_javascript", "log_screenshot", "freeze_page_context",
+                    "unfreeze_page_context", "run_yaml", "set_ai_action_context"
                 }
 
-                if tool_name not in action_map:
-                    return f"未知的工具: {tool_name}"
+                # 查询类 API - 通过 executeQuery 调用
+                query_apis = {
+                    "aiAssert", "location", "screenshot", "get_tabs",
+                    "get_screenshot", "get_console_logs", "playwright_example"
+                }
 
-                api_action, api_params = action_map[tool_name]
-
-                # 清理参数（移除 None 值）
-                clean_params = {k: v for k, v in api_params.items() if v is not None}
-
-                logger.info(f"🔧 执行工具: {tool_name}, 参数: {clean_params}")
-
-                # 执行动作或查询
-                if api_action in ["location", "tabs", "playwright_example"]:
-                    # 查询操作
-                    result = await self.http_client.execute_query(
-                        api_action, clean_params
-                    )
-                else:
+                if midscene_api_name in action_apis:
                     # 动作操作
                     async for event in self.http_client.execute_action(
-                        api_action, clean_params, stream=self.enable_websocket
+                        midscene_api_name, kwargs, stream=self.enable_websocket
                     ):
                         if "error" in event:
                             logger.error(f"工具执行错误: {event['error']}")
@@ -329,6 +248,13 @@ class MidsceneAgent:
                             break
                     else:
                         result = "执行完成"
+                elif midscene_api_name in query_apis:
+                    # 查询操作
+                    result = await self.http_client.execute_query(
+                        midscene_api_name, kwargs
+                    )
+                else:
+                    return f"未知的工具: {tool_name}"
 
                 logger.info(f"✅ 工具执行成功: {tool_name}")
                 return result

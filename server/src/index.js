@@ -5,17 +5,17 @@
  * 集成 Midscene.js + Playwright 实现网页自动化
  */
 
-require('dotenv').config();
-const express = require('express');
-const http = require('http');
-const WebSocket = require('ws');
-const cors = require('cors');
-const { MidsceneOrchestrator } = require('./orchestrator');
+require("dotenv").config();
+const express = require("express");
+const http = require("http");
+const WebSocket = require("ws");
+const cors = require("cors");
+const { MidsceneOrchestrator } = require("./orchestrator");
 const {
   httpMetricsMiddleware,
   getMetrics,
-  startMetricsCollection
-} = require('./metrics');
+  startMetricsCollection,
+} = require("./metrics");
 
 const app = express();
 const server = http.createServer(app);
@@ -23,7 +23,7 @@ const wss = new WebSocket.Server({ server });
 
 // 中间件
 app.use(cors());
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: "10mb" }));
 app.use(httpMetricsMiddleware());
 
 // 初始化 orchestrator
@@ -35,30 +35,32 @@ const wsConnections = new Map(); // sessionId -> ws
 /**
  * WebSocket 消息处理
  */
-wss.on('connection', (ws, req) => {
+wss.on("connection", (ws, req) => {
   let currentSessionId = null;
 
-  console.log('🔌 WebSocket client connected');
+  console.log("🔌 WebSocket client connected");
 
-  ws.on('message', async (message) => {
+  ws.on("message", async (message) => {
     try {
       const data = JSON.parse(message);
       const { type, sessionId, action, params } = data;
 
       switch (type) {
-        case 'subscribe':
+        case "subscribe":
           currentSessionId = sessionId;
           wsConnections.set(sessionId, ws);
           console.log(`📡 Client subscribed to session: ${sessionId}`);
 
-          ws.send(JSON.stringify({
-            type: 'subscribed',
-            sessionId,
-            timestamp: Date.now()
-          }));
+          ws.send(
+            JSON.stringify({
+              type: "subscribed",
+              sessionId,
+              timestamp: Date.now(),
+            })
+          );
           break;
 
-        case 'action':
+        case "action":
           if (currentSessionId) {
             try {
               const result = await orchestrator.executeAction(
@@ -68,51 +70,61 @@ wss.on('connection', (ws, req) => {
                 { stream: true, websocket: ws }
               );
             } catch (error) {
-              ws.send(JSON.stringify({
-                type: 'action_error',
-                sessionId: currentSessionId,
-                action,
-                error: error.message,
-                timestamp: Date.now()
-              }));
+              ws.send(
+                JSON.stringify({
+                  type: "action_error",
+                  sessionId: currentSessionId,
+                  action,
+                  error: error.message,
+                  timestamp: Date.now(),
+                })
+              );
             }
           }
           break;
 
-        case 'unsubscribe':
+        case "unsubscribe":
           if (currentSessionId) {
             wsConnections.delete(currentSessionId);
-            console.log(`📡 Client unsubscribed from session: ${currentSessionId}`);
+            console.log(
+              `📡 Client unsubscribed from session: ${currentSessionId}`
+            );
             currentSessionId = null;
           }
           break;
 
         default:
-          ws.send(JSON.stringify({
-            type: 'error',
-            message: `Unknown message type: ${type}`,
-            timestamp: Date.now()
-          }));
+          ws.send(
+            JSON.stringify({
+              type: "error",
+              message: `Unknown message type: ${type}`,
+              timestamp: Date.now(),
+            })
+          );
       }
     } catch (error) {
-      console.error('WebSocket message error:', error);
-      ws.send(JSON.stringify({
-        type: 'error',
-        message: error.message,
-        timestamp: Date.now()
-      }));
+      console.error("WebSocket message error:", error);
+      ws.send(
+        JSON.stringify({
+          type: "error",
+          message: error.message,
+          timestamp: Date.now(),
+        })
+      );
     }
   });
 
-  ws.on('close', () => {
+  ws.on("close", () => {
     if (currentSessionId) {
       wsConnections.delete(currentSessionId);
-      console.log(`📡 WebSocket client disconnected from session: ${currentSessionId}`);
+      console.log(
+        `📡 WebSocket client disconnected from session: ${currentSessionId}`
+      );
     }
   });
 
-  ws.on('error', (error) => {
-    console.error('WebSocket error:', error);
+  ws.on("error", (error) => {
+    console.error("WebSocket error:", error);
   });
 });
 
@@ -121,45 +133,45 @@ wss.on('connection', (ws, req) => {
  */
 
 // 健康检查
-app.get('/api/health', async (req, res) => {
+app.get("/api/health", async (req, res) => {
   try {
     const health = await orchestrator.healthCheck();
     res.json({
-      status: 'ok',
+      status: "ok",
       timestamp: Date.now(),
-      ...health
+      ...health,
     });
   } catch (error) {
     res.status(500).json({
-      status: 'error',
+      status: "error",
       message: error.message,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 });
 
 // 创建会话
-app.post('/api/sessions', async (req, res) => {
+app.post("/api/sessions", async (req, res) => {
   try {
     const sessionId = await orchestrator.createSession(req.body);
     res.json({
       success: true,
       sessionId,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
     console.log(`✅ Session created: ${sessionId}`);
   } catch (error) {
-    console.error('Failed to create session:', error);
+    console.error("Failed to create session:", error);
     res.status(500).json({
       success: false,
       error: error.message,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 });
 
 // 执行动作
-app.post('/api/sessions/:sessionId/action', async (req, res) => {
+app.post("/api/sessions/:sessionId/action", async (req, res) => {
   const { sessionId } = req.params;
   const { action, params } = req.body;
 
@@ -168,20 +180,23 @@ app.post('/api/sessions/:sessionId/action', async (req, res) => {
     res.json({
       success: true,
       result,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   } catch (error) {
-    console.error(`Failed to execute action ${action} for session ${sessionId}:`, error);
+    console.error(
+      `Failed to execute action ${action} for session ${sessionId}:`,
+      error
+    );
     res.status(500).json({
       success: false,
       error: error.message,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 });
 
 // 查询页面信息
-app.post('/api/sessions/:sessionId/query', async (req, res) => {
+app.post("/api/sessions/:sessionId/query", async (req, res) => {
   const { sessionId } = req.params;
   const { query, params } = req.body;
 
@@ -190,20 +205,23 @@ app.post('/api/sessions/:sessionId/query', async (req, res) => {
     res.json({
       success: true,
       result,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   } catch (error) {
-    console.error(`Failed to execute query ${query} for session ${sessionId}:`, error);
+    console.error(
+      `Failed to execute query ${query} for session ${sessionId}:`,
+      error
+    );
     res.status(500).json({
       success: false,
       error: error.message,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 });
 
 // 截取屏幕截图
-app.get('/api/sessions/:sessionId/screenshot', async (req, res) => {
+app.get("/api/sessions/:sessionId/screenshot", async (req, res) => {
   const { sessionId } = req.params;
 
   try {
@@ -211,38 +229,38 @@ app.get('/api/sessions/:sessionId/screenshot', async (req, res) => {
     res.json({
       success: true,
       screenshot,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   } catch (error) {
     console.error(`Failed to take screenshot for session ${sessionId}:`, error);
     res.status(500).json({
       success: false,
       error: error.message,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 });
 
 // 获取活跃会话列表
-app.get('/api/sessions', (req, res) => {
+app.get("/api/sessions", (req, res) => {
   try {
     const sessions = orchestrator.getActiveSessions();
     res.json({
       success: true,
       sessions,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       error: error.message,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 });
 
 // 获取会话历史
-app.get('/api/sessions/:sessionId/history', (req, res) => {
+app.get("/api/sessions/:sessionId/history", (req, res) => {
   const { sessionId } = req.params;
 
   try {
@@ -250,19 +268,19 @@ app.get('/api/sessions/:sessionId/history', (req, res) => {
     res.json({
       success: true,
       history,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       error: error.message,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 });
 
 // 销毁会话
-app.delete('/api/sessions/:sessionId', async (req, res) => {
+app.delete("/api/sessions/:sessionId", async (req, res) => {
   const { sessionId } = req.params;
 
   try {
@@ -270,7 +288,7 @@ app.delete('/api/sessions/:sessionId', async (req, res) => {
     res.json({
       success: true,
       message: `Session ${sessionId} destroyed`,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
     console.log(`🗑️ Session destroyed: ${sessionId}`);
   } catch (error) {
@@ -278,53 +296,53 @@ app.delete('/api/sessions/:sessionId', async (req, res) => {
     res.status(500).json({
       success: false,
       error: error.message,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 });
 
 // Prometheus 指标端点
-app.get('/metrics', async (req, res) => {
+app.get("/metrics", async (req, res) => {
   try {
     const metrics = await getMetrics();
-    res.set('Content-Type', register.contentType);
+    res.set("Content-Type", register.contentType);
     res.end(metrics);
   } catch (error) {
     res.status(500).json({
-      error: error.message
+      error: error.message,
     });
   }
 });
 
 // 根路径
-app.get('/', (req, res) => {
+app.get("/", (req, res) => {
   res.json({
-    name: 'Midscene Server',
-    version: '2.0.0',
-    description: 'Node.js server for Midscene.js + Playwright integration',
+    name: "Midscene Server",
+    version: "2.0.0",
+    description: "Node.js server for Midscene.js + Playwright integration",
     endpoints: [
-      'GET /api/health - Health check',
-      'POST /api/sessions - Create session',
-      'GET /api/sessions - List sessions',
-      'POST /api/sessions/:sessionId/action - Execute action',
-      'POST /api/sessions/:sessionId/query - Query page',
-      'GET /api/sessions/:sessionId/screenshot - Take screenshot',
-      'GET /api/sessions/:sessionId/history - Get session history',
-      'DELETE /api/sessions/:sessionId - Destroy session',
-      'GET /metrics - Prometheus metrics',
-      'WebSocket /ws - WebSocket connection'
+      "GET /api/health - Health check",
+      "POST /api/sessions - Create session",
+      "GET /api/sessions - List sessions",
+      "POST /api/sessions/:sessionId/action - Execute action",
+      "POST /api/sessions/:sessionId/query - Query page",
+      "GET /api/sessions/:sessionId/screenshot - Take screenshot",
+      "GET /api/sessions/:sessionId/history - Get session history",
+      "DELETE /api/sessions/:sessionId - Destroy session",
+      "GET /metrics - Prometheus metrics",
+      "WebSocket /ws - WebSocket connection",
     ],
-    timestamp: Date.now()
+    timestamp: Date.now(),
   });
 });
 
 // 全局错误处理
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
+  console.error("Unhandled error:", err);
   res.status(500).json({
     success: false,
     error: err.message,
-    timestamp: Date.now()
+    timestamp: Date.now(),
   });
 });
 
@@ -337,15 +355,15 @@ async function startServer() {
     startMetricsCollection(orchestrator);
 
     server.listen(PORT, () => {
-      console.log('\n' + '='.repeat(70));
-      console.log('🚀 Midscene Node.js Server v2.0.0');
-      console.log('='.repeat(70));
+      console.log("\n" + "=".repeat(70));
+      console.log("🚀 Midscene Node.js Server v2.0.0");
+      console.log("=".repeat(70));
       console.log(`✅ HTTP Server running on port ${PORT}`);
       console.log(`✅ WebSocket server ready`);
       console.log(`✅ Orchestrator initialized`);
       console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
       console.log(`📈 Metrics: http://localhost:${PORT}/metrics`);
-      console.log('='.repeat(70) + '\n');
+      console.log("=".repeat(70) + "\n");
     });
 
     // 优雅关闭处理
@@ -354,7 +372,7 @@ async function startServer() {
 
       // 关闭 HTTP 服务器
       server.close(() => {
-        console.log('✅ HTTP server closed');
+        console.log("✅ HTTP server closed");
       });
 
       // 关闭 WebSocket 连接
@@ -365,26 +383,25 @@ async function startServer() {
       // 关闭 orchestrator
       await orchestrator.shutdown();
 
-      console.log('✅ Graceful shutdown complete');
+      console.log("✅ Graceful shutdown complete");
       process.exit(0);
     };
 
     // 监听关闭信号
-    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+    process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+    process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
-    process.on('uncaughtException', (error) => {
-      console.error('Uncaught Exception:', error);
-      gracefulShutdown('UNCAUGHT_EXCEPTION');
+    process.on("uncaughtException", (error) => {
+      console.error("Uncaught Exception:", error);
+      gracefulShutdown("UNCAUGHT_EXCEPTION");
     });
 
-    process.on('unhandledRejection', (reason, promise) => {
-      console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-      gracefulShutdown('UNHANDLED_REJECTION');
+    process.on("unhandledRejection", (reason, promise) => {
+      console.error("Unhandled Rejection at:", promise, "reason:", reason);
+      gracefulShutdown("UNHANDLED_REJECTION");
     });
-
   } catch (error) {
-    console.error('Failed to start server:', error);
+    console.error("Failed to start server:", error);
     process.exit(1);
   }
 }

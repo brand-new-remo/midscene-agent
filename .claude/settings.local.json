@@ -18,7 +18,9 @@
       "Bash(node -e:*)",
       "Bash(jobs:*)",
       "Bash(lsof:*)",
-      "Bash(timeout 30 python:*)"
+      "Bash(timeout 30 python:*)",
+      "Bash(node:*)",
+      "Bash(xargs:*)"
     ],
     "deny": [],
     "ask": []
