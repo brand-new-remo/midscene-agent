@@ -21,7 +21,10 @@
       "Bash(timeout 30 python:*)",
       "Bash(node:*)",
       "Bash(xargs:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(mkdir:*)",
+      "Bash(mv:*)",
+      "Bash(touch:*)"
     ],
     "deny": [],
     "ask": []

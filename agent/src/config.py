@@ -10,7 +10,9 @@ from typing import Dict, Any, Optional
 from dotenv import load_dotenv
 
 # 从 .env 文件加载环境变量
-load_dotenv()
+# 相对于当前文件的路径
+env_path = os.path.join(os.path.dirname(__file__), '..', '.env')
+load_dotenv(env_path)
 
 
 class Config:

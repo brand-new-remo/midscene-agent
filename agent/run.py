@@ -14,9 +14,8 @@ from dotenv import load_dotenv
 # 加载环境变量
 load_dotenv()
 
-# 将当前目录和 src 添加到路径
+# 将当前目录添加到路径
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
 
 from examples.basic_usage import (
     basic_example,
@@ -116,14 +115,18 @@ def check_config():
     print("配置检查 ()")
     print("=" * 70 + "\n")
 
+    # 获取当前脚本目录下的 .env 文件路径
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    env_path = os.path.join(script_dir, ".env")
+
     # 检查 .env 文件
-    if not os.path.exists(".env"):
+    if not os.path.exists(env_path):
         print("⚠️ 警告: 未找到 .env 文件")
         print("   复制 .env.example 到 .env 并添加你的 API 密钥\n")
         return
 
     # 读取 .env 文件
-    with open(".env", "r") as f:
+    with open(env_path, "r") as f:
         env_content = f.read()
 
     print("📋 当前配置:")
@@ -156,7 +159,8 @@ def check_config():
         async def check_server():
             async with aiohttp.ClientSession() as session:
                 try:
-                    async with session.get("http://localhost:3000/api/health", timeout=2) as response:
+                    timeout = aiohttp.ClientTimeout(total=2)
+                    async with session.get("http://localhost:3000/api/health", timeout=timeout) as response:
                         if response.status == 200:
                             health = await response.json()
                             print(f"✅ Node.js 服务运行正常")
@@ -201,8 +205,12 @@ async def main():
     """主入口点。"""
     print_banner()
 
+    # 获取当前脚本目录下的 .env 文件路径
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    env_path = os.path.join(script_dir, ".env")
+
     # 检查 .env 是否存在
-    if not os.path.exists(".env"):
+    if not os.path.exists(env_path):
         print("⚠️ 警告: 未找到 .env 文件")
         print("   复制 .env.example 到 .env 并添加你的 DEEPSEEK_API_KEY\n")
 

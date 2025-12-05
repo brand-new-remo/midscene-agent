@@ -11,11 +11,13 @@ import os
 from dotenv import load_dotenv
 
 # 加载环境变量
-load_dotenv()
+# 相对于当前示例文件的路径
+env_path = os.path.join(os.path.dirname(__file__), '..', '.env')
+load_dotenv(env_path)
 
 # 添加 src 到路径
 import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from src.agent import MidsceneAgent
 
