@@ -59,6 +59,11 @@ logs/
 .tmp/
 temp/
 
+# Node.js
+node_modules/
+**/node_modules/
+.npm/
+
 # Midscene.js dump files
 midscene_run/dump
 midscene_run/report

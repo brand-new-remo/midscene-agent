@@ -8,7 +8,17 @@
       "Bash(npm view:*)",
       "Bash(npm info:*)",
       "Bash(npm pack:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npm init -y)",
+      "Bash(npm install:*)",
+      "Bash(ls:*)",
+      "Bash(echo:*)",
+      "Bash(npm start)",
+      "Bash(curl:*)",
+      "Bash(node -e:*)",
+      "Bash(jobs:*)",
+      "Bash(lsof:*)",
+      "Bash(timeout 30 python:*)"
     ],
     "deny": [],
     "ask": []

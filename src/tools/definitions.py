@@ -156,6 +156,68 @@ TOOL_DEFINITIONS = {
         "category": TOOL_CATEGORY_TEST,
         "required": False,
     },
+
+    # ========== AI 自动规划工具 ==========
+    "midscene_ai_action": {
+        "description": "使用 AI 自动规划并执行一系列 UI 动作。这是 Midscene 的核心 API，AI 会自动分解任务并执行",
+        "params": {
+            "prompt": "要执行的 UI 动作描述，可以使用自然语言，如'在搜索框中输入 JavaScript，然后点击搜索按钮'",
+            "cacheable?": "是否启用缓存，默认 True"
+        },
+        "category": TOOL_CATEGORY_INTERACTION,
+        "required": True,
+    },
+
+    "midscene_evaluate_javascript": {
+        "description": "在当前页面上下文中执行 JavaScript 表达式，并返回结果",
+        "params": {
+            "script": "要执行的 JavaScript 代码，如'document.title'、'window.innerWidth' 等"
+        },
+        "category": TOOL_CATEGORY_QUERY,
+        "required": True,
+    },
+
+    "midscene_log_screenshot": {
+        "description": "截取当前页面的屏幕截图并在报告中记录，支持添加标题和描述",
+        "params": {
+            "title?": "截图的标题，如'登录页面'、'搜索结果'等",
+            "content?": "截图的描述信息，如'用户 A 的操作截图'"
+        },
+        "category": TOOL_CATEGORY_QUERY,
+        "required": False,
+    },
+
+    "midscene_freeze_page_context": {
+        "description": "冻结当前页面上下文，使后续操作复用相同的页面快照，提高大量并发操作的性能",
+        "params": {},
+        "category": TOOL_CATEGORY_TEST,
+        "required": False,
+    },
+
+    "midscene_unfreeze_page_context": {
+        "description": "解冻页面上下文，恢复使用实时页面状态",
+        "params": {},
+        "category": TOOL_CATEGORY_TEST,
+        "required": False,
+    },
+
+    "midscene_run_yaml": {
+        "description": "执行 YAML 格式的自动化脚本，返回所有 .aiQuery 调用的结果",
+        "params": {
+            "yaml_script": "YAML 格式的自动化脚本内容，包含 tasks 和 flow 配置"
+        },
+        "category": TOOL_CATEGORY_TEST,
+        "required": True,
+    },
+
+    "midscene_set_ai_action_context": {
+        "description": "设置 AI 动作上下文背景知识，会在调用 agent.aiAction() 时发送给 AI 模型",
+        "params": {
+            "context": "背景知识描述，如'如果存在 Cookie 同意对话框，请先关闭它'"
+        },
+        "category": TOOL_CATEGORY_TEST,
+        "required": True,
+    },
 }
 
 # 工具分类配置
@@ -193,7 +255,13 @@ TOOL_CATEGORIES = {
         "name": "测试工具",
         "description": "自动化测试和调试",
         "tools": [
-            "midscene_playwright_example"
+            "midscene_playwright_example",
+            "midscene_evaluate_javascript",
+            "midscene_log_screenshot",
+            "midscene_freeze_page_context",
+            "midscene_unfreeze_page_context",
+            "midscene_run_yaml",
+            "midscene_set_ai_action_context"
         ]
     }
 }
@@ -221,14 +289,18 @@ RECOMMENDED_TOOL_SETS = {
         "tools": [
             "midscene_navigate",
             "midscene_aiTap",
+            "midscene_aiDoubleClick",
+            "midscene_aiRightClick",
             "midscene_aiInput",
             "midscene_aiScroll",
             "midscene_aiKeyboardPress",
             "midscene_aiHover",
             "midscene_aiWaitFor",
             "midscene_aiAssert",
+            "midscene_aiAction",
             "midscene_location",
             "midscene_screenshot",
+            "midscene_log_screenshot",
             "midscene_get_tabs",
             "midscene_set_active_tab",
         ]

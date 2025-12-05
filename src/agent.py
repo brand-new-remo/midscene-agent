@@ -1,27 +1,45 @@
 """
-LangGraph Agent 与 Midscene 集成
+Midscene Agent，使用 HTTP 客户端替代 MCP stdio
 
-本模块实现了一个基于 LangGraph 的智能体，使用 DeepSeek LLM
-进行推理，使用 Midscene 进行网页自动化。
+基于 LangGraph 的智能体，使用 DeepSeek LLM 进行推理，
+通过 HTTP 协议与 Node.js Midscene 服务通信，
+实现更稳定、功能更完整的网页自动化。
 """
 
+import logging
 from typing import List, Dict, Any, Optional, AsyncGenerator
-from langchain_core.tools import BaseTool
+from langchain_core.tools import BaseTool, tool
 from langchain_deepseek import ChatDeepSeek
 from langchain_core.messages import HumanMessage
 from langgraph.graph import StateGraph, MessagesState, START, END
+from langgraph.prebuilt import ToolNode, tools_condition
 from pydantic import SecretStr
-from .mcp_wrapper import MidsceneMCPWrapper
+from .http_client import (
+    MidsceneHTTPClient,
+    SessionConfig,
+    MidsceneConnectionError,
+)
+from .tools.definitions import (
+    get_tool_definition,
+    TOOL_DEFINITIONS,
+    get_recommended_tool_set,
+)
+
+# 配置日志
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class MidsceneAgent:
     """
-    用于 AI 驱动网页自动化的 LangGraph Agent。
+    Midscene Agent，使用 HTTP 客户端与 Node.js 服务通信
 
-    该智能体结合了：
-    - DeepSeek LLM 用于推理和决策
-    - Midscene 用于视觉驱动的网页交互
-    - LangGraph 用于状态管理和执行流程
+    功能：
+    1. 更稳定的 HTTP 通信
+    2. 支持 WebSocket 流式响应
+    3. 更好的错误处理和重试机制
+    4. 利用完整的 Midscene.js 功能
+    5. 原生支持会话管理和复用
     """
 
     def __init__(
@@ -30,114 +48,359 @@ class MidsceneAgent:
         deepseek_base_url: str = "https://api.deepseek.com/v1",
         deepseek_model: str = "deepseek-chat",
         temperature: float = 0,
-        midscene_command: str = "npx",
-        midscene_args: Optional[List[str]] = None,
-        env: Optional[Dict[str, Any]] = None,
+        midscene_server_url: str = "http://localhost:3000",
+        midscene_config: Optional[Dict[str, Any]] = None,
         tool_set: str = "full",
+        enable_websocket: bool = True,
+        timeout: int = 300,
     ):
         """
-        初始化 Midscene 智能体。
+        初始化新版 Midscene Agent
 
         Args:
-            deepseek_api_key: DeepSeek 的 API 密钥
-            deepseek_base_url: DeepSeek API 的基础 URL
-            deepseek_model: 要使用的模型名称
-            temperature: LLM 响应的温度参数
-            midscene_command: 运行 Midscene MCP 服务器的命令
-            midscene_args: Midscene 命令的参数
-            env: 环境变量
-            tool_set: 工具集选择：'basic'（基础）、'advanced'（高级）、'full'（完整）
+            deepseek_api_key: DeepSeek API 密钥
+            deepseek_base_url: DeepSeek API 基础 URL
+            deepseek_model: DeepSeek 模型名称
+            temperature: LLM 温度参数
+            midscene_server_url: Node.js Midscene 服务器地址
+            midscene_config: Midscene 配置
+            tool_set: 工具集选择：'basic'、'advanced'、'full'
+            enable_websocket: 是否启用 WebSocket 流式响应
+            timeout: 操作超时时间（秒）
         """
         self.deepseek_api_key = deepseek_api_key
         self.deepseek_base_url = deepseek_base_url
         self.deepseek_model = deepseek_model
         self.temperature = temperature
+        self.midscene_server_url = midscene_server_url
+        self.midscene_config = midscene_config or {}
         self.tool_set = tool_set
+        self.enable_websocket = enable_websocket
+        self.timeout = timeout
 
-        self.mcp_wrapper = MidsceneMCPWrapper(
-            midscene_command=midscene_command, midscene_args=midscene_args, env=env
-        )
+        # 初始化 HTTP 客户端
+        self.http_client = MidsceneHTTPClient(base_url=midscene_server_url)
 
+        # 内部状态
         self.llm: Optional[Any] = None
         self.agent_executor: Optional[Any] = None
+        self.tools: List[BaseTool] = []
+        self.initialized = False
+
+        logger.info("Midscene Agent initialized")
 
     async def initialize(self) -> None:
         """
-        初始化 LLM 和智能体执行器。
+        初始化智能体
 
-        Raises:
-            RuntimeError: 如果初始化失败
+        1. 创建 HTTP 客户端会话
+        2. 创建 Midscene 会话
+        3. 初始化 LLM
+        4. 创建 LangGraph 执行器
         """
         try:
-            # 初始化 MCP 连接
-            await self.mcp_wrapper.start()
+            logger.info("🚀 正在初始化 Midscene Agent...")
 
-            # 使用新的工具系统获取工具
-            print(f"\n🔧 正在创建工具集: {self.tool_set}")
-            tools = await self.mcp_wrapper.get_langchain_tools(tool_set=self.tool_set)
-            print(f"✅ 为智能体创建了 {len(tools)} 个工具")
+            # 1. 启动 HTTP 客户端
+            logger.info("📡 启动 HTTP 客户端...")
+            await self.http_client.connect()
 
-            # 初始化 LLM（绑定工具）
+            # 2. 健康检查
+            logger.info("🔍 检查服务器健康状态...")
+            health = await self.http_client.health_check()
+            if health.get("status") not in ("ok", "healthy"):
+                raise MidsceneConnectionError(f"服务器不健康: {health}")
+
+            # 3. 创建 Midscene 会话
+            logger.info("🌐 创建 Midscene 会话...")
+            session_config = SessionConfig(
+                model=self.midscene_config.get("model", "doubao-seed-1.6-vision"),
+                base_url=self.midscene_config.get("base_url"),
+                api_key=self.midscene_config.get("api_key"),
+                headless=self.midscene_config.get("headless", True),
+                viewport_width=self.midscene_config.get("viewport_width", 1920),
+                viewport_height=self.midscene_config.get("viewport_height", 1080),
+            )
+
+            await self.http_client.create_session(session_config)
+
+            # 4. 连接 WebSocket（如果启用）
+            if self.enable_websocket:
+                logger.info("🔌 连接 WebSocket...")
+                connected = await self.http_client.connect_websocket()
+                if connected:
+                    logger.info("✅ WebSocket 连接成功")
+                else:
+                    logger.warning("⚠️ WebSocket 连接失败，使用 HTTP 模式")
+
+            # 5. 创建工具
+            logger.info(f"🔧 创建工具集: {self.tool_set}")
+            self.tools = await self._create_tools()
+            logger.info(f"✅ 创建了 {len(self.tools)} 个工具")
+
+            # 6. 初始化 LLM
+            logger.info("🤖 初始化 DeepSeek LLM...")
             self.llm = ChatDeepSeek(
                 model=self.deepseek_model,
                 api_key=SecretStr(self.deepseek_api_key),
                 base_url=self.deepseek_base_url,
                 temperature=self.temperature,
                 streaming=True,
-            ).bind_tools(tools)
+            ).bind_tools(self.tools)
 
-            print(f"\n✅ 已初始化 DeepSeek LLM ({self.deepseek_model}) 并绑定 {len(tools)} 个工具")
+            # 7. 创建 LangGraph 执行器
+            logger.info("🔄 构建 LangGraph 执行器...")
+            self.agent_executor = await self._build_graph()
 
-            # 使用 StateGraph 创建智能体执行器
-            from langgraph.prebuilt import ToolNode, tools_condition
-
-            # 构建智能体图
-            def agent_node(state: MessagesState) -> MessagesState:
-                if self.llm is None:
-                    raise RuntimeError("LLM 未初始化")
-
-                # 简化的日志输出：只显示消息数量和工具调用
-                num_messages = len(state['messages'])
-                # print(f"🤖 Agent Node: {num_messages} messages")
-
-                response = self.llm.invoke(state["messages"])
-
-                # 只在有工具调用时显示详细信息
-                if hasattr(response, "tool_calls") and response.tool_calls:
-                    print(f"💬 LLM Response: {response.content}")
-                    # print(f"🔧 Tool calls: {len(response.tool_calls)}")
-                elif hasattr(response, "content") and response.content:
-                    # 显示非工具调用的响应内容（截断）
-                    content = str(response.content)
-                    if len(content) > 100:
-                        print(f"💬 LLM Response: {content[:100]}...")
-                    else:
-                        print(f"💬 LLM Response: {content}")
-
-                return {"messages": state["messages"] + [response]}
-
-            # 创建图
-            builder = StateGraph(MessagesState)
-            builder.add_node("agent", agent_node)
-            builder.add_node("tools", ToolNode(tools))
-            builder.add_edge(START, "agent")
-            builder.add_conditional_edges(
-                "agent", tools_condition, {"tools": "tools", "__end__": END}
-            )
-            builder.add_edge("tools", "agent")
-
-            self.agent_executor = builder.compile(
-                interrupt_before=[], interrupt_after=[]  # 可选：中断点  # 可选：中断点
-            )
-            print("✅ 智能体执行器已初始化")
+            self.initialized = True
+            logger.info("✅ Midscene Agent 初始化完成")
 
         except Exception as e:
+            logger.error(f"❌ 初始化失败: {e}")
             await self.cleanup()
             raise RuntimeError(f"初始化智能体失败: {e}")
 
+    async def _create_tools(self) -> List[BaseTool]:
+        """创建 LangChain 工具"""
+        tools = []
+
+        # 获取要创建的工具列表
+        if self.tool_set == "full":
+            tool_names = list(TOOL_DEFINITIONS.keys())
+        else:
+            tool_names = get_recommended_tool_set(self.tool_set)
+
+        # 为每个工具创建包装器
+        for tool_name in tool_names:
+            tool_def = get_tool_definition(tool_name)
+            if not tool_def:
+                logger.warning(f"⚠️ 跳过未定义的工具: {tool_name}")
+                continue
+
+            langchain_tool = await self._create_langchain_tool(tool_name, tool_def)
+            if langchain_tool:
+                tools.append(langchain_tool)
+
+        return tools
+
+    async def _create_langchain_tool(
+        self, tool_name: str, tool_def: Dict[str, Any]
+    ) -> BaseTool:
+        """创建单个 LangChain 工具"""
+
+        # 提取工具信息
+        description = tool_def.get("description", "")
+        params = tool_def.get("params", {})
+        category = tool_def.get("category", "")
+
+        # 构建参数文档
+        param_docs = []
+        for param_name, param_desc in params.items():
+            optional = param_name.endswith("?")
+            clean_name = param_name.rstrip("?")
+            param_docs.append(
+                f"    {clean_name}: {param_desc}" + (" (可选)" if optional else "")
+            )
+
+        full_description = f"""{description}
+
+参数:
+{chr(10).join(param_docs)}
+
+分类: {category}"""
+
+        # 使用 @tool 装饰器创建工具
+        @tool
+        async def midscene_tool_wrapper(**kwargs):
+            """Midscene 工具包装器"""
+            try:
+                # 映射工具名到 HTTP API 端点
+                # 构建 logScreenshot 的 options 参数
+                log_screenshot_options = {}
+                if kwargs.get("content"):
+                    log_screenshot_options["content"] = kwargs.get("content")
+
+                action_map = {
+                    "midscene_navigate": ("navigate", {"url": kwargs.get("url")}),
+                    "midscene_aiTap": ("aiTap", {"locate": kwargs.get("locate")}),
+                    "midscene_aiDoubleClick": ("aiDoubleClick", {"locate": kwargs.get("locate")}),
+                    "midscene_aiRightClick": ("aiRightClick", {"locate": kwargs.get("locate")}),
+                    "midscene_aiInput": (
+                        "aiInput",
+                        {"locate": kwargs.get("locate"), "value": kwargs.get("value")},
+                    ),
+                    "midscene_aiScroll": (
+                        "aiScroll",
+                        {
+                            "direction": kwargs.get("direction"),
+                            "scrollType": kwargs.get("scrollType", "once"),
+                            "distance": kwargs.get("distance", 500),
+                        },
+                    ),
+                    "midscene_aiKeyboardPress": (
+                        "aiKeyboardPress",
+                        {"key": kwargs.get("key"), "locate": kwargs.get("locate")},
+                    ),
+                    "midscene_aiHover": ("aiHover", {"locate": kwargs.get("locate")}),
+                    "midscene_aiWaitFor": (
+                        "aiWaitFor",
+                        {
+                            "assertion": kwargs.get("assertion"),
+                            "timeoutMs": kwargs.get("timeoutMs"),
+                            "checkIntervalMs": kwargs.get("checkIntervalMs"),
+                        },
+                    ),
+                    "midscene_aiAssert": (
+                        "aiAssert",
+                        {"assertion": kwargs.get("assertion")},
+                    ),
+                    "midscene_aiAction": (
+                        "aiAction",
+                        {"prompt": kwargs.get("prompt"), "options": {"cacheable": kwargs.get("cacheable", True)}},
+                    ),
+                    "midscene_set_active_tab": (
+                        "setActiveTab",
+                        {"tabId": kwargs.get("tabId")},
+                    ),
+                    "midscene_evaluate_javascript": (
+                        "evaluateJavaScript",
+                        {"script": kwargs.get("script")},
+                    ),
+                    "midscene_log_screenshot": (
+                        "logScreenshot",
+                        {"title": kwargs.get("title"), "options": log_screenshot_options},
+                    ),
+                    "midscene_freeze_page_context": ("freezePageContext", {}),
+                    "midscene_unfreeze_page_context": ("unfreezePageContext", {}),
+                    "midscene_run_yaml": (
+                        "runYaml",
+                        {"yamlScript": kwargs.get("yaml_script")},
+                    ),
+                    "midscene_set_ai_action_context": (
+                        "setAIActionContext",
+                        {"context": kwargs.get("context")},
+                    ),
+                    "midscene_location": ("location", {}),
+                    "midscene_screenshot": (
+                        "screenshot",
+                        {
+                            "name": kwargs.get("name"),
+                            "fullPage": kwargs.get("fullPage"),
+                        },
+                    ),
+                    "midscene_get_tabs": ("tabs", {}),
+                    "midscene_get_console_logs": (
+                        "consoleLogs",
+                        {"msgType": kwargs.get("msgType")},
+                    ),
+                    "midscene_get_screenshot": (
+                        "screenshot",
+                        {"name": kwargs.get("name")},
+                    ),
+                    "midscene_playwright_example": ("playwright_example", {}),
+                }
+
+                if tool_name not in action_map:
+                    return f"未知的工具: {tool_name}"
+
+                api_action, api_params = action_map[tool_name]
+
+                # 清理参数（移除 None 值）
+                clean_params = {k: v for k, v in api_params.items() if v is not None}
+
+                logger.info(f"🔧 执行工具: {tool_name}, 参数: {clean_params}")
+
+                # 执行动作或查询
+                if api_action in ["location", "tabs", "playwright_example"]:
+                    # 查询操作
+                    result = await self.http_client.execute_query(
+                        api_action, clean_params
+                    )
+                else:
+                    # 动作操作
+                    async for event in self.http_client.execute_action(
+                        api_action, clean_params, stream=self.enable_websocket
+                    ):
+                        if "error" in event:
+                            logger.error(f"工具执行错误: {event['error']}")
+                            return f"执行失败: {event['error']}"
+                        elif "result" in event:
+                            result = event["result"]
+                            break
+                    else:
+                        result = "执行完成"
+
+                logger.info(f"✅ 工具执行成功: {tool_name}")
+                return result
+
+            except Exception as e:
+                error_msg = f"工具 '{tool_name}' 执行错误: {str(e)}"
+                logger.error(error_msg)
+                return error_msg
+
+        # 设置工具属性
+        midscene_tool_wrapper.name = tool_name
+        midscene_tool_wrapper.description = full_description
+        midscene_tool_wrapper.args_schema = self._generate_pydantic_model(
+            tool_name, params
+        )
+
+        return midscene_tool_wrapper
+
+    def _generate_pydantic_model(self, tool_name: str, params: Dict):
+        """生成 Pydantic 模型"""
+        from pydantic import BaseModel, Field
+        from typing import Optional
+
+        fields = {}
+        annotations = {}
+
+        for param_name, param_desc in params.items():
+            optional = param_name.endswith("?")
+            clean_name = param_name.rstrip("?")
+
+            field_type = Optional[str] if optional else str
+            default = None if optional else ...
+
+            annotations[clean_name] = field_type
+            fields[clean_name] = Field(default=default, description=param_desc)
+
+        model_name = f"{tool_name.replace('midscene_', '').title()}Model"
+        namespace = {**fields, "__annotations__": annotations}
+
+        return type(model_name, (BaseModel,), namespace)
+
+    async def _build_graph(self):
+        """构建 LangGraph 执行器"""
+
+        def agent_node(state: MessagesState) -> MessagesState:
+            if self.llm is None:
+                raise RuntimeError("LLM 未初始化")
+
+            response = self.llm.invoke(state["messages"])
+
+            # 记录工具调用
+            if hasattr(response, "tool_calls") and response.tool_calls:
+                logger.info(f"💬 LLM 调用了 {len(response.tool_calls)} 个工具")
+                for tool_call in response.tool_calls:
+                    logger.info(f"  - {tool_call['name']}: {tool_call['args']}")
+
+            return {"messages": state["messages"] + [response]}
+
+        builder = StateGraph(MessagesState)
+        builder.add_node("agent", agent_node)
+        builder.add_node("tools", ToolNode(self.tools))
+        builder.add_edge(START, "agent")
+        builder.add_conditional_edges(
+            "agent", tools_condition, {"tools": "tools", "__end__": END}
+        )
+        builder.add_edge("tools", "agent")
+
+        return builder.compile(interrupt_before=[], interrupt_after=[])
+
     async def execute(self, user_input: str, stream: bool = True) -> AsyncGenerator:
         """
-        使用智能体执行任务。
+        执行任务
 
         Args:
             user_input: 任务的自然语言指令
@@ -149,45 +412,71 @@ class MidsceneAgent:
         Raises:
             RuntimeError: 如果智能体未初始化
         """
-        if not self.agent_executor:
+        if not self.initialized or not self.agent_executor:
             raise RuntimeError("智能体未初始化。请先调用 initialize()。")
 
-        print(f"\n🚀 开始执行智能体")
-        print(f"📝 任务: {user_input}\n")
+        logger.info(f"\n🚀 开始执行任务")
+        logger.info(f"📝 任务: {user_input}\n")
 
         try:
-            # 为 LangChain 1.0+ 使用 HumanMessage
             input_messages = {"messages": [HumanMessage(content=user_input)]}
-
-            # 配置最大递归次数以避免循环
             config = {"recursion_limit": 100}
 
             if stream:
                 async for chunk in self.agent_executor.astream(
                     input_messages, config=config
                 ):
-                    # Yield each chunk as an event
                     yield chunk
             else:
                 result = await self.agent_executor.ainvoke(
                     input_messages, config=config
                 )
                 yield result
+
         except Exception as e:
             import traceback
 
-            yield {"error": str(e), "traceback": traceback.format_exc()}
+            error_msg = f"执行任务失败: {str(e)}"
+            logger.error(error_msg)
+            logger.error(traceback.format_exc())
+            yield {"error": error_msg, "traceback": traceback.format_exc()}
+
+    async def take_screenshot(self, **kwargs) -> Dict[str, Any]:
+        """截取屏幕截图的便捷方法"""
+        return await self.http_client.take_screenshot(**kwargs)
+
+    async def get_session_info(self) -> Dict[str, Any]:
+        """获取会话信息"""
+        sessions = await self.http_client.get_sessions()
+        history = await self.http_client.get_session_history()
+        return {"active_sessions": sessions, "session_history": history}
+
+    async def health_check(self) -> Dict[str, Any]:
+        """健康检查"""
+        return await self.http_client.health_check()
 
     async def cleanup(self) -> None:
-        """清理资源。"""
-        if self.mcp_wrapper:
-            await self.mcp_wrapper.stop()
+        """清理资源"""
+        try:
+            if self.http_client:
+                await self.http_client.cleanup()
+                logger.info("🔌 HTTP 客户端已清理")
+        except Exception as e:
+            logger.error(f"清理资源时出错: {e}")
+
+        self.initialized = False
 
     async def __aenter__(self):
-        """异步上下文管理器入口。"""
+        """异步上下文管理器入口"""
         await self.initialize()
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """异步上下文管理器出口。"""
+        """异步上下文管理器出口"""
         await self.cleanup()
+
+
+class MidsceneAgentError(Exception):
+    """Midscene Agent 错误"""
+
+    pass

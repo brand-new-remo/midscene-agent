@@ -25,7 +25,7 @@ class Config:
     DEEPSEEK_TEMPERATURE: float = float(os.getenv("DEEPSEEK_TEMPERATURE", "0"))
 
     # Midscene 配置
-    MIDSCENE_MODEL: str = os.getenv("MIDSCENE_MODEL", "doubao-seed-1.6-vision")
+    MIDSCENE_MODEL_NAME: str = os.getenv("MIDSCENE_MODEL_NAME", "doubao-seed-1.6-vision")
     MIDSCENE_COMMAND: str = os.getenv("MIDSCENE_COMMAND", "npx")
     MIDSCENE_ARGS: list = os.getenv("MIDSCENE_ARGS", "-y @midscene/mcp").split()
 
@@ -68,7 +68,7 @@ class Config:
                 "temperature": cls.DEEPSEEK_TEMPERATURE,
             },
             "midscene": {
-                "model": cls.MIDSCENE_MODEL,
+                "model": cls.MIDSCENE_MODEL_NAME,
                 "command": cls.MIDSCENE_COMMAND,
                 "args": cls.MIDSCENE_ARGS,
                 "api_key": (

@@ -1,20 +1,13 @@
 """
-基础使用示例
+Midscene Agent 使用示例
 
-此示例演示如何使用 MidsceneAgent 自动化网页任务。
+演示如何使用基于 HTTP 的 Midscene Agent，
+包括基础网页自动化、查询和流式响应功能。
 """
 
 import asyncio
 import os
-import sys
 from dotenv import load_dotenv
-
-# 将父目录添加到路径，使其可以导入 src 包
-current_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir)
-
-# 导入智能体模块
 from src.agent import MidsceneAgent
 
 # 加载环境变量
@@ -23,197 +16,342 @@ load_dotenv()
 
 async def basic_example():
     """
-    使用 MidsceneAgent 进行网页自动化的基础示例。
+    基础网页自动化示例
+
+    演示如何使用 Midscene Agent 执行基本的网页操作
     """
-    # 从环境获取配置
-    api_key = os.getenv("DEEPSEEK_API_KEY")
-    if not api_key:
-        print("❌ 错误: 在环境中未找到 DEEPSEEK_API_KEY")
-        print("请在 .env 文件中设置或将其导出为环境变量")
+    print("\n" + "=" * 70)
+    print("🚀 Midscene Agent - 基础示例")
+    print("=" * 70)
+
+    # 获取 API 密钥
+    deepseek_api_key = os.getenv("DEEPSEEK_API_KEY")
+    if not deepseek_api_key:
+        print("❌ 错误: 未找到 DEEPSEEK_API_KEY")
+        print("请在 .env 文件中设置 DEEPSEEK_API_KEY")
         return
 
-    # 为 Midscene MCP 服务器准备环境变量
-    midscene_env = {
-        "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY", ""),
-        "OPENAI_BASE_URL": os.getenv("OPENAI_BASE_URL", ""),
-        "MIDSCENE_MODEL_NAME": os.getenv("MIDSCENE_MODEL", "doubao-seed-1.6-vision"),
+    # 准备 Midscene 配置
+    midscene_config = {
+        "model": os.getenv("MIDSCENE_MODEL_NAME", "doubao-seed-1.6-vision"),
+        "api_key": os.getenv("OPENAI_API_KEY"),
+        "base_url": os.getenv("OPENAI_BASE_URL"),
+        "headless": False,  # 显示浏览器窗口以便观察
+        "viewport_width": 1280,
+        "viewport_height": 768
     }
 
-    # 初始化智能体
-    agent_instance = MidsceneAgent(
-        deepseek_api_key=api_key,
-        deepseek_base_url=os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
-        deepseek_model=os.getenv("DEEPSEEK_MODEL", "deepseek-chat"),
-        temperature=0,
-        env=midscene_env,
+    # 创建 Agent
+    agent = MidsceneAgent(
+        deepseek_api_key=deepseek_api_key,
+        deepseek_base_url=os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1"),
+        midscene_server_url=os.getenv("MIDSCENE_SERVER_URL", "http://localhost:3000"),
+        midscene_config=midscene_config,
+        tool_set="full",  # 使用完整工具集
+        enable_websocket=True  # 启用 WebSocket 流式响应
     )
 
     try:
-        # 将智能体用作异步上下文管理器
-        async with agent_instance:
-            # 定义任务
-            task = """
-            请完成以下网页自动化任务：
-            1. 导航到 https://www.google.com/
-            2. 在搜索框中输入 "LangGraph DeepSeek Midscene" 直接输入内容，不要考虑那里显示的东西，那里实际显示的是一个占位文字，不影响输入
-            3. 点击搜索按钮
-            4. 告诉我页面中是否搜到了标题为：企业级UI自动化测试落地痛点与AI提供的解决方案 的结果
+        # 使用异步上下文管理器
+        async with agent:
+            print("\n✅ Agent 初始化成功")
+
+            # 示例任务：访问 GitHub 并执行操作
+            task = """访问 https://github.com 并执行以下操作：
+            1. 导航到 GitHub 首页
+            2. 在搜索框中搜索 "midscene"
+            3. 等待搜索结果加载
+            4. 截取一张屏幕截图
+            5. 验证是否显示了搜索结果
             """
 
-            # 注意：此示例只执行操作，不进行任何查询或验证
-            # 如果需要查询页面信息，请使用 midscene_query 工具
+            print(f"\n📝 执行任务: {task}")
+            print("\n" + "-" * 70)
 
-            # 执行任务
-            async for event in agent_instance.execute(task):
+            # 执行任务并流式显示结果
+            async for event in agent.execute(task, stream=True):
                 if "messages" in event:
-                    # 打印最新消息
-                    last_message = event["messages"][-1]
-                    # LangChain 1.0+ 兼容输出
-                    if hasattr(last_message, "content"):
-                        print(last_message.content)
-                    else:
-                        print(last_message)
+                    latest_msg = event["messages"][-1]
+                    if hasattr(latest_msg, "content") and latest_msg.content:
+                        print(f"💬 {latest_msg.content}")
                 elif "error" in event:
                     print(f"❌ 错误: {event['error']}")
 
-    except Exception as e:
-        print(f"❌ 错误: {e}")
-        import traceback
+            print("\n" + "-" * 70)
 
+            # 额外的交互示例
+            print("\n🔍 执行额外查询...")
+
+            # 获取当前页面位置
+            location_result = await agent.http_client.execute_query("location")
+            print(f"📍 当前页面位置: {location_result}")
+
+            # 截取屏幕截图
+            screenshot_result = await agent.take_screenshot(name="example_screenshot")
+            print(f"📸 截图完成: {screenshot_result.get('screenshot', {})}")
+
+    except Exception as e:
+        print(f"\n❌ 执行失败: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+async def query_example():
+    """
+    页面查询示例
+
+    演示如何使用Agent 查询页面信息
+    """
+    print("\n" + "=" * 70)
+    print("🔍 Midscene Agent - 查询示例")
+    print("=" * 70)
+
+    # 获取 API 密钥
+    deepseek_api_key = os.getenv("DEEPSEEK_API_KEY")
+    if not deepseek_api_key:
+        print("❌ 错误: 未找到 DEEPSEEK_API_KEY")
+        return
+
+    # 创建 Agent
+    agent = MidsceneAgent(
+        deepseek_api_key=deepseek_api_key,
+        midscene_server_url=os.getenv("MIDSCENE_SERVER_URL", "http://localhost:3000"),
+        midscene_config={
+            "headless": False,
+            "model": os.getenv("MIDSCENE_MODEL_NAME", "doubao-seed-1.6-vision")
+        },
+        tool_set="full",
+        enable_websocket=True
+    )
+
+    try:
+        async with agent:
+            print("\n✅ Agent 初始化成功")
+
+            # 访问百度首页并查询信息
+            task = """访问 https://www.baidu.com 并：
+            1. 导航到百度首页
+            2. 等待页面加载完成
+            3. 查询页面标题是什么
+            4. 验证是否有搜索输入框
+            5. 提取页面上显示的主要文本内容
+            """
+
+            print(f"\n📝 执行任务: {task}")
+            print("\n" + "-" * 70)
+
+            async for event in agent.execute(task, stream=True):
+                if "messages" in event:
+                    latest_msg = event["messages"][-1]
+                    if hasattr(latest_msg, "content") and latest_msg.content:
+                        print(f"💬 {latest_msg.content}")
+
+            print("\n" + "-" * 70)
+
+            # 使用 aiQuery 提取结构化数据
+            print("\n📊 使用 aiQuery 提取结构化数据...")
+            query_result = await agent.http_client.execute_query(
+                "aiQuery",
+                {
+                    "dataDemand": {
+                        "title": "页面标题",
+                        "searchBoxExists": "是否存在搜索输入框",
+                        "mainLinks": "页面上主要链接的文本, string[]"
+                    },
+                    "options": {
+                        "domIncluded": True
+                    }
+                }
+            )
+            print(f"📋 查询结果: {query_result}")
+
+    except Exception as e:
+        print(f"\n❌ 执行失败: {e}")
+        import traceback
         traceback.print_exc()
 
 
 async def interactive_example():
     """
-    交互式示例 - 允许在一个会话中执行多个任务。
+    交互式多任务示例
+
+    演示如何连续执行多个相关任务
     """
-    api_key = os.getenv("DEEPSEEK_API_KEY")
-    if not api_key:
+    print("\n" + "=" * 70)
+    print("🔄 Midscene Agent - 交互式示例")
+    print("=" * 70)
+
+    deepseek_api_key = os.getenv("DEEPSEEK_API_KEY")
+    if not deepseek_api_key:
         print("❌ 错误: 未找到 DEEPSEEK_API_KEY")
         return
 
-    # 为 Midscene MCP 服务器准备环境变量
-    midscene_env = {
-        "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY", ""),
-        "OPENAI_BASE_URL": os.getenv("OPENAI_BASE_URL", ""),
-        "MIDSCENE_MODEL_NAME": os.getenv("MIDSCENE_MODEL", "doubao-seed-1.6-vision"),
-    }
-
-    agent_instance = MidsceneAgent(
-        deepseek_api_key=api_key,
-        deepseek_base_url=os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
-        env=midscene_env,
+    agent = MidsceneAgent(
+        deepseek_api_key=deepseek_api_key,
+        midscene_server_url=os.getenv("MIDSCENE_SERVER_URL", "http://localhost:3000"),
+        midscene_config={
+            "headless": False,
+            "model": os.getenv("MIDSCENE_MODEL_NAME", "doubao-seed-1.6-vision")
+        },
+        tool_set="full",
+        enable_websocket=True
     )
 
     try:
-        # 初始化一次
-        await agent_instance.initialize()
+        async with agent:
+            print("\n✅ Agent 初始化成功")
 
-        # 按顺序执行多个任务
-        tasks = [
-            "导航到 https://news.ycombinator.com 并告诉我页面标题",
-            "查找 'submit' 按钮或链接并描述它的位置",
-            "向下滚动查看页面上更多内容",
-        ]
+            # 任务列表
+            tasks = [
+                "访问 https://httpbin.org 并导航到首页",
+                "找到页面上的输入框并输入测试数据",
+                "截取当前页面的屏幕截图",
+                "验证输入是否成功",
+                "获取页面的控制台日志"
+            ]
 
-        for i, task in enumerate(tasks, 1):
-            print(f"\n{'='*60}")
-            print(f"任务 {i}/{len(tasks)}")
-            print(f"{'='*60}\n")
+            for i, task in enumerate(tasks, 1):
+                print(f"\n📝 任务 {i}/{len(tasks)}: {task}")
+                print("-" * 50)
 
-            async for event in agent_instance.execute(task):
+                async for event in agent.execute(task, stream=True):
+                    if "messages" in event:
+                        latest_msg = event["messages"][-1]
+                        if hasattr(latest_msg, "content") and latest_msg.content:
+                            print(f"💬 {latest_msg.content}")
+
+                # 任务间隔
+                if i < len(tasks):
+                    print("\n⏳ 等待 2 秒...")
+                    await asyncio.sleep(2)
+
+            print("\n✅ 所有任务执行完成")
+
+            # 获取会话信息
+            session_info = await agent.get_session_info()
+            print(f"\n📊 会话统计:")
+            print(f"  - 活跃会话数: {len(session_info['active_sessions'])}")
+            print(f"  - 动作历史数: {len(session_info['session_history'])}")
+
+    except Exception as e:
+        print(f"\n❌ 执行失败: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+async def test_new_features():
+    """
+    测试新功能示例
+
+    演示Agent 的新特性
+    """
+    print("\n" + "=" * 70)
+    print("🆕 Midscene Agent - 新功能测试")
+    print("=" * 70)
+
+    deepseek_api_key = os.getenv("DEEPSEEK_API_KEY")
+    if not deepseek_api_key:
+        print("❌ 错误: 未找到 DEEPSEEK_API_KEY")
+        return
+
+    agent = MidsceneAgent(
+        deepseek_api_key=deepseek_api_key,
+        midscene_server_url=os.getenv("MIDSCENE_SERVER_URL", "http://localhost:3000"),
+        midscene_config={
+            "headless": False,
+            "model": os.getenv("MIDSCENE_MODEL_NAME", "doubao-seed-1.6-vision")
+        },
+        tool_set="full",
+        enable_websocket=True
+    )
+
+    try:
+        async with agent:
+            print("\n✅ Agent 初始化成功")
+
+            # 测试 WebSocket 流式响应
+            print("\n🔌 测试 WebSocket 流式响应...")
+            task_with_progress = """访问 https://example.com 并执行以下操作：
+            1. 导航到页面
+            2. 等待页面完全加载
+            3. 悬停在页面标题上
+            4. 滚动页面到底部
+            5. 滚动回到顶部
+            """
+
+            async for event in agent.execute(task_with_progress, stream=True):
                 if "messages" in event:
-                    last_message = event["messages"][-1]
-                    if hasattr(last_message, "content"):
-                        print(last_message.content)
-                    else:
-                        print(last_message)
+                    latest_msg = event["messages"][-1]
+                    if hasattr(latest_msg, "content") and latest_msg.content:
+                        print(f"📡 [流式] {latest_msg.content}")
+
+            # 测试健康检查
+            print("\n🏥 测试健康检查...")
+            health = await agent.health_check()
+            print(f"健康状态: {health}")
+
+            # 测试会话管理
+            print("\n📋 测试会话信息...")
+            sessions = await agent.http_client.get_sessions()
+            print(f"活跃会话: {sessions}")
 
     except Exception as e:
-        print(f"❌ 错误: {e}")
-    finally:
-        await agent_instance.cleanup()
+        print(f"\n❌ 执行失败: {e}")
+        import traceback
+        traceback.print_exc()
 
 
-async def query_example():
-    """
-    专注于从页面查询信息的示例。
-    """
-    api_key = os.getenv("DEEPSEEK_API_KEY")
-    if not api_key:
-        print("❌ 错误: 未找到 DEEPSEEK_API_KEY")
+async def main():
+    """主函数"""
+    print("\n" + "=" * 70)
+    print("🎉 欢迎使用Midscene Agent！")
+    print("本示例展示了基于 HTTP + WebSocket 的新架构")
+    print("=" * 70)
+
+    # 检查 Node.js 服务是否运行
+    import aiohttp
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get("http://localhost:3000/api/health") as response:
+                if response.status == 200:
+                    print("\n✅ Node.js Midscene 服务运行正常")
+                else:
+                    print(f"\n⚠️ Node.js 服务返回状态: {response.status}")
+    except Exception as e:
+        print(f"\n❌ 无法连接到 Node.js 服务: {e}")
+        print("请确保已启动 Node.js 服务: cd server && npm install && npm start")
         return
 
-    # 为 Midscene MCP 服务器准备环境变量
-    midscene_env = {
-        "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY", ""),
-        "OPENAI_BASE_URL": os.getenv("OPENAI_BASE_URL", ""),
-        "MIDSCENE_MODEL_NAME": os.getenv("MIDSCENE_MODEL", "doubao-seed-1.6-vision"),
-    }
+    # 运行示例
+    print("\n选择要运行的示例:")
+    print("1. 基础网页自动化示例")
+    print("2. 页面查询示例")
+    print("3. 交互式多任务示例")
+    print("4. 新功能测试示例")
+    print("0. 退出")
 
-    agent_instance = MidsceneAgent(
-        deepseek_api_key=api_key,
-        deepseek_base_url=os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
-        env=midscene_env,
-    )
+    choice = input("\n请输入选择 (0-4): ").strip()
 
-    try:
-        await agent_instance.initialize()
-
-        # 首先，导航到页面
-        print("📄 正在导航到 https://example.com...")
-        async for event in agent_instance.execute("导航到 https://example.com"):
-            if "messages" in event:
-                msg = event["messages"][-1]
-                if hasattr(msg, "content"):
-                    print(msg.content)
-                else:
-                    print(msg)
-
-        # 现在查询页面
-        print("\n🔍 正在查询页面信息...")
-        async for event in agent_instance.execute(
-            "这个页面是关于什么的？提取所有可见文本并列出主要部分。"
-        ):
-            if "messages" in event:
-                msg = event["messages"][-1]
-                if hasattr(msg, "content"):
-                    print(msg.content)
-                else:
-                    print(msg)
-
-    except Exception as e:
-        print(f"❌ 错误: {e}")
-    finally:
-        await agent_instance.cleanup()
+    if choice == "1":
+        await basic_example()
+    elif choice == "2":
+        await query_example()
+    elif choice == "3":
+        await interactive_example()
+    elif choice == "4":
+        await test_new_features()
+    elif choice == "0":
+        print("\n👋 再见！")
+    else:
+        print("\n❌ 无效选择")
 
 
 if __name__ == "__main__":
-    print("MidsceneAgent 基础使用示例\n")
-    print("选择要运行的示例:")
-    print("1. 基础网页自动化任务")
-    print("2. 交互式多任务示例")
-    print("3. 页面查询示例")
-    print("\n按 Ctrl+C 退出\n")
-
     try:
-        choice = input("输入你的选择 (1-3): ").strip()
-        print()
-
-        if choice == "1":
-            asyncio.run(basic_example())
-        elif choice == "2":
-            asyncio.run(interactive_example())
-        elif choice == "3":
-            asyncio.run(query_example())
-        else:
-            print("无效选择。正在运行基础示例...")
-            asyncio.run(basic_example())
-
+        asyncio.run(main())
     except KeyboardInterrupt:
-        print("\n\n👋 再见！")
+        print("\n\n👋 再见！\n")
     except Exception as e:
-        print(f"\n❌ 错误: {e}")
+        print(f"\n❌ 发生错误: {e}")
         import traceback
-
         traceback.print_exc()

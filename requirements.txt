@@ -4,7 +4,10 @@ langchain-core>=1.0.0
 langgraph>=1.0.0
 langchain-deepseek>=1.0.0
 
-# MCP Protocol
+# HTTP Client
+aiohttp>=3.9.0
+
+# MCP Protocol (for backward compatibility)
 mcp>=1.0.0
 
 # Async support

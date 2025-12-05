@@ -166,7 +166,7 @@ python-dotenv>=1.0.0
 DEEPSEEK_API_KEY=sk-xxxxxx
 DEEPSEEK_BASE_URL=https://api.deepseek.com
 DEEPSEEK_MODEL=deepseek-chat
-MIDSCENE_MODEL=doubao-seed-1.6-vision
+MIDSCENE_MODEL_NAME_NAME=doubao-seed-1.6-vision
 OPENAI_API_KEY=sk-xxxxxx
 ```
 

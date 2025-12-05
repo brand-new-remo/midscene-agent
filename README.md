@@ -2,6 +2,14 @@
 
 一个 AI 驱动的网页自动化智能体，结合 **LangGraph** 进行智能编排、**DeepSeek LLM** 进行推理，以及 **Midscene** 进行基于视觉的网页交互。
 
+## ✨ 主要特性
+
+- **🚀 混合架构**: Node.js + Python 完美融合
+- **🌐 HTTP + WebSocket**: 更稳定的通信协议
+- **📡 流式响应**: 实时查看执行进度
+- **🔧 完整功能**: 充分利用 Midscene.js 所有 API
+- **📊 监控指标**: 内置 Prometheus 监控
+
 ## 功能特性
 
 - 通过自然语言指令控制浏览器
@@ -9,21 +17,27 @@
 - 智能提取页面信息
 - 支持多步骤复杂任务
 - 基于视觉模型的元素定位
+- 支持会话管理和复用
+- 实时流式响应和进度反馈
 
 ## 架构
 
 ```
-用户（自然语言）
-       ↓
-LangGraph Agent（StateGraph + ReAct）
-       ↓
-DeepSeek LLM（推理引擎）
-       ↓
-MCP 协议（JSON-RPC over stdio）
-       ↓
-Midscene MCP 服务器（视觉分析 + Playwright）
-       ↓
-Chrome 浏览器
+用户输入（自然语言）
+         ↓
+   LangGraph Agent（StateGraph + 流程控制）
+         ↓
+   DeepSeek LLM（推理引擎）
+         ↓
+   HTTP Client（Python）- 异步通信
+         ↓
+   Node.js Server（Express + WebSocket）
+         ↓
+   Midscene Orchestrator（会话管理）
+         ↓
+   Midscene.js + Playwright（浏览器自动化）
+         ↓
+   浏览器（Chrome/Chromium）
 ```
 
 ## 快速开始
@@ -42,25 +56,36 @@ Chrome 浏览器
 git clone <your-repo-url>
 cd midscene-agent
 
+# 安装 Node.js 依赖
+cd server
+npm install
+cd ..
+
 # 安装 Python 依赖
 pip install -r requirements.txt
-
-# 安装 Midscene CLI
-npm install -g @midscene/web
 
 # 配置环境变量
 cp .env.example .env
 # 编辑 .env 添加你的 API 密钥
 ```
 
-### 运行
+### 启动
 
 ```bash
-# 交互式菜单
-python run.py
+# 启动 Node.js 服务
+cd server
+npm start
+# 服务运行在 http://localhost:3000
 
-# 或直接运行示例
+# 新终端：运行 Python 示例
 python examples/basic_usage.py
+```
+
+### 监控
+
+```bash
+# Prometheus 指标
+curl http://localhost:3000/metrics
 ```
 
 ## 项目结构
@@ -69,13 +94,25 @@ python examples/basic_usage.py
 midscene-agent/
 ├── src/
 │   ├── agent.py          # LangGraph 智能体
-│   ├── mcp_wrapper.py    # MCP 客户端
+│   ├── http_client.py    # HTTP 客户端
 │   ├── config.py         # 配置管理
-│   └── utils/            # 工具模块
+│   └── tools/            # 工具模块
+├── server/               # Node.js 服务
+│   ├── src/
+│   │   ├── index.js      # 主服务器
+│   │   ├── orchestrator.js # Midscene 协调器
+│   │   └── metrics.js    # 监控指标
+│   └── package.json      # Node.js 依赖
 ├── examples/
 │   ├── basic_usage.py    # 基础示例
-│   └── test_ecommerce.py # 电商测试
+│   └── search_results_demo.py # 搜索结果演示
+├── docs/                 # 文档
+│   ├── architecture/     # 架构文档
+│   ├── deployment/       # 部署文档
+│   └── guides/           # 使用指南
 ├── run.py                # 交互式启动器
+├── test.py               # 测试脚本
+├── start.sh              # 快速启动脚本
 ├── requirements.txt      # Python 依赖
 └── .env.example          # 环境变量模板
 ```
@@ -89,14 +126,25 @@ import asyncio
 from src.agent import MidsceneAgent
 
 async def main():
+    # 创建 Agent（基于 HTTP）
     agent = MidsceneAgent(
         deepseek_api_key="your-api-key",
         deepseek_base_url="https://api.deepseek.com/v1",
+        midscene_server_url="http://localhost:3000",
+        enable_websocket=True,  # 启用 WebSocket 流式响应
+        tool_set="full"
     )
 
     async with agent:
-        task = "导航到 https://www.google.com，搜索 'LangGraph'"
-        async for event in agent.execute(task):
+        task = """访问 https://github.com 并执行以下操作：
+        1. 导航到 GitHub 首页
+        2. 在搜索框中搜索 "midscene"
+        3. 等待搜索结果加载
+        4. 截取一张屏幕截图
+        """
+
+        # 流式响应，显示执行进度
+        async for event in agent.execute(task, stream=True):
             if "messages" in event:
                 print(event["messages"][-1].content)
 
@@ -118,10 +166,28 @@ async with agent:
 
 ## 可用工具
 
-| 工具 | 说明 | 示例 |
-|------|------|------|
-| `midscene_action` | 执行浏览器操作 | "点击登录按钮"、"输入 'hello'" |
-| `midscene_query` | 提取页面信息 | "价格是多少？"、"列出所有链接" |
+### 完整工具集
+
+| 类别 | 工具 | 说明 | 示例 |
+|------|------|------|------|
+| **导航** | `midscene_navigate` | 导航到 URL | `{"url": "https://example.com"}` |
+| | `midscene_set_active_tab` | 切换标签页 | `{"tabId": "1"}` |
+| **交互** | `midscene_aiTap` | AI 智能点击 | `{"locate": "登录按钮"}` |
+| | `midscene_aiInput` | AI 智能输入 | `{"locate": "搜索框", "value": "Python"}` |
+| | `midscene_aiScroll` | AI 智能滚动 | `{"direction": "down", "distance": 500}` |
+| | `midscene_aiHover` | AI 悬停 | `{"locate": "用户头像"}` |
+| | `midscene_aiKeyboardPress` | 按键操作 | `{"key": "Enter"}` |
+| | `midscene_aiWaitFor` | 智能等待 | `{"assertion": "页面加载完成"}` |
+| **查询** | `midscene_aiAssert` | AI 断言验证 | `{"assertion": "价格显示正确"}` |
+| | `midscene_location` | 获取位置信息 | `{}` |
+| | `midscene_screenshot` | 截取屏幕截图 | `{"name": "homepage", "fullPage": true}` |
+| | `midscene_get_tabs` | 获取标签页列表 | `{}` |
+| | `midscene_get_console_logs` | 获取控制台日志 | `{"msgType": "error"}` |
+| **高级** | `midscene_aiQuery` | 结构化数据提取 | `{"dataDemand": "{name: string}"}` |
+| | `midscene_aiAsk` | AI 问答 | `{"prompt": "页面主要内容"}` |
+| | `midscene_aiBoolean` | 布尔值查询 | `{"prompt": "是否有登录按钮"}` |
+| | `midscene_aiNumber` | 数值查询 | `{"prompt": "价格是多少"}` |
+| | `midscene_aiString` | 字符串查询 | `{"prompt": "页面标题"}` |
 
 ## 配置
 
@@ -133,10 +199,13 @@ DEEPSEEK_API_KEY=sk-your-api-key
 DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
 DEEPSEEK_MODEL=deepseek-chat
 
+# Midscene 服务地址
+MIDSCENE_SERVER_URL=http://localhost:3000
+
 # 视觉模型（用于 Midscene）
 OPENAI_API_KEY=your-vision-api-key
 OPENAI_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
-MIDSCENE_MODEL=doubao-seed-1.6-vision
+MIDSCENE_MODEL_NAME=doubao-seed-1.6-vision
 
 # 浏览器（可选）
 CHROME_PATH=/path/to/chrome
@@ -170,24 +239,42 @@ task = """
 
 | 问题 | 解决方案 |
 |------|----------|
-| 连接 Midscene 失败 | 运行 `npm install -g @midscene/web` |
+| Node.js 服务无法启动 | 检查 Node.js 版本 >= 18，端口 3000 是否被占用 |
+| Python 端无法连接 | 确保 Node.js 服务运行在 http://localhost:3000 |
 | API 密钥错误 | 检查 `.env` 文件配置 |
-| Chrome 未找到 | 设置 `CHROME_PATH` 环境变量 |
+| Chrome 未找到 | 安装 Chrome 浏览器或设置 `CHROME_PATH` |
 | 操作超时 | 简化任务或增加超时时间 |
 
 ## 依赖
 
+### Python 依赖
 - langchain >= 1.0.0
 - langgraph >= 1.0.0
 - langchain-deepseek >= 1.0.0
-- mcp >= 1.0.0
+- aiohttp >= 3.9.0
 - pydantic >= 2.0.0
+- python-dotenv >= 1.0.0
+
+### Node.js 依赖
+- @midscene/web >= 0.30.9
+- express >= 5.2.1
+- ws >= 8.18.3
+- playwright >= 1.57.0
+- winston >= 3.18.3
+- prom-client >= 15.1.3
+
+## 文档
+
+- [架构概览](./docs/architecture/overview.md) - 详细架构说明
+- [依赖修正记录](./docs/architecture/dependency-fixes.md) - 版本修正历史
+- [清理日志](./docs/architecture/cleanup-log.md) - 代码清理记录
+- [迁移指南](./docs/guides/migration.md) - 版本迁移说明
 
 ## 资源
 
 - [LangGraph 文档](https://langchain-ai.github.io/langgraph/)
 - [DeepSeek API](https://platform.deepseek.com/docs)
-- [Midscene 文档](https://midscene.org)
+- [Midscene 文档](https://midscenejs.com)
 
 ## 许可证
 

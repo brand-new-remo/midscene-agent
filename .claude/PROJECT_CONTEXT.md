@@ -61,7 +61,7 @@ class Config:
     DEEPSEEK_MODEL: str
 
     # Midscene 配置
-    MIDSCENE_MODEL: str
+    MIDSCENE_MODEL_NAME: str
     MIDSCENE_COMMAND: str = "npx"
     MIDSCENE_ARGS: list = ["-y", "@midscene/mcp"]
 
@@ -190,7 +190,7 @@ OPENAI_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
 ```bash
 HEADLESS=false  # 浏览器模式
 CHROME_PATH=/Applications/Google Chrome.app/Contents/MacOS/Google Chrome
-MIDSCENE_MODEL=ep-20251202151146-7fhck
+MIDSCENE_MODEL_NAME=ep-20251202151146-7fhck
 ```
 
 ## 工具调用
