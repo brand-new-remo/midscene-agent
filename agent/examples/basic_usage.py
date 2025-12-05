@@ -65,7 +65,7 @@ async def basic_example():
             1. 导航到 https://midscenejs.com/zh/index.html
             2. 等待页面完全加载
             3. 点击左侧导航菜单中的"MCP 服务"菜单项
-            4. 告诉我使用场景这个区域下面描述的场景内容是什么
+            4. 检查是否显示了“使用场景”部分
             """
 
             print(f"\n📝 执行任务: {task}")

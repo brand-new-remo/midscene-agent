@@ -24,7 +24,9 @@
       "Bash(rm:*)",
       "Bash(mkdir:*)",
       "Bash(mv:*)",
-      "Bash(touch:*)"
+      "Bash(touch:*)",
+      "Bash(npm run typecheck)",
+      "Bash(npm run:*)"
     ],
     "deny": [],
     "ask": []
