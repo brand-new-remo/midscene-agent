@@ -46,9 +46,12 @@
 **Python 端 (runner/):**
 - `agent/agent.py` - 基于 LangGraph 的智能体，集成了 DeepSeek LLM
 - `agent/http_client.py` - 用于与 Node.js 通信的异步 HTTP/WebSocket 客户端
+- `agent/config.py` - 配置管理
 - `agent/tools/definitions.py` - 网页自动化操作的工具定义
-- `run.py` - 带有菜单的交互式启动器，用于运行测试
-- `run_yaml_direct.py` - 直接执行基于 YAML 的测试文件
+- `executor/yaml_executor.py` - YAML 测试文件执行器
+- `executor/text_executor.py` - 自然语言测试文件执行器
+- `modes/` - 交互式菜单的模式模块
+- `run.py` - 带有菜单的交互式启动器
 
 **Node.js 端 (server/):**
 - `src/index.ts` - Express HTTP 服务器 + WebSocket 服务器 (端口 3000)
@@ -97,13 +100,13 @@ npm run quality:fix  # lint:fix + format:write + typecheck
 python run.py
 
 # 直接执行 YAML 测试
-python run_yaml_direct.py tests/basic_usage.yaml
+python -m executor.yaml_executor yamls/basic_usage.yaml
 
-# 运行所有 YAML 测试
-python run_yaml_direct.py tests/*.yaml
+# 直接执行自然语言测试
+python -m executor.text_executor texts/basic_usage.txt
 
-# 自定义任务模式 (通过 run.py 菜单选项 3)
-# 提供自然语言任务的交互式提示
+# 检查配置
+python check_config.py
 ```
 
 ### 环境设置
@@ -142,14 +145,17 @@ python run.py
 # 方法 1: 使用交互式启动器
 cd runner
 python run.py
-# 选择选项 1，然后选择特定测试
+# 选择选项 1 或 3，然后选择特定测试
 
-# 方法 2: 直接执行
-python run_yaml_direct.py tests/basic_usage.yaml
+# 方法 2: 直接执行 YAML 测试
+python -m executor.yaml_executor yamls/basic_usage.yaml
 
-# 方法 3: 自定义任务
+# 方法 3: 直接执行自然语言测试
+python -m executor.text_executor texts/basic_usage.txt
+
+# 方法 4: 自定义任务
 python run.py
-# 选择选项 3，输入自然语言指令
+# 选择选项 5，输入自然语言指令
 ```
 
 ### 开发周期
@@ -161,7 +167,7 @@ python run.py
 
 2. **运行/测试 Python 代码** (在 `runner/` 目录中):
    ```bash
-   python run_yaml_direct.py tests/your_test.yaml
+   python -m executor.yaml_executor yamls/your_test.yaml
    ```
 
 3. **检查代码质量** (在 `server/` 目录中):
@@ -212,9 +218,14 @@ python run.py
 
 ## 测试
 
-### YAML 测试格式
+### 测试格式
 
-测试使用 `runner/tests/` 中的 YAML 文件:
+项目支持两种测试格式:
+
+#### YAML 测试格式 (runner/yamls/)
+
+结构化的测试定义，支持明确的操作类型:
+
 ```yaml
 web:
   url: https://example.com
@@ -233,14 +244,38 @@ tasks:
           prompt: "Extract information"
 ```
 
+#### 自然语言测试格式 (runner/texts/)
+
+使用自然语言描述的测试，AI 自动规划执行:
+
+```
+@web:
+  url: https://example.com
+  headless: false
+
+@task: Example Task
+
+1. 导航到页面并等待完全加载
+2. 点击搜索按钮
+3. 验证搜索结果是否显示
+4. 截取当前页面的截图
+```
+
 ### 测试文件
 
-位于 `runner/tests/`:
+**YAML 测试** (位于 `runner/yamls/`):
 - `basic_usage.yaml` - 基础自动化示例
 - `github_interaction.yaml` - GitHub 自动化
 - `baidu_query_demo.yaml` - 搜索查询演示
 - `search_results_demo.yaml` - 搜索结果处理
 - `httpbin_interaction.yaml` - HTTP 测试
+
+**自然语言测试** (位于 `runner/texts/`):
+- `basic_usage.txt` - 基础自动化示例
+- `github_interaction.txt` - GitHub 自动化
+- `baidu_query_demo.txt` - 搜索查询演示
+- `search_results_demo.txt` - 搜索结果处理
+- `httpbin_interaction.txt` - HTTP 测试
 
 ## 关键 API 端点
 
@@ -297,11 +332,19 @@ midscene-agent/
 │   ├── agent/
 │   │   ├── agent.py         # 主智能体
 │   │   ├── http_client.py   # HTTP 客户端
-│   │   ├── tools/           # 工具定义
-│   │   └── utils/           # 工具函数
-│   ├── tests/               # YAML 测试文件
+│   │   ├── config.py        # 配置管理
+│   │   └── tools/           # 工具定义
+│   ├── executor/            # 测试执行器
+│   │   ├── yaml_executor.py # YAML 测试执行器
+│   │   └── text_executor.py # 自然语言测试执行器
+│   ├── modes/               # 交互式菜单模式
+│   │   ├── yaml_mode.py     # YAML 测试模式
+│   │   ├── text_mode.py     # 自然语言测试模式
+│   │   └── custom_mode.py   # 自定义任务模式
+│   ├── yamls/               # YAML 测试文件
+│   ├── texts/               # 自然语言测试文件
 │   ├── run.py               # 交互式启动器
-│   ├── run_yaml_direct.py   # 直接 YAML 执行器
+│   ├── check_config.py      # 配置检查器
 │   └── requirements.txt     # Python 依赖
 ├── docs/                    # 文档
 ├── .claude/

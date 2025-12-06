@@ -2,12 +2,13 @@
 
 一个 AI 驱动的网页自动化智能体，结合 **LangGraph** 进行智能编排、**DeepSeek LLM** 进行推理，以及 **Midscene** 进行基于视觉的网页交互。
 
-## ✨ 主要特性
+## 主要特性
 
-- **🚀 混合架构**: Node.js + Python 完美融合
-- **🌐 HTTP + WebSocket**: 更稳定的通信协议
-- **📡 流式响应**: 实时查看执行进度
-- **🔧 完整功能**: 充分利用 Midscene.js 所有 API
+- **混合架构**: Node.js + Python 完美融合
+- **HTTP + WebSocket**: 更稳定的通信协议
+- **流式响应**: 实时查看执行进度
+- **完整功能**: 充分利用 Midscene.js 所有 API
+- **双格式测试**: 支持 YAML 结构化测试和自然语言测试
 
 ## 功能特性
 
@@ -61,6 +62,7 @@ npm install
 cd ..
 
 # 安装 Python 依赖
+cd runner
 pip install -r requirements.txt
 
 # 配置环境变量
@@ -76,109 +78,129 @@ cd server
 npm start
 # 服务运行在 http://localhost:3000
 
-# 新终端：运行 Python 示例
-python examples/basic_usage.py
+# 新终端：运行交互式启动器
+cd runner
+python run.py
 ```
 
 ## 项目结构
 
 ```
 midscene-agent/
-├── src/
-│   ├── agent.py          # LangGraph 智能体
-│   ├── http_client.py    # HTTP 客户端
-│   ├── config.py         # 配置管理
-│   └── tools/            # 工具模块
-├── server/               # Node.js 服务
+├── server/                  # Node.js HTTP/WebSocket 服务器
 │   ├── src/
-│   │   ├── index.js      # 主服务器
-│   │   └── orchestrator.js # Midscene 协调器
-│   └── package.json      # Node.js 依赖
-├── examples/
-│   ├── basic_usage.py    # 基础示例
-│   └── search_results_demo.py # 搜索结果演示
-├── docs/                 # 文档
-│   ├── architecture/     # 架构文档
-│   ├── deployment/       # 部署文档
-│   └── guides/           # 使用指南
-├── run.py                # 交互式启动器
-├── test.py               # 测试脚本
-├── start.sh              # 快速启动脚本
-├── requirements.txt      # Python 依赖
-└── .env.example          # 环境变量模板
+│   │   ├── index.ts         # 主服务器入口
+│   │   ├── orchestrator.ts  # Midscene 协调器
+│   │   └── types/           # TypeScript 类型定义
+│   └── package.json
+├── runner/                  # Python LangGraph 智能体
+│   ├── agent/
+│   │   ├── agent.py         # LangGraph 智能体
+│   │   ├── http_client.py   # HTTP 客户端
+│   │   ├── config.py        # 配置管理
+│   │   └── tools/           # 工具模块
+│   ├── executor/            # 测试执行器
+│   │   ├── yaml_executor.py # YAML 测试执行器
+│   │   └── text_executor.py # 自然语言测试执行器
+│   ├── modes/               # 交互式菜单模式
+│   │   ├── yaml_mode.py     # YAML 测试模式
+│   │   ├── text_mode.py     # 自然语言测试模式
+│   │   └── custom_mode.py   # 自定义任务模式
+│   ├── yamls/               # YAML 测试文件
+│   ├── texts/               # 自然语言测试文件
+│   ├── run.py               # 交互式启动器
+│   ├── check_config.py      # 配置检查
+│   └── requirements.txt     # Python 依赖
+├── docs/                    # 文档
+└── .env.example             # 环境变量模板
 ```
 
 ## 使用示例
 
-### 基础用法
+### 交互式启动器
 
-```python
-import asyncio
-from src.agent import MidsceneAgent
-
-async def main():
-    # 创建 Agent（基于 HTTP）
-    agent = MidsceneAgent(
-        deepseek_api_key="your-api-key",
-        deepseek_base_url="https://api.deepseek.com/v1",
-        midscene_server_url="http://localhost:3000",
-        enable_websocket=True,  # 启用 WebSocket 流式响应
-        tool_set="full"
-    )
-
-    async with agent:
-        task = """访问 https://github.com 并执行以下操作：
-        1. 导航到 GitHub 首页
-        2. 在搜索框中搜索 "midscene"
-        3. 等待搜索结果加载
-        4. 截取一张屏幕截图
-        """
-
-        # 流式响应，显示执行进度
-        async for event in agent.execute(task, stream=True):
-            if "messages" in event:
-                print(event["messages"][-1].content)
-
-asyncio.run(main())
+```bash
+cd runner
+python run.py
 ```
 
-### 多步骤任务
+菜单选项:
+1. 运行单个 YAML 测试
+2. 运行所有 YAML 测试
+3. 运行单个自然语言测试
+4. 运行所有自然语言测试
+5. 自定义任务模式
+6. 检查配置
 
-```python
-async with agent:
-    task = """
-    1. 前往 https://news.ycombinator.com
-    2. 点击第一个故事链接
-    3. 用 2-3 句话总结文章内容
-    """
-    async for event in agent.execute(task):
-        print(event)
+### 直接执行测试
+
+```bash
+# 执行 YAML 测试
+python -m executor.yaml_executor yamls/basic_usage.yaml
+
+# 执行自然语言测试
+python -m executor.text_executor texts/basic_usage.txt
+```
+
+### 测试文件格式
+
+#### YAML 测试 (runner/yamls/)
+
+```yaml
+web:
+  url: https://example.com
+  headless: false
+  viewportWidth: 1280
+  viewportHeight: 768
+
+tasks:
+  - name: Example Task
+    flow:
+      - ai: Navigate and perform actions
+      - aiAssert: Check result
+      - logScreenshot: Capture result
+      - aiQuery:
+          name: "Data"
+          prompt: "Extract information"
+```
+
+#### 自然语言测试 (runner/texts/)
+
+```
+@web:
+  url: https://example.com
+  headless: false
+
+@task: Example Task
+
+1. 导航到页面并等待完全加载
+2. 点击搜索按钮
+3. 验证搜索结果是否显示
+4. 截取当前页面的截图
 ```
 
 ## 可用工具
 
-### 完整工具集
-
-| 类别 | 工具 | 说明 | 示例 |
-|------|------|------|------|
-| **导航** | `midscene_navigate` | 导航到 URL | `{"url": "https://example.com"}` |
-| | `midscene_set_active_tab` | 切换标签页 | `{"tabId": "1"}` |
-| **交互** | `midscene_aiTap` | AI 智能点击 | `{"locate": "登录按钮"}` |
-| | `midscene_aiInput` | AI 智能输入 | `{"locate": "搜索框", "value": "Python"}` |
-| | `midscene_aiScroll` | AI 智能滚动 | `{"direction": "down", "distance": 500}` |
-| | `midscene_aiHover` | AI 悬停 | `{"locate": "用户头像"}` |
-| | `midscene_aiKeyboardPress` | 按键操作 | `{"key": "Enter"}` |
-| | `midscene_aiWaitFor` | 智能等待 | `{"assertion": "页面加载完成"}` |
-| **查询** | `midscene_aiAssert` | AI 断言验证 | `{"assertion": "价格显示正确"}` |
-| | `midscene_location` | 获取位置信息 | `{}` |
-| | `midscene_screenshot` | 截取屏幕截图 | `{"name": "homepage", "fullPage": true}` |
-| | `midscene_get_tabs` | 获取标签页列表 | `{}` |
-| | `midscene_get_console_logs` | 获取控制台日志 | `{"msgType": "error"}` |
-| **高级** | `midscene_aiQuery` | 结构化数据提取 | `{"dataDemand": "{name: string}"}` |
-| | `midscene_aiAsk` | AI 问答 | `{"prompt": "页面主要内容"}` |
-| | `midscene_aiBoolean` | 布尔值查询 | `{"prompt": "是否有登录按钮"}` |
-| | `midscene_aiNumber` | 数值查询 | `{"prompt": "价格是多少"}` |
-| | `midscene_aiString` | 字符串查询 | `{"prompt": "页面标题"}` |
+| 类别 | 工具 | 说明 |
+|------|------|------|
+| **导航** | `midscene_navigate` | 导航到 URL |
+| | `midscene_set_active_tab` | 切换标签页 |
+| **交互** | `midscene_aiTap` | AI 智能点击 |
+| | `midscene_aiInput` | AI 智能输入 |
+| | `midscene_aiScroll` | AI 智能滚动 |
+| | `midscene_aiHover` | AI 悬停 |
+| | `midscene_aiKeyboardPress` | 按键操作 |
+| | `midscene_aiWaitFor` | 智能等待 |
+| **查询** | `midscene_aiAssert` | AI 断言验证 |
+| | `midscene_location` | 获取位置信息 |
+| | `midscene_screenshot` | 截取屏幕截图 |
+| | `midscene_get_tabs` | 获取标签页列表 |
+| | `midscene_get_console_logs` | 获取控制台日志 |
+| **高级** | `midscene_aiQuery` | 结构化数据提取 |
+| | `midscene_aiAsk` | AI 问答 |
+| | `midscene_aiBoolean` | 布尔值查询 |
+| | `midscene_aiNumber` | 数值查询 |
+| | `midscene_aiString` | 字符串查询 |
 
 ## 配置
 
