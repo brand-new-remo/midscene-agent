@@ -96,6 +96,7 @@ module.exports = {
     'max-lines-per-function': 'off',
     'max-params': 'off',
     'max-statements': 'off',
+    indent: 'off',
     // 警告级别
     'no-console': 'off',
     'no-debugger': 'error',
