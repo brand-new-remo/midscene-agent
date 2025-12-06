@@ -17,7 +17,7 @@ def check_config():
     print("=" * 70 + "\n")
 
     # 获取当前脚本目录下的 .env 文件路径
-    script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    script_dir = os.path.dirname(os.path.abspath(__file__))
     env_path = os.path.join(script_dir, ".env")
 
     # 检查 .env 文件
