@@ -46,3 +46,4 @@ Thumbs.db
 # TypeScript 构建信息
 *.tsbuildinfo
 .eslintrc.cjs
+dist/
