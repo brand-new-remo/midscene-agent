@@ -90,7 +90,30 @@ midscene-agent/
 ├── server/                  # Node.js HTTP/WebSocket 服务器
 │   ├── src/
 │   │   ├── index.ts         # 主服务器入口
-│   │   ├── orchestrator.ts  # Midscene 协调器
+│   │   ├── orchestrator/    # Midscene 编排器模块化实现
+│   │   │   ├── index.ts         # 编排器主类
+│   │   │   ├── session.ts       # 会话管理
+│   │   │   ├── actions/         # 操作执行
+│   │   │   │   └── execute.ts
+│   │   │   ├── queries/         # 查询执行
+│   │   │   │   └── execute.ts
+│   │   │   ├── action-history.ts # 历史记录
+│   │   │   ├── system.ts        # 系统功能
+│   │   │   ├── config.ts        # 配置
+│   │   │   └── types.ts         # 类型定义
+│   │   ├── websocket/       # WebSocket 服务器
+│   │   │   ├── index.ts
+│   │   │   ├── connectionManager.ts
+│   │   │   └── handlers.ts
+│   │   ├── routes/          # HTTP 路由模块
+│   │   │   ├── sessions.ts
+│   │   │   ├── health.ts
+│   │   │   └── index.ts
+│   │   ├── middleware/      # Express 中间件
+│   │   ├── server/          # 服务器控制
+│   │   │   ├── start.ts
+│   │   │   └── shutdown.ts
+│   │   ├── config/          # 服务器配置
 │   │   └── types/           # TypeScript 类型定义
 │   └── package.json
 ├── runner/                  # Python LangGraph 智能体
@@ -98,7 +121,9 @@ midscene-agent/
 │   │   ├── agent.py         # LangGraph 智能体
 │   │   ├── http_client.py   # HTTP 客户端
 │   │   ├── config.py        # 配置管理
-│   │   └── tools/           # 工具模块
+│   │   ├── tools/           # 工具模块
+│   │   │   └── definitions.py
+│   │   └── utils/           # 工具函数
 │   ├── executor/            # 测试执行器
 │   │   ├── yaml_executor.py # YAML 测试执行器
 │   │   └── text_executor.py # 自然语言测试执行器
@@ -125,6 +150,7 @@ python run.py
 ```
 
 菜单选项:
+
 1. 运行单个 YAML 测试
 2. 运行所有 YAML 测试
 3. 运行单个自然语言测试
@@ -181,26 +207,27 @@ tasks:
 
 ## 可用工具
 
-| 类别 | 工具 | 说明 |
-|------|------|------|
-| **导航** | `midscene_navigate` | 导航到 URL |
-| | `midscene_set_active_tab` | 切换标签页 |
-| **交互** | `midscene_aiTap` | AI 智能点击 |
-| | `midscene_aiInput` | AI 智能输入 |
-| | `midscene_aiScroll` | AI 智能滚动 |
-| | `midscene_aiHover` | AI 悬停 |
-| | `midscene_aiKeyboardPress` | 按键操作 |
-| | `midscene_aiWaitFor` | 智能等待 |
-| **查询** | `midscene_aiAssert` | AI 断言验证 |
-| | `midscene_location` | 获取位置信息 |
-| | `midscene_screenshot` | 截取屏幕截图 |
-| | `midscene_get_tabs` | 获取标签页列表 |
-| | `midscene_get_console_logs` | 获取控制台日志 |
-| **高级** | `midscene_aiQuery` | 结构化数据提取 |
-| | `midscene_aiAsk` | AI 问答 |
-| | `midscene_aiBoolean` | 布尔值查询 |
-| | `midscene_aiNumber` | 数值查询 |
-| | `midscene_aiString` | 字符串查询 |
+| 类别     | 工具                        | 说明           |
+| -------- | --------------------------- | -------------- |
+| **导航** | `midscene_navigate`         | 导航到 URL     |
+|          | `midscene_set_active_tab`   | 切换标签页     |
+| **交互** | `midscene_aiTap`            | AI 智能点击    |
+|          | `midscene_aiInput`          | AI 智能输入    |
+|          | `midscene_aiScroll`         | AI 智能滚动    |
+|          | `midscene_aiHover`          | AI 悬停        |
+|          | `midscene_aiKeyboardPress`  | 按键操作       |
+|          | `midscene_aiWaitFor`        | 智能等待       |
+| **查询** | `midscene_aiAssert`         | AI 断言验证    |
+|          | `midscene_aiLocate`         | 获取元素位置   |
+|          | `midscene_location`         | 获取位置信息   |
+|          | `midscene_screenshot`       | 截取屏幕截图   |
+|          | `midscene_get_tabs`         | 获取标签页列表 |
+|          | `midscene_get_console_logs` | 获取控制台日志 |
+| **高级** | `midscene_aiQuery`          | 结构化数据提取 |
+|          | `midscene_aiAsk`            | AI 问答        |
+|          | `midscene_aiBoolean`        | 布尔值查询     |
+|          | `midscene_aiNumber`         | 数值查询       |
+|          | `midscene_aiString`         | 字符串查询     |
 
 ## 配置
 
@@ -230,10 +257,12 @@ HEADLESS=false
 ### 编写有效指令
 
 **推荐**：
+
 - "点击右上角的蓝色 '登录' 按钮"
 - "在搜索框中输入 'Python tutorials' 并按回车"
 
 **避免**：
+
 - "点击按钮"（太模糊）
 - "搜索某些东西"（没有具体内容）
 
@@ -250,17 +279,18 @@ task = """
 
 ## 故障排除
 
-| 问题 | 解决方案 |
-|------|----------|
+| 问题                 | 解决方案                                      |
+| -------------------- | --------------------------------------------- |
 | Node.js 服务无法启动 | 检查 Node.js 版本 >= 18，端口 3000 是否被占用 |
-| Python 端无法连接 | 确保 Node.js 服务运行在 http://localhost:3000 |
-| API 密钥错误 | 检查 `.env` 文件配置 |
-| Chrome 未找到 | 安装 Chrome 浏览器或设置 `CHROME_PATH` |
-| 操作超时 | 简化任务或增加超时时间 |
+| Python 端无法连接    | 确保 Node.js 服务运行在 http://localhost:3000 |
+| API 密钥错误         | 检查 `.env` 文件配置                          |
+| Chrome 未找到        | 安装 Chrome 浏览器或设置 `CHROME_PATH`        |
+| 操作超时             | 简化任务或增加超时时间                        |
 
 ## 依赖
 
 ### Python 依赖
+
 - langchain >= 1.0.0
 - langgraph >= 1.0.0
 - langchain-deepseek >= 1.0.0
@@ -269,18 +299,12 @@ task = """
 - python-dotenv >= 1.0.0
 
 ### Node.js 依赖
+
 - @midscene/web >= 0.30.9
 - express >= 5.2.1
 - ws >= 8.18.3
 - playwright >= 1.57.0
 - winston >= 3.18.3
-
-## 文档
-
-- [架构概览](./docs/architecture/overview.md) - 详细架构说明
-- [依赖修正记录](./docs/architecture/dependency-fixes.md) - 版本修正历史
-- [清理日志](./docs/architecture/cleanup-log.md) - 代码清理记录
-- [迁移指南](./docs/guides/migration.md) - 版本迁移说明
 
 ## 资源
 

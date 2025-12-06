@@ -54,8 +54,27 @@
 - `run.py` - 带有菜单的交互式启动器
 
 **Node.js 端 (server/):**
-- `src/index.ts` - Express HTTP 服务器 + WebSocket 服务器 (端口 3000)
-- `src/orchestrator.ts` - Midscene Playwright 智能体的会话管理器
+- `src/index.ts` - 主服务器入口，集成 Express + WebSocket
+- `src/orchestrator/` - Midscene 编排器模块化实现
+  - `index.ts` - 编排器主类，会话管理
+  - `session.ts` - 会话生命周期管理
+  - `actions/execute.ts` - 网页操作执行器
+  - `queries/execute.ts` - 页面查询执行器
+  - `action-history.ts` - 操作历史记录
+  - `system.ts` - 系统功能（健康检查、关闭等）
+  - `config.ts` - 编排器配置
+  - `types.ts` - 类型定义
+- `src/websocket/` - WebSocket 服务器实现
+  - `index.ts` - WebSocket 服务器创建
+  - `connectionManager.ts` - 连接管理器
+  - `handlers.ts` - 消息处理器
+- `src/routes/` - HTTP 路由模块
+  - `sessions.ts` - 会话管理路由
+  - `health.ts` - 健康检查路由
+  - `root.ts` - 根路由
+- `src/middleware/` - Express 中间件
+- `src/server/` - 服务器启动和关闭
+- `src/config/` - 服务器配置
 - `src/types/` - API 契约的 TypeScript 类型定义
 
 **通信协议:**
@@ -206,8 +225,11 @@ python run.py
 - `midscene_aiBoolean` - 获取布尔值答案
 - `midscene_aiString` - 获取字符串值
 - `midscene_aiNumber` - 获取数值
+- `midscene_aiLocate` - 获取元素位置信息
 - `midscene_location` - 获取当前 URL/标题
 - `midscene_screenshot` - 截屏
+- `midscene_getTabs` - 获取标签页列表
+- `midscene_getConsoleLogs` - 获取控制台日志
 
 ## 配置
 
@@ -324,7 +346,30 @@ midscene-agent/
 ├── server/                  # Node.js HTTP/WebSocket 服务器
 │   ├── src/
 │   │   ├── index.ts         # 主服务器入口
-│   │   ├── orchestrator.ts  # 会话/编排逻辑
+│   │   ├── orchestrator/    # Midscene 编排器
+│   │   │   ├── index.ts         # 编排器主类
+│   │   │   ├── session.ts       # 会话管理
+│   │   │   ├── actions/         # 操作执行
+│   │   │   │   └── execute.ts
+│   │   │   ├── queries/         # 查询执行
+│   │   │   │   └── execute.ts
+│   │   │   ├── action-history.ts # 历史记录
+│   │   │   ├── system.ts        # 系统功能
+│   │   │   ├── config.ts        # 配置
+│   │   │   └── types.ts         # 类型
+│   │   ├── websocket/       # WebSocket 支持
+│   │   │   ├── index.ts
+│   │   │   ├── connectionManager.ts
+│   │   │   └── handlers.ts
+│   │   ├── routes/          # HTTP 路由
+│   │   │   ├── sessions.ts
+│   │   │   ├── health.ts
+│   │   │   └── index.ts
+│   │   ├── middleware/      # Express 中间件
+│   │   ├── server/          # 服务器控制
+│   │   │   ├── start.ts
+│   │   │   └── shutdown.ts
+│   │   ├── config/          # 服务器配置
 │   │   └── types/           # TypeScript 定义
 │   ├── package.json
 │   └── dist/                # 构建输出
@@ -333,7 +378,9 @@ midscene-agent/
 │   │   ├── agent.py         # 主智能体
 │   │   ├── http_client.py   # HTTP 客户端
 │   │   ├── config.py        # 配置管理
-│   │   └── tools/           # 工具定义
+│   │   ├── tools/           # 工具定义
+│   │   │   └── definitions.py
+│   │   └── utils/           # 工具函数
 │   ├── executor/            # 测试执行器
 │   │   ├── yaml_executor.py # YAML 测试执行器
 │   │   └── text_executor.py # 自然语言测试执行器
