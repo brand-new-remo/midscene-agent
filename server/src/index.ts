@@ -11,7 +11,7 @@ import cors from 'cors';
 import express, { type NextFunction, type Request, type Response } from 'express';
 import { WebSocket, WebSocketServer } from 'ws';
 
-import MidsceneOrchestrator from './orchestrator.js';
+import MidsceneOrchestrator from './orchestrator/index.js';
 
 import type { ActionParams, ActionType, QueryParams, QueryType, WsMessage } from './types/index.js';
 

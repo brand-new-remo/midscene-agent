@@ -37,7 +37,7 @@ module.exports = {
         caughtErrorsIgnorePattern: '^_',
       },
     ],
-    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/no-explicit-any': 'error',
     '@typescript-eslint/explicit-function-return-type': [
       'error',
       {
@@ -81,6 +81,7 @@ module.exports = {
     'import/no-useless-path-segments': 'off',
     'import/no-unresolved': 'off',
     'import/extensions': 'off',
+    'import/prefer-default-export': 'off',
 
     // Promise 规则
     'promise/always-return': 'error',
@@ -92,14 +93,7 @@ module.exports = {
     'promise/valid-params': 'error',
 
     'max-depth': 'off',
-    'max-lines-per-function': [
-      'error',
-      {
-        max: 50,
-        skipComments: true,
-        skipBlankLines: true,
-      },
-    ],
+    'max-lines-per-function': 'off',
     'max-params': 'off',
     'max-statements': 'off',
     // 警告级别
@@ -140,6 +134,7 @@ module.exports = {
     'arrow-body-style': 'off',
     'implicit-arrow-linebreak': 'off',
     'function-paren-newline': 'off',
+    'no-underscore-dangle': 'off',
   },
   overrides: [
     {
