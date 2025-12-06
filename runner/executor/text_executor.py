@@ -1,31 +1,28 @@
 #!/usr/bin/env python3
 """
-直接执行 YAML 测试用例
+自然语言测试用例执行器
 
 使用方法:
-    python run_yaml_direct.py <yaml_file> [选项]
-    例如: python run_yaml_direct.py tests/basic_usage.yaml
-           python run_yaml_direct.py tests/*.yaml --concurrent 4
+    python -m executor.text_executor <txt_file> [选项]
+    例如: python -m executor.text_executor texts/basic_usage.txt
 """
 
 import asyncio
-import yaml
 import os
 import sys
-import re
 import argparse
-from typing import Dict, Any, Optional, List
-import json
-import aiohttp
-from datetime import datetime
+import re
 import glob
+from typing import Dict, Any, Optional, List, Tuple
+import json
+from datetime import datetime
 
-# 添加 runner 到 sys.path，以便能够导入 agent 包
-runner_dir = os.path.dirname(__file__)
+# 添加 runner 到 sys.path
+runner_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if runner_dir not in sys.path:
     sys.path.insert(0, runner_dir)
 
-# 直接导入 agent 模块（使用绝对导入）
+# 直接导入 agent 模块
 from agent.agent import MidsceneAgent
 from agent.http_client import (
     MidsceneHTTPClient,
@@ -39,118 +36,14 @@ from agent.tools.definitions import (
 )
 
 
-def replace_env_vars(obj: Any) -> Any:
-    """
-    递归替换 YAML 中的环境变量 ${variable-name}
+class TextTestExecutor:
+    """自然语言测试执行器"""
 
-    Args:
-        obj: 要处理的 Python 对象（dict、list、str 等）
-
-    Returns:
-        替换环境变量后的对象
-    """
-    def replace_match(match):
-        var_name = match.group(1)
-        return os.getenv(var_name, '')
-
-    if isinstance(obj, str):
-        # 替换 ${variable-name} 格式的环境变量
-        return re.sub(r'\$\{(\w+)\}', replace_match, obj)
-    elif isinstance(obj, dict):
-        return {key: replace_env_vars(value) for key, value in obj.items()}
-    elif isinstance(obj, list):
-        return [replace_env_vars(item) for item in obj]
-    else:
-        return obj
-
-
-def parse_arguments():
-    """解析命令行参数"""
-    parser = argparse.ArgumentParser(
-        description='直接执行 YAML 测试用例',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-示例:
-  %(prog)s tests/basic_usage.yaml
-  %(prog)s tests/*.yaml --concurrent 4
-  %(prog)s tests/basic_usage.yaml --headed
-  %(prog)s tests/*.yaml --continue-on-error --summary output.json
-        """
-    )
-
-    parser.add_argument(
-        'files',
-        nargs='+',
-        help='要执行的 YAML 文件或模式（如 tests/*.yaml）'
-    )
-
-    parser.add_argument(
-        '--concurrent',
-        type=int,
-        default=1,
-        help='并发执行的数量 (默认: 1)'
-    )
-
-    parser.add_argument(
-        '--continue-on-error',
-        action='store_true',
-        help='如果脚本文件执行失败，继续运行其余脚本文件'
-    )
-
-    parser.add_argument(
-        '--headed',
-        action='store_true',
-        help='在有图形界面的浏览器中运行脚本'
-    )
-
-    parser.add_argument(
-        '--keep-window',
-        action='store_true',
-        help='脚本执行结束后保持浏览器窗口打开（自动启用 --headed）'
-    )
-
-    parser.add_argument(
-        '--summary',
-        type=str,
-        help='指定生成的 JSON 格式汇总报告文件的路径'
-    )
-
-    parser.add_argument(
-        '--web.userAgent',
-        type=str,
-        help='设置浏览器 UA，将覆盖所有脚本文件中的 web.userAgent 参数'
-    )
-
-    parser.add_argument(
-        '--web.viewportWidth',
-        type=int,
-        help='设置浏览器视口宽度，将覆盖所有脚本文件中的 web.viewportWidth 参数'
-    )
-
-    parser.add_argument(
-        '--web.viewportHeight',
-        type=int,
-        help='设置浏览器视口高度，将覆盖所有脚本文件中的 web.viewportHeight 参数'
-    )
-
-    args = parser.parse_args()
-
-    # 如果设置了 --keep-window，自动启用 --headed
-    if args.keep_window:
-        args.headed = True
-
-    return args
-
-
-class YamlTestRunner:
-    """YAML 测试执行器"""
-
-    def __init__(self, yaml_config: Dict[str, Any], args: Optional[argparse.Namespace] = None):
-        self.config = yaml_config
+    def __init__(self, text_config: Dict[str, Any], args: Optional[argparse.Namespace] = None):
+        self.config = text_config
         self.args = args or argparse.Namespace()
         self.agent: Optional[MidsceneAgent] = None
         self.results = []
-        self.ai_action_context = self.config.get('agent', {}).get('aiActionContext', '')
 
     async def initialize_agent(self):
         """初始化 Midscene Agent"""
@@ -202,7 +95,6 @@ class YamlTestRunner:
 
         print(f"\n🌐 正在导航到: {url}")
         try:
-            # 使用 aiAction 来导航
             async for event in self.agent.execute(f"导航到 {url}", stream=True):
                 if "messages" in event:
                     msg = event["messages"][-1]
@@ -211,46 +103,108 @@ class YamlTestRunner:
         except Exception as e:
             print(f"  ❌ 导航失败: {e}")
 
+    def parse_text_file(self, file_path: str) -> Dict[str, Any]:
+        """解析 .txt 文件为内部配置结构"""
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        config = {'web': {}, 'tasks': []}
+        current_section = None
+        current_task = None
+        step_counter = 0
+
+        for line in content.split('\n'):
+            line = line.strip()
+
+            # 跳过空行和注释
+            if not line or line.startswith('#'):
+                continue
+
+            # 先解析任务定义 - 必须在其他@检查之前
+            if line.startswith('@task:'):
+                task_name = line.split(':', 1)[1].strip()
+                current_task = {
+                    'name': task_name,
+                    'flow': []
+                }
+                config['tasks'].append(current_task)
+                step_counter = 0
+                continue
+
+            # 然后解析配置节 (@web, @agent)
+            if line.startswith('@'):
+                if ':' in line:
+                    section_name, section_value = line.split(':', 1)
+                    section_name = section_name.strip('@').strip()
+                    section_value = section_value.strip()
+
+                    if section_name == 'web':
+                        current_section = 'web'
+                        config['web'] = {}
+                    elif section_name == 'agent':
+                        current_section = 'agent'
+                        config['agent'] = {'aiActionContext': section_value}
+                continue
+
+            # 解析配置项
+            if current_section == 'web':
+                if ':' in line:
+                    key, value = line.split(':', 1)
+                    key = key.strip()
+                    value = value.strip()
+
+                    # 转换数据类型
+                    if key in ['headless']:
+                        config['web'][key] = value.lower() in ['true', '1', 'yes', 'on']
+                    elif key in ['viewportWidth', 'viewportHeight']:
+                        config['web'][key] = int(value)
+                    else:
+                        config['web'][key] = value
+
+            # 解析步骤
+            if current_task is not None:
+                # 提取步骤编号
+                step_match = re.match(r'^(\d+)\.\s*(.+)$', line)
+                if step_match:
+                    step_number = int(step_match.group(1))
+                    step_content = step_match.group(2).strip()
+                    step_counter = step_number
+
+                    # 解析步骤类型
+                    parsed_step = self._parse_step(step_content)
+                    if parsed_step:
+                        current_task['flow'].append(parsed_step)
+
+        return config
+
+    def _parse_step(self, content: str) -> Optional[Dict[str, Any]]:
+        """解析单个步骤
+
+        新版本：简化解析逻辑，直接将所有内容作为自然语言传递给 AI
+        AI 会自动判断需要执行什么操作
+        """
+        content = content.strip()
+
+        # 如果内容为空，跳过
+        if not content:
+            return None
+
+        # 移除旧版本的特殊指令前缀，直接作为自然语言处理
+        # 统一格式：所有步骤都使用 ai 动作，让大模型自动判断要做什么
+        return {'ai': content}
+
     async def execute_step(self, step: Dict[str, Any]):
-        """执行单个步骤"""
+        """执行单个步骤
+
+        新版本：简化逻辑，所有步骤都通过 AI 自动判断和执行
+        """
         for action_type, action_content in step.items():
             try:
-                # 自动规划操作
-                if action_type in ['ai', 'aiAction']:
+                if action_type == 'ai':
+                    # 新版本：所有步骤都通过 AI 自动规划执行
                     await self._execute_ai_action(action_content)
-                # 断言和查询操作
-                elif action_type == 'aiAssert':
-                    await self._execute_ai_assert(action_content)
-                elif action_type == 'aiQuery':
-                    result = await self._execute_ai_query(action_content)
-                    return result
-                elif action_type == 'aiBoolean':
-                    result = await self._execute_ai_boolean(action_content)
-                    return result
-                elif action_type == 'aiNumber':
-                    result = await self._execute_ai_number(action_content)
-                    return result
-                elif action_type == 'aiString':
-                    result = await self._execute_ai_string(action_content)
-                    return result
-                # 截图和等待操作
-                elif action_type == 'logScreenshot':
-                    await self._execute_log_screenshot(action_content)
-                elif action_type == 'sleep':
-                    await self._execute_sleep(action_content)
-                elif action_type == 'aiWaitFor':
-                    await self._execute_ai_wait_for(action_content)
-                # 交互操作
-                elif action_type in ['aiTap', 'aiInput', 'aiHover', 'aiScroll', 'aiKeyboardPress']:
-                    await self._execute_interaction(action_type, action_content)
-                elif action_type == 'aiDoubleClick':
-                    await self._execute_interaction(action_type, action_content)
-                elif action_type == 'aiRightClick':
-                    await self._execute_interaction(action_type, action_content)
-                # JavaScript 执行
-                elif action_type == 'javascript':
-                    await self._execute_javascript(action_content)
                 else:
+                    # 保留其他类型以防万一，但实际上不会用到
                     print(f"  ⚠️ 未知操作类型: {action_type}")
             except Exception as e:
                 print(f"  ❌ 执行失败: {e}")
@@ -258,16 +212,33 @@ class YamlTestRunner:
                 traceback.print_exc()
 
     async def _execute_ai_action(self, content: Any):
-        """执行 AI 自动规划操作"""
+        """执行 AI 自动规划操作
+
+        新版本：增强自然语言理解，自动判断操作类型
+        """
         if self.agent is None:
             print(f"  ❌ Agent 未初始化")
             return
 
         prompt = content if isinstance(content, str) else str(content)
+
         print(f"\n🤖 AI 自动操作:")
         print(f"  📝 指令: {prompt}")
 
-        async for event in self.agent.execute(prompt, stream=True):
+        # 增强提示词，帮助 AI 更好地理解自然语言指令
+        # AI 会自动判断是导航、点击、输入、查询、截图还是其他操作
+        enhanced_prompt = f"""{prompt}
+
+请根据上述自然语言描述，自动判断需要执行什么操作：
+- 如果是导航，使用导航工具
+- 如果是点击、输入、滚动等交互，使用相应的交互工具
+- 如果是查询、验证信息，使用查询工具
+- 如果需要截图，使用截图工具
+- 如果是其他操作，选择最合适的工具
+
+请自动完成这个任务，并告诉我执行结果。"""
+
+        async for event in self.agent.execute(enhanced_prompt, stream=True):
             if "messages" in event:
                 msg = event["messages"][-1]
                 if hasattr(msg, "content") and msg.content:
@@ -291,7 +262,6 @@ class YamlTestRunner:
         print(f"\n🔍 执行断言:")
         print(f"  📝 条件: {prompt}")
 
-        # 构建任务描述
         task = f"验证以下条件是否成立: {prompt}"
         if error_message:
             task += f" 如果不成立，显示错误: {error_message}"
@@ -347,7 +317,6 @@ class YamlTestRunner:
         print(f"  📝 查询: {prompt}")
 
         try:
-            # 使用 aiQuery
             query_result = await self.agent.http_client.execute_query(
                 "aiQuery",
                 {
@@ -367,7 +336,7 @@ class YamlTestRunner:
             print(f"  ❌ 查询失败: {e}")
             import traceback
             traceback.print_exc()
-            return {}  # 明确返回空字典
+            return {}
 
     async def _execute_ai_boolean(self, content: Any):
         """执行布尔查询"""
@@ -473,9 +442,7 @@ class YamlTestRunner:
 
     async def _execute_sleep(self, content: Any):
         """等待"""
-        # 支持秒和毫秒
         if isinstance(content, (int, float)):
-            # 如果值 > 1000，认为是毫秒，否则是秒
             if content > 1000:
                 seconds = content / 1000
                 print(f"\n⏳ 等待 {content}ms")
@@ -504,7 +471,6 @@ class YamlTestRunner:
         print(f"\n👆 执行交互: {action_type}")
         print(f"  📝 描述: {prompt}")
 
-        # 构建执行描述
         action_desc = f"{action_type} {prompt}"
         if 'xpath' in params:
             action_desc += f" (xpath: {params['xpath']})"
@@ -535,7 +501,6 @@ class YamlTestRunner:
         print(f"  📝 条件: {prompt}")
         print(f"  ⏰ 超时: {timeout}ms")
 
-        # 使用 execute 方法来等待条件
         try:
             task = f"等待条件满足: {prompt}，超时时间 {timeout}ms"
             async for event in self.agent.execute(task, stream=True):
@@ -546,7 +511,7 @@ class YamlTestRunner:
             print(f"  ✅ 等待完成")
         except Exception as e:
             print(f"  ❌ 等待检查失败: {e}")
-            await asyncio.sleep(timeout / 1000)  # 发生错误时也等待一段时间
+            await asyncio.sleep(timeout / 1000)
 
     async def _execute_javascript(self, content: Any):
         """执行 JavaScript"""
@@ -564,7 +529,6 @@ class YamlTestRunner:
         print(f"\n💻 执行 JavaScript:")
         print(f"  📝 名称: {name}")
 
-        # 使用 execute 方法执行 JavaScript
         try:
             task = f"执行 JavaScript: {script}"
             async for event in self.agent.execute(task, stream=True):
@@ -578,7 +542,6 @@ class YamlTestRunner:
 
     async def run(self):
         """运行所有任务"""
-        web_config = self.config.get('web', {})
         tasks = self.config.get('tasks', [])
 
         if not tasks:
@@ -589,6 +552,7 @@ class YamlTestRunner:
         await self.initialize_agent()
 
         # 导航到 URL
+        web_config = self.config.get('web', {})
         if 'url' in web_config:
             await self.navigate_to_url(web_config['url'])
 
@@ -658,31 +622,106 @@ class YamlTestRunner:
         print("\n" + "=" * 70)
 
 
+def parse_arguments():
+    """解析命令行参数"""
+    parser = argparse.ArgumentParser(
+        description='直接执行自然语言测试用例',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+示例:
+  %(prog)s texts/basic_usage.txt
+  %(prog)s texts/*.txt --concurrent 4
+  %(prog)s texts/basic_usage.txt --headed
+  %(prog)s texts/*.txt --continue-on-error --summary output.json
+        """
+    )
+
+    parser.add_argument(
+        'files',
+        nargs='+',
+        help='要执行的文本文件或模式（如 texts/*.txt）'
+    )
+
+    parser.add_argument(
+        '--concurrent',
+        type=int,
+        default=1,
+        help='并发执行的数量 (默认: 1)'
+    )
+
+    parser.add_argument(
+        '--continue-on-error',
+        action='store_true',
+        help='如果脚本文件执行失败，继续运行其余脚本文件'
+    )
+
+    parser.add_argument(
+        '--headed',
+        action='store_true',
+        help='在有图形界面的浏览器中运行脚本'
+    )
+
+    parser.add_argument(
+        '--keep-window',
+        action='store_true',
+        help='脚本执行结束后保持浏览器窗口打开（自动启用 --headed）'
+    )
+
+    parser.add_argument(
+        '--summary',
+        type=str,
+        help='指定生成的 JSON 格式汇总报告文件的路径'
+    )
+
+    parser.add_argument(
+        '--web.userAgent',
+        type=str,
+        help='设置浏览器 UA，将覆盖所有脚本文件中的 web.userAgent 参数'
+    )
+
+    parser.add_argument(
+        '--web.viewportWidth',
+        type=int,
+        help='设置浏览器视口宽度，将覆盖所有脚本文件中的 web.viewportWidth 参数'
+    )
+
+    parser.add_argument(
+        '--web.viewportHeight',
+        type=int,
+        help='设置浏览器视口高度，将覆盖所有脚本文件中的 web.viewportHeight 参数'
+    )
+
+    args = parser.parse_args()
+
+    if args.keep_window:
+        args.headed = True
+
+    return args
+
+
 async def main():
     """主函数 - 支持多个文件和命令行参数"""
-    # 解析命令行参数
     args = parse_arguments()
 
     # 扩展文件模式
-    yaml_files = []
+    txt_files = []
     for pattern in args.files:
-        # 支持通配符
         if '*' in pattern or '?' in pattern:
             files = glob.glob(pattern)
-            yaml_files.extend(files)
+            txt_files.extend(files)
         else:
-            yaml_files.append(pattern)
+            txt_files.append(pattern)
 
     # 去重并过滤
-    yaml_files = list(set(yaml_files))
-    yaml_files = [f for f in yaml_files if f.endswith('.yaml') or f.endswith('.yml')]
+    txt_files = list(set(txt_files))
+    txt_files = [f for f in txt_files if f.endswith('.txt')]
 
-    if not yaml_files:
-        print("❌ 未找到匹配的 YAML 文件")
+    if not txt_files:
+        print("❌ 未找到匹配的文本文件")
         return
 
-    print(f"📋 找到 {len(yaml_files)} 个 YAML 文件:")
-    for i, f in enumerate(yaml_files, 1):
+    print(f"📋 找到 {len(txt_files)} 个文本文件:")
+    for i, f in enumerate(txt_files, 1):
         print(f"  {i}. {f}")
     print()
 
@@ -694,60 +733,52 @@ async def main():
         print("⚠️ 警告: 未设置 OPENAI_API_KEY")
 
     print("\n" + "=" * 70)
-    print("🚀 开始执行 YAML 测试")
+    print("🚀 开始执行自然语言测试")
     print("=" * 70)
 
     all_results = []
 
-    # 并发或顺序执行
     if args.concurrent > 1:
         print(f"\n⚡ 并发执行模式 ({args.concurrent} 个并发)")
-        # 注意：这里为了简化，我们仍然顺序执行，因为 MidsceneAgent 需要会话管理
-        # 在实际生产环境中，可以使用多进程或多线程实现真正的并发
 
-    for i, yaml_file in enumerate(yaml_files, 1):
+    for i, txt_file in enumerate(txt_files, 1):
         print(f"\n{'='*70}")
-        print(f"执行 {i}/{len(yaml_files)}: {yaml_file}")
+        print(f"执行 {i}/{len(txt_files)}: {txt_file}")
         print(f"{'='*70}")
 
-        if not os.path.exists(yaml_file):
-            print(f"❌ 文件不存在: {yaml_file}")
+        if not os.path.exists(txt_file):
+            print(f"❌ 文件不存在: {txt_file}")
             if not args.continue_on_error:
                 break
             all_results.append({
-                'file': yaml_file,
+                'file': txt_file,
                 'success': False,
                 'error': '文件不存在'
             })
             continue
 
-        # 读取 YAML
         try:
-            with open(yaml_file, 'r', encoding='utf-8') as f:
-                yaml_config = yaml.safe_load(f)
+            executor = TextTestExecutor({}, args)
+            config = executor.parse_text_file(txt_file)
+            executor.config = config
 
-            if not yaml_config:
-                print(f"❌ YAML 文件为空: {yaml_file}")
+            if not config.get('tasks'):
+                print(f"❌ 文件中没有任务: {txt_file}")
                 if not args.continue_on_error:
                     break
                 all_results.append({
-                    'file': yaml_file,
+                    'file': txt_file,
                     'success': False,
-                    'error': 'YAML 文件为空'
+                    'error': '文件中没有任务'
                 })
                 continue
 
-            # 替换环境变量
-            yaml_config = replace_env_vars(yaml_config)
-
-            # 执行测试
-            runner = YamlTestRunner(yaml_config, args)
-            await runner.run()
+            await executor.run()
 
             all_results.append({
-                'file': yaml_file,
-                'success': all(r['success'] for r in runner.results),
-                'results': runner.results
+                'file': txt_file,
+                'success': all(r['success'] for r in executor.results),
+                'results': executor.results
             })
 
         except Exception as e:
@@ -756,7 +787,7 @@ async def main():
             traceback.print_exc()
 
             all_results.append({
-                'file': yaml_file,
+                'file': txt_file,
                 'success': False,
                 'error': str(e)
             })
@@ -768,7 +799,7 @@ async def main():
     if args.summary:
         try:
             summary = {
-                'total_files': len(yaml_files),
+                'total_files': len(txt_files),
                 'success_files': sum(1 for r in all_results if r['success']),
                 'failed_files': sum(1 for r in all_results if not r['success']),
                 'results': all_results
@@ -781,7 +812,7 @@ async def main():
         except Exception as e:
             print(f"❌ 保存汇总报告失败: {e}")
 
-    print("\n👋 感谢使用 YAML 执行器！")
+    print("\n👋 感谢使用自然语言执行器！")
 
 
 if __name__ == "__main__":

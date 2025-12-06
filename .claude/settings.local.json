@@ -29,7 +29,14 @@
       "Bash(npm run:*)",
       "Bash(bash -c:*)",
       "Bash(python3 run_yaml_direct.py:*)",
-      "Bash(python3 -m py_compile:*)"
+      "Bash(python3 -m py_compile:*)",
+      "mcp__filesystem__list_directory",
+      "mcp__filesystem__read_file",
+      "mcp__filesystem__directory_tree",
+      "mcp__filesystem__read_text_file",
+      "mcp__filesystem__list_directory_with_sizes",
+      "Bash(wc:*)",
+      "Bash(python3 -m executor.yaml_executor:*)"
     ],
     "deny": [],
     "ask": []

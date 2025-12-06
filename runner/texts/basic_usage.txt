@@ -1,0 +1,16 @@
+# Midscene 基础使用示例
+# 演示纯粹自然语言的网页自动化 - 无需使用特殊指令
+
+@web:
+  url: https://midscenejs.com/zh/index.html
+  headless: false
+  viewportWidth: 1280
+  viewportHeight: 768
+
+@task: 基础网页自动化示例
+
+1. 导航到页面并等待完全加载
+2. 点击左侧导航菜单中的"MCP 服务"菜单项
+3. 检查页面是否显示了"使用场景"部分
+4. 截取一张当前页面的截图，记录操作结果
+5. 提取并显示当前页面的标题、主要导航菜单项和主要内容区域的文本
