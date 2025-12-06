@@ -3,7 +3,7 @@
  * @description 定义 WebSocket 通信的所有类型，包括消息格式和响应类型
  */
 
-import type { ActionParams } from './action.js'
+import type { ActionParams } from './action.js';
 
 /**
  * WebSocket 消息基接口
@@ -11,19 +11,19 @@ import type { ActionParams } from './action.js'
  */
 export interface WsMessage {
   /** 消息类型，用于区分不同类型的操作 */
-  type: string
+  type: string;
 
   /** 相关的会话 ID（某些消息类型需要） */
-  sessionId?: string
+  sessionId?: string;
 
   /** 动作类型（action 类型消息需要） */
-  action?: string
+  action?: string;
 
   /** 动作参数（action 类型消息需要） */
-  params?: ActionParams
+  params?: ActionParams;
 
   /** 消息时间戳（Unix 毫秒时间戳） */
-  timestamp?: number
+  timestamp?: number;
 }
 
 /**
@@ -32,10 +32,10 @@ export interface WsMessage {
  */
 export interface WsSubscribeMessage extends WsMessage {
   /** 消息类型 */
-  type: 'subscribe'
+  type: 'subscribe';
 
   /** 要订阅的会话 ID（必需） */
-  sessionId: string
+  sessionId: string;
 }
 
 /**
@@ -44,13 +44,13 @@ export interface WsSubscribeMessage extends WsMessage {
  */
 export interface WsActionMessage extends WsMessage {
   /** 消息类型 */
-  type: 'action'
+  type: 'action';
 
   /** 要执行的动作类型 */
-  action: string
+  action: string;
 
   /** 动作执行参数 */
-  params: ActionParams
+  params: ActionParams;
 }
 
 /**
@@ -59,7 +59,7 @@ export interface WsActionMessage extends WsMessage {
  */
 export interface WsUnsubscribeMessage extends WsMessage {
   /** 消息类型 */
-  type: 'unsubscribe'
+  type: 'unsubscribe';
 }
 
 /**
@@ -68,22 +68,22 @@ export interface WsUnsubscribeMessage extends WsMessage {
  */
 export interface WsResponse {
   /** 响应类型，用于区分不同类型的响应 */
-  type: string
+  type: string;
 
   /** 相关的会话 ID */
-  sessionId?: string
+  sessionId?: string;
 
   /** 执行的动作类型 */
-  action?: string
+  action?: string;
 
   /** 响应数据或动作执行结果 */
-  result?: unknown
+  result?: unknown;
 
   /** 错误信息（发生错误时） */
-  error?: string
+  error?: string;
 
   /** 响应时间戳（Unix 毫秒时间戳） */
-  timestamp: number
+  timestamp: number;
 }
 
 /**
@@ -92,16 +92,16 @@ export interface WsResponse {
  */
 export interface WsActionStartResponse extends WsResponse {
   /** 响应类型 */
-  type: 'action_start'
+  type: 'action_start';
 
   /** 会话 ID */
-  sessionId: string
+  sessionId: string;
 
   /** 开始执行的动作类型 */
-  action: string
+  action: string;
 
   /** 响应时间戳 */
-  timestamp: number
+  timestamp: number;
 }
 
 /**
@@ -110,19 +110,19 @@ export interface WsActionStartResponse extends WsResponse {
  */
 export interface WsActionCompleteResponse extends WsResponse {
   /** 响应类型 */
-  type: 'action_complete'
+  type: 'action_complete';
 
   /** 会话 ID */
-  sessionId: string
+  sessionId: string;
 
   /** 完成执行的动作类型 */
-  action: string
+  action: string;
 
   /** 动作执行结果 */
-  result: unknown
+  result: unknown;
 
   /** 响应时间戳 */
-  timestamp: number
+  timestamp: number;
 }
 
 /**
@@ -131,19 +131,19 @@ export interface WsActionCompleteResponse extends WsResponse {
  */
 export interface WsActionErrorResponse extends WsResponse {
   /** 响应类型 */
-  type: 'action_error'
+  type: 'action_error';
 
   /** 会话 ID */
-  sessionId: string
+  sessionId: string;
 
   /** 执行失败的动作类型 */
-  action?: string
+  action?: string;
 
   /** 错误信息 */
-  error: string
+  error: string;
 
   /** 响应时间戳 */
-  timestamp: number
+  timestamp: number;
 }
 
 /**
@@ -152,11 +152,11 @@ export interface WsActionErrorResponse extends WsResponse {
  */
 export interface WsSubscribedResponse extends WsResponse {
   /** 响应类型 */
-  type: 'subscribed'
+  type: 'subscribed';
 
   /** 成功订阅的会话 ID */
-  sessionId: string
+  sessionId: string;
 
   /** 响应时间戳 */
-  timestamp: number
+  timestamp: number;
 }

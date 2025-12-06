@@ -3,8 +3,19 @@
  * @description 定义 HTTP API 的所有响应类型和结果类型
  */
 
-import type { Logger } from 'winston'
-import type { Session, SessionConfig, SessionInfo, ActionType, ActionParams, ActionResult, ActionRecord, ActionOptions, QueryType, QueryParams } from './index.js'
+import type {
+  Session,
+  SessionConfig,
+  SessionInfo,
+  ActionType,
+  ActionParams,
+  ActionResult,
+  ActionRecord,
+  ActionOptions,
+  QueryType,
+  QueryParams,
+} from './index.js';
+import type { Logger } from 'winston';
 
 /**
  * API 响应基接口
@@ -12,19 +23,19 @@ import type { Session, SessionConfig, SessionInfo, ActionType, ActionParams, Act
  */
 export interface ApiResponse<T = unknown> {
   /** 请求是否成功执行 */
-  success: boolean
+  success: boolean;
 
   /** 响应时间戳（Unix 毫秒时间戳） */
-  timestamp: number
+  timestamp: number;
 
   /** 响应数据（可选） */
-  result?: T
+  result?: T;
 
   /** 错误信息（可选，请求失败时包含） */
-  error?: string
+  error?: string;
 
   /** 成功消息（可选） */
-  message?: string
+  message?: string;
 }
 
 /**
@@ -33,7 +44,7 @@ export interface ApiResponse<T = unknown> {
  */
 export interface CreateSessionResponse extends ApiResponse {
   /** 成功创建后会话 ID（仅在 success=true 时存在） */
-  sessionId?: string
+  sessionId?: string;
 }
 
 /**
@@ -42,7 +53,7 @@ export interface CreateSessionResponse extends ApiResponse {
  */
 export interface ExecuteActionResponse extends ApiResponse {
   /** 动作执行结果（仅在 success=true 时存在） */
-  result?: ActionResult
+  result?: ActionResult;
 }
 
 /**
@@ -51,7 +62,7 @@ export interface ExecuteActionResponse extends ApiResponse {
  */
 export interface ExecuteQueryResponse extends ApiResponse {
   /** 查询执行结果（仅在 success=true 时存在） */
-  result?: unknown
+  result?: unknown;
 }
 
 /**
@@ -60,7 +71,7 @@ export interface ExecuteQueryResponse extends ApiResponse {
  */
 export interface GetSessionsResponse extends ApiResponse {
   /** 活跃会话列表（仅在 success=true 时存在） */
-  sessions?: SessionInfo[]
+  sessions?: SessionInfo[];
 }
 
 /**
@@ -69,7 +80,7 @@ export interface GetSessionsResponse extends ApiResponse {
  */
 export interface GetSessionHistoryResponse extends ApiResponse {
   /** 会话动作历史记录（仅在 success=true 时存在） */
-  history?: ActionRecord[]
+  history?: ActionRecord[];
 }
 
 /**
@@ -78,7 +89,7 @@ export interface GetSessionHistoryResponse extends ApiResponse {
  */
 export interface DestroySessionResponse extends ApiResponse {
   /** 成功消息（仅在 success=true 时存在） */
-  message?: string
+  message?: string;
 }
 
 /**
@@ -87,19 +98,19 @@ export interface DestroySessionResponse extends ApiResponse {
  */
 export interface HealthCheckResult {
   /** 服务状态标识 */
-  status: string
+  status: string;
 
   /** 当前活跃的会话数量 */
-  activeSessions: number
+  activeSessions: number;
 
   /** 自服务启动以来的累计动作执行次数 */
-  totalActions: number
+  totalActions: number;
 
   /** 服务运行时长（秒） */
-  uptime: number
+  uptime: number;
 
   /** 当前进程的内存使用情况 */
-  memory: NodeJS.MemoryUsage
+  memory: NodeJS.MemoryUsage;
 }
 
 /**
@@ -108,7 +119,7 @@ export interface HealthCheckResult {
  */
 export interface HealthCheckResponse extends ApiResponse<HealthCheckResult> {
   /** 健康检查结果数据（包含服务状态统计信息） */
-  result?: HealthCheckResult
+  result?: HealthCheckResult;
 }
 
 /**
@@ -117,19 +128,19 @@ export interface HealthCheckResponse extends ApiResponse<HealthCheckResult> {
  */
 export interface RootResponse {
   /** 服务名称 */
-  name: string
+  name: string;
 
   /** 服务版本号 */
-  version: string
+  version: string;
 
   /** 服务描述 */
-  description: string
+  description: string;
 
   /** 支持的所有 API 端点列表 */
-  endpoints: string[]
+  endpoints: string[];
 
   /** 响应时间戳 */
-  timestamp: number
+  timestamp: number;
 }
 
 /**
@@ -138,20 +149,20 @@ export interface RootResponse {
  */
 export interface OrchestratorInterface {
   /** 所有活跃会话的映射表 */
-  sessions: Map<string, Session>
+  sessions: Map<string, Session>;
 
   /** 所有会话的动作历史记录映射表 */
-  actionHistory: Map<string, ActionRecord[]>
+  actionHistory: Map<string, ActionRecord[]>;
 
   /** Winston 日志实例 */
-  logger: Logger
+  logger: Logger;
 
   /**
    * 创建新的 Midscene 会话
    * @param config - 会话配置参数
    * @returns 创建的会话唯一 ID
    */
-  createSession(config?: SessionConfig): Promise<string>
+  createSession(config?: SessionConfig): Promise<string>;
 
   /**
    * 执行网页动作
@@ -161,7 +172,12 @@ export interface OrchestratorInterface {
    * @param options - 执行选项（如流式响应）
    * @returns 动作执行结果
    */
-  executeAction(sessionId: string, action: ActionType, params?: ActionParams, options?: ActionOptions): Promise<ActionResult>
+  executeAction(
+    sessionId: string,
+    action: ActionType,
+    params?: ActionParams,
+    options?: ActionOptions
+  ): Promise<ActionResult>;
 
   /**
    * 查询页面信息
@@ -170,35 +186,35 @@ export interface OrchestratorInterface {
    * @param params - 查询参数
    * @returns 查询结果
    */
-  executeQuery(sessionId: string, query: QueryType, params?: QueryParams): Promise<unknown>
+  executeQuery(sessionId: string, query: QueryType, params?: QueryParams): Promise<unknown>;
 
   /**
    * 销毁指定会话
    * @param sessionId - 要销毁的会话 ID
    */
-  destroySession(sessionId: string): Promise<void>
+  destroySession(sessionId: string): Promise<void>;
 
   /**
    * 获取所有活跃会话列表
    * @returns 会话信息数组
    */
-  getActiveSessions(): SessionInfo[]
+  getActiveSessions(): SessionInfo[];
 
   /**
    * 获取指定会话的动作历史记录
    * @param sessionId - 会话 ID
    * @returns 动作记录数组
    */
-  getSessionHistory(sessionId: string): ActionRecord[]
+  getSessionHistory(sessionId: string): ActionRecord[];
 
   /**
    * 执行服务健康检查
    * @returns 健康检查结果
    */
-  healthCheck(): Promise<HealthCheckResult>
+  healthCheck(): Promise<HealthCheckResult>;
 
   /**
    * 优雅关闭 Orchestrator
    */
-  shutdown(): Promise<void>
+  shutdown(): Promise<void>;
 }

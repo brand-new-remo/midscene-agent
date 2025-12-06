@@ -1,0 +1,73 @@
+# 依赖
+node_modules/
+/.pnp
+.pnp.js
+
+# 测试覆盖率
+coverage/
+/.nyc_output
+
+# 构建输出
+dist/
+build/
+
+# 日志
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# 运行时
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 编辑器
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ESLint 缓存
+.eslintcache
+*.eslintcache
+
+# Prettier 缓存
+.prettiercache
+
+# TypeScript
+*.tsbuildinfo
+
+# 临时文件
+*.tmp
+*.temp
+.tmp/
+.temp/
+
+# OS
+Thumbs.db
+
+# 测试
+jest.config.js.bak
+tsconfig.json.bak
+
+# 调试
+*.pid
+*.seed
+*.pid.lock
+
+# Midscene 运行目录
+midscene_run/
+screenshots/
+videos/

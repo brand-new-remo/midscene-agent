@@ -14,8 +14,8 @@ export type {
   /** 会话对象接口 */
   Session,
   /** 会话信息接口 */
-  SessionInfo
-} from './session.js'
+  SessionInfo,
+} from './session.js';
 
 // ====================
 // Action 相关类型
@@ -30,8 +30,8 @@ export type {
   /** 动作记录接口 */
   ActionRecord,
   /** 动作执行选项接口 */
-  ActionOptions
-} from './action.js'
+  ActionOptions,
+} from './action.js';
 
 // ====================
 // Query 相关类型
@@ -44,8 +44,8 @@ export type {
   /** 页面位置信息结果接口 */
   LocationResult,
   /** 标签页信息接口 */
-  TabInfo
-} from './query.js'
+  TabInfo,
+} from './query.js';
 
 // ====================
 // WebSocket 相关类型
@@ -68,8 +68,8 @@ export type {
   /** WebSocket 动作错误响应接口 */
   WsActionErrorResponse,
   /** WebSocket 订阅确认响应接口 */
-  WsSubscribedResponse
-} from './websocket.js'
+  WsSubscribedResponse,
+} from './websocket.js';
 
 // ====================
 // API 相关类型
@@ -96,35 +96,22 @@ export type {
   /** 根路径响应接口 */
   RootResponse,
   /** Orchestrator 接口定义 */
-  OrchestratorInterface
-} from './api.js'
+  OrchestratorInterface,
+} from './api.js';
 
 // ====================
 // 重新导出的类型
 // ====================
 
 // 从子模块重新导出常用类型，方便直接引用
-export type {
-  SessionConfig as Config
-} from './session.js'
+export type { SessionConfig as Config } from './session.js';
 
-export type {
-  Session as SessionData
-} from './session.js'
+export type { Session as SessionData } from './session.js';
 
-export type {
-  ActionType as Action
-} from './action.js'
+export type { ActionType as Action } from './action.js';
 
-export type {
-  QueryType as Query
-} from './query.js'
+export type { QueryType as Query } from './query.js';
 
-export type {
-  ActionParams as Params
-} from './action.js'
+export type { ActionParams as Params } from './action.js';
 
-export type {
-  WsMessage as Message
-} from './websocket.js'
-
+export type { WsMessage as Message } from './websocket.js';

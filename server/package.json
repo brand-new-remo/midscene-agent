@@ -10,7 +10,16 @@
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "lint": "eslint \"**/*.{ts,js}\" --max-warnings=0",
+    "lint:fix": "eslint \"**/*.{ts,js}\" --fix",
+    "lint:check": "eslint \"**/*.{ts,js}\" --quiet",
+    "format": "prettier --write \"**/*.{ts,js,json,md,css,scss}\"",
+    "format:check": "prettier --check \"**/*.{ts,js,json,md,css,scss}\"",
+    "format:write": "prettier --write \"**/*.{ts,js,json,md,css,scss}\"",
+    "quality": "npm run lint:check && npm run format:check && npm run typecheck",
+    "quality:fix": "npm run lint:fix && npm run format:write && npm run typecheck",
+    "prepare": "husky install"
   },
   "keywords": [
     "midscene",
@@ -38,13 +47,33 @@
     "@types/node": "^24.10.1",
     "@types/uuid": "^10.0.0",
     "@types/ws": "^8.18.1",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.56.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-promise": "^6.1.1",
+    "eslint-plugin-security": "^2.1.1",
+    "eslint-plugin-sonarjs": "^0.23.0",
+    "husky": "^9.0.6",
     "jest": "^30.2.0",
+    "lint-staged": "^15.2.1",
     "nodemon": "^3.1.11",
+    "prettier": "^3.2.4",
     "typescript": "^5.9.3",
     "vite": "^7.2.6",
     "vite-node": "^5.2.0"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "lint-staged": {
+    "*.{ts,js}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,css,scss}": [
+      "prettier --write"
+    ]
   }
 }

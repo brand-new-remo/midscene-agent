@@ -1,15 +1,18 @@
-import { defineConfig } from 'vite'
-import { resolve } from 'path'
-import { fileURLToPath } from 'url'
+/* eslint-disable import/order */
+import { resolve } from 'path';
+import { fileURLToPath } from 'url';
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url))
+import { defineConfig } from 'vite';
+/* eslint-enable import/order */
+
+const dirname = fileURLToPath(new URL('.', import.meta.url));
 
 export default defineConfig({
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
+      entry: resolve(dirname, 'src/index.ts'),
       formats: ['es'],
-      fileName: 'index'
+      fileName: 'index',
     },
     rollupOptions: {
       external: [
@@ -25,11 +28,11 @@ export default defineConfig({
         'http',
         'fs',
         'path',
-        'url'
-      ]
+        'url',
+      ],
     },
     target: 'node18',
     outDir: 'dist',
-    ssr: true
-  }
-})
+    ssr: true,
+  },
+});

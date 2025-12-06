@@ -3,8 +3,8 @@
  * @description 定义 Midscene 会话管理的所有类型，包括会话配置、会话对象和会话信息
  */
 
-import type { Browser, Page } from 'playwright'
-import type { PlaywrightAgent } from '@midscene/web'
+import type { PlaywrightAgent } from '@midscene/web';
+import type { Browser, Page } from 'playwright';
 
 /**
  * 会话配置接口
@@ -12,28 +12,28 @@ import type { PlaywrightAgent } from '@midscene/web'
  */
 export interface SessionConfig {
   /** 是否以无头模式启动浏览器（默认：true） */
-  headless?: boolean
+  headless?: boolean;
 
   /** 浏览器视口宽度（默认：1920px） */
-  viewport_width?: number
+  viewport_width?: number;
 
   /** 浏览器视口高度（默认：1080px） */
-  viewport_height?: number
+  viewport_height?: number;
 
   /** Midscene 使用的 AI 模型名称（默认：从环境变量 MIDSCENE_MODEL_NAME 获取） */
-  model?: string
+  model?: string;
 
   /** AI API 的基础 URL（默认：从环境变量 OPENAI_BASE_URL 获取） */
-  baseURL?: string
+  baseURL?: string;
 
   /** AI API 的密钥（默认：从环境变量 OPENAI_API_KEY 获取） */
-  apiKey?: string
+  apiKey?: string;
 
   /** 网络空闲等待超时时间（默认：2000ms） */
-  waitForNetworkIdleTimeout?: number
+  waitForNetworkIdleTimeout?: number;
 
   /** 动作执行超时时间（默认：30000ms） */
-  actionTimeout?: number
+  actionTimeout?: number;
 }
 
 /**
@@ -42,19 +42,19 @@ export interface SessionConfig {
  */
 export interface MidsceneConfig {
   /** AI 模型名称，必填 */
-  model: string
+  model: string;
 
   /** AI API 基础 URL，可选 */
-  baseURL?: string
+  baseURL?: string;
 
   /** AI API 密钥，可选 */
-  apiKey?: string
+  apiKey?: string;
 
   /** 网络空闲等待超时时间，默认 2000ms */
-  waitForNetworkIdleTimeout: number
+  waitForNetworkIdleTimeout: number;
 
   /** 动作执行超时时间，默认 30000ms */
-  actionTimeout: number
+  actionTimeout: number;
 }
 
 /**
@@ -63,29 +63,29 @@ export interface MidsceneConfig {
  */
 export interface Session {
   /** PlaywrightAgent 实例，用于执行网页自动化操作 */
-  agent: PlaywrightAgent
+  agent: PlaywrightAgent;
 
   /** Playwright 浏览器实例 */
-  browser: Browser
+  browser: Browser;
 
   /** Playwright 页面实例，原始的 Page 对象 */
-  page: Page
+  page: Page;
 
   /** Midscene 运行时配置 */
-  config: MidsceneConfig
+  config: MidsceneConfig;
 
   /** 会话当前状态：
    * - 'ready': 会话已就绪，可以执行操作
    * - 'busy': 会话正在执行操作中
    * - 'error': 会话遇到错误，需要重建
    */
-  state: 'ready' | 'busy' | 'error'
+  state: 'ready' | 'busy' | 'error';
 
   /** 会话创建时间戳（Unix 毫秒时间戳） */
-  createdAt: number
+  createdAt: number;
 
   /** 会话最后活动时间戳（Unix 毫秒时间戳） */
-  lastActivity: number
+  lastActivity: number;
 }
 
 /**
@@ -94,14 +94,14 @@ export interface Session {
  */
 export interface SessionInfo {
   /** 会话唯一标识符 */
-  sessionId: string
+  sessionId: string;
 
   /** 会话创建时间戳 */
-  createdAt: number
+  createdAt: number;
 
   /** 会话最后活动时间戳 */
-  lastActivity: number
+  lastActivity: number;
 
   /** 会话当前状态（字符串格式） */
-  state: string
+  state: string;
 }
