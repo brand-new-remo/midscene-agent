@@ -1,0 +1,20 @@
+# Midscene 基础使用示例
+# 演示基本的网页自动化、查询和流式响应功能
+
+web:
+  url: https://midscenejs.com/zh/index.html
+  headless: false
+  viewportWidth: 1280
+  viewportHeight: 768
+
+tasks:
+  - name: 基础网页自动化示例
+    flow:
+      - ai: 导航到页面并等待完全加载
+      - ai: 点击左侧导航菜单中的"MCP 服务"菜单项
+      - aiAssert: 检查是否显示了"使用场景"部分
+      - logScreenshot:
+          content: "基础自动化示例执行结果"
+      - aiQuery:
+          name: "页面信息"
+          prompt: "提取当前页面的标题、主要导航菜单项和主要内容区域的文本"

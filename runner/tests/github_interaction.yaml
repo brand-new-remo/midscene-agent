@@ -1,0 +1,41 @@
+# GitHub 交互演示
+# 演示访问 GitHub 并执行多个操作
+
+web:
+  url: https://github.com
+  headless: false
+  viewportWidth: 1280
+  viewportHeight: 768
+
+tasks:
+  - name: 搜索仓库
+    flow:
+      - ai: 导航到 github.com 并等待页面加载
+      - sleep: 2000
+      - aiInput: "midscene"
+        locate:
+          prompt: "在页面顶部的搜索框中输入"
+      - aiTap:
+          locate:
+            prompt: "点击搜索按钮或按回车键"
+      - sleep: 3000
+      - aiQuery:
+          name: "搜索结果统计"
+          prompt: "统计搜索结果的数量并提取前3个仓库的名称"
+      - logScreenshot:
+          content: "GitHub 搜索结果"
+
+  - name: 查看第一个仓库
+    continueOnError: true
+    flow:
+      - ai: 找到第一个搜索结果并点击进入仓库页面
+      - sleep: 2000
+      - logScreenshot:
+          content: "仓库详情页"
+      - aiQuery:
+          name: "仓库信息"
+          prompt: "提取仓库的名称、描述、主要编程语言、星标数和最近更新时间"
+      - aiAssert:
+          name: "验证仓库信息"
+          prompt: "确认页面显示了仓库的详细信息"
+          errorMessage: "未能找到仓库信息"

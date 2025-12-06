@@ -27,7 +27,9 @@
       "Bash(touch:*)",
       "Bash(npm run typecheck)",
       "Bash(npm run:*)",
-      "Bash(bash -c:*)"
+      "Bash(bash -c:*)",
+      "Bash(python3 run_yaml_direct.py:*)",
+      "Bash(python3 -m py_compile:*)"
     ],
     "deny": [],
     "ask": []

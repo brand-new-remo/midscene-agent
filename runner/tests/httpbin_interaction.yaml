@@ -1,0 +1,42 @@
+# HTTPBin 交互演示
+# 演示多个连续任务的执行
+
+web:
+  url: https://httpbin.org
+  headless: false
+  viewportWidth: 1280
+  viewportHeight: 768
+
+tasks:
+  - name: 基础交互任务
+    flow:
+      - ai: 导航到 httpbin.org 首页
+      - sleep: 2000
+      - logScreenshot:
+          content: "HTTPBin 首页"
+      - ai: 查看页面上可用的端点列表
+      - aiQuery:
+          name: "可用端点"
+          prompt: "提取页面上显示的主要 API 端点名称和描述"
+      - aiAssert:
+          name: "验证页面内容"
+          prompt: "确认页面显示了 API 端点信息"
+          errorMessage: "页面内容不完整"
+
+  - name: 滚动和交互测试
+    flow:
+      - aiScroll:
+          direction: "down"
+          scrollType: "once"
+          distance: 500
+      - sleep: 1000
+      - logScreenshot:
+          content: "滚动后页面"
+      - aiScroll:
+          direction: "up"
+          scrollType: "untilTop"
+      - sleep: 1000
+      - aiAssert:
+          name: "验证滚动完成"
+          prompt: "确认页面已回到顶部"
+          errorMessage: "滚动操作未完成"
