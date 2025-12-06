@@ -373,8 +373,8 @@ async function startServer(): Promise<void> {
       console.log('🚀 Midscene Node.js Server v2.0.0');
       console.log('='.repeat(70));
       console.log(`✅ HTTP Server running on port ${PORT}`);
-      console.log(`✅ WebSocket server ready`);
-      console.log(`✅ Orchestrator initialized`);
+      console.log('✅ WebSocket server ready');
+      console.log('✅ Orchestrator initialized');
       console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
       console.log(`${'='.repeat(70)}\n`);
     });

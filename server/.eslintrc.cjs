@@ -18,11 +18,7 @@ module.exports = {
     ecmaVersion: 2022,
     sourceType: 'module',
   },
-  plugins: [
-    '@typescript-eslint',
-    'import',
-    'promise',
-  ],
+  plugins: ['@typescript-eslint', 'import', 'promise'],
   settings: {
     'import/resolver': {
       typescript: {
@@ -107,19 +103,10 @@ module.exports = {
     'max-params': 'off',
     'max-statements': 'off',
     // 警告级别
-    'no-console': 'warn',
+    'no-console': 'off',
     'no-debugger': 'error',
     'no-alert': 'error',
-    'no-magic-numbers': [
-      'warn',
-      {
-        ignore: [-1, 0, 1, 2],
-        ignoreArrayIndexes: true,
-        detectObjects: false,
-        enforceConst: true,
-        ignoreDefaultValues: true,
-      },
-    ],
+    'no-magic-numbers': 'off',
     'no-throw-literal': 'error',
     'no-useless-escape': 'error',
 
@@ -148,6 +135,11 @@ module.exports = {
     'arrow-spacing': 'off',
     'block-spacing': 'off',
     'brace-style': 'off',
+    'object-curly-newline': 'off',
+    'operator-linebreak': 'off',
+    'arrow-body-style': 'off',
+    'implicit-arrow-linebreak': 'off',
+    'function-paren-newline': 'off',
   },
   overrides: [
     {
