@@ -36,6 +36,11 @@
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
-    "mcp-midscene"
+    "tavily",
+    "playwright",
+    "context7",
+    "chrome-devtools",
+    "sequential-thinking",
+    "filesystem"
   ]
 }
