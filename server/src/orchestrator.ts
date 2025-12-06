@@ -5,7 +5,7 @@
  * 执行网页自动化动作，并提供查询功能。
  */
 
-import { MidscenePlaywrightAgent } from './midscene-playwright-agent.js'
+import { PlaywrightAgent } from '@midscene/web'
 import { v4 as uuidv4 } from 'uuid'
 import winston from 'winston'
 import { chromium, type Page } from 'playwright'
@@ -100,8 +100,8 @@ export class MidsceneOrchestrator implements OrchestratorInterface {
         actionTimeout: config.actionTimeout || 30000
       }
 
-      // 创建 MidscenePlaywrightAgent 实例
-      const agent = new MidscenePlaywrightAgent(page, midsceneConfig)
+      // 创建 PlaywrightAgent 实例
+      const agent = new PlaywrightAgent(page, midsceneConfig)
 
       // 存储会话信息
       this.sessions.set(sessionId, {
@@ -235,7 +235,7 @@ export class MidsceneOrchestrator implements OrchestratorInterface {
    * 直接执行动作（无流式）
    */
   private async executeActionDirect(
-    agent: MidscenePlaywrightAgent,
+    agent: PlaywrightAgent,
     page: Page,
     action: ActionType,
     params: ActionParams
@@ -348,7 +348,7 @@ export class MidsceneOrchestrator implements OrchestratorInterface {
    * 带进度反馈的动作执行
    */
   private async executeActionWithProgress(
-    agent: MidscenePlaywrightAgent,
+    agent: PlaywrightAgent,
     page: Page,
     action: ActionType,
     params: ActionParams,
@@ -379,8 +379,80 @@ export class MidsceneOrchestrator implements OrchestratorInterface {
   }
 
   /**
-   * 查询页面信息
+   * 查询页面信息 - 函数重载，提供精确的类型返回
    */
+
+  // aiAssert 查询：返回断言结果对象
+  async executeQuery(
+    sessionId: string,
+    query: 'aiAssert',
+    params?: QueryParams
+  ): Promise<{ success: true; assertion: string }>
+
+  // aiBoolean 查询：返回布尔值
+  async executeQuery(
+    sessionId: string,
+    query: 'aiBoolean',
+    params?: QueryParams
+  ): Promise<boolean>
+
+  // aiNumber 查询：返回数值
+  async executeQuery(
+    sessionId: string,
+    query: 'aiNumber',
+    params?: QueryParams
+  ): Promise<number>
+
+  // aiString 查询：返回字符串
+  async executeQuery(
+    sessionId: string,
+    query: 'aiString',
+    params?: QueryParams
+  ): Promise<string>
+
+  // aiAsk 查询：返回字符串或对象
+  async executeQuery(
+    sessionId: string,
+    query: 'aiAsk',
+    params?: QueryParams
+  ): Promise<string | Record<string, unknown>>
+
+  // aiQuery 查询：返回结构化数据
+  async executeQuery(
+    sessionId: string,
+    query: 'aiQuery',
+    params?: QueryParams
+  ): Promise<Record<string, unknown> | string>
+
+  // aiLocate 查询：返回位置信息
+  async executeQuery(
+    sessionId: string,
+    query: 'aiLocate',
+    params?: QueryParams
+  ): Promise<{ x: number; y: number; width: number; height: number }>
+
+  // location 查询：返回位置信息结果
+  async executeQuery(
+    sessionId: string,
+    query: 'location',
+    params?: QueryParams
+  ): Promise<LocationResult>
+
+  // getTabs 查询：返回标签页信息列表
+  async executeQuery(
+    sessionId: string,
+    query: 'getTabs',
+    params?: QueryParams
+  ): Promise<TabInfo[]>
+
+  // 通用重载：返回 unknown（用于动态查询类型）
+  async executeQuery(
+    sessionId: string,
+    query: QueryType,
+    params?: QueryParams
+  ): Promise<unknown>
+
+  // 方法实现
   async executeQuery(
     sessionId: string,
     query: QueryType,
@@ -445,7 +517,6 @@ export class MidsceneOrchestrator implements OrchestratorInterface {
         }
 
         case 'getTabs': {
-          // get browser from page.context().browser()
           const browser = page.context().browser()
           if (!browser) {
             throw new Error('Browser not found')

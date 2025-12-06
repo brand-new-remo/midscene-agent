@@ -26,7 +26,8 @@
       "Bash(mv:*)",
       "Bash(touch:*)",
       "Bash(npm run typecheck)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(bash -c:*)"
     ],
     "deny": [],
     "ask": []

@@ -4,7 +4,7 @@
  */
 
 import type { Browser, Page } from 'playwright'
-import { MidscenePlaywrightAgent } from '../midscene-playwright-agent'
+import type { PlaywrightAgent } from '@midscene/web'
 
 /**
  * 会话配置接口
@@ -62,8 +62,8 @@ export interface MidsceneConfig {
  * @description 表示一个活跃的 Midscene 会话，包含其所有相关状态和资源
  */
 export interface Session {
-  /** MidscenePlaywrightAgent 实例，用于执行网页自动化操作 */
-  agent: MidscenePlaywrightAgent
+  /** PlaywrightAgent 实例，用于执行网页自动化操作 */
+  agent: PlaywrightAgent
 
   /** Playwright 浏览器实例 */
   browser: Browser
