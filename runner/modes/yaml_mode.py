@@ -11,7 +11,7 @@ import subprocess
 import sys
 
 
-async def run_yaml_tests():
+async def run_yaml_tests() -> None:
     """运行 YAML 测试用例"""
     print("\n" + "=" * 70)
     print("📝 YAML 测试用例")
@@ -37,7 +37,7 @@ async def run_yaml_tests():
     await _run_yaml_tests(yaml_files, tests_dir)
 
 
-async def _run_yaml_tests(yaml_files, tests_dir):
+async def _run_yaml_tests(yaml_files, tests_dir) -> None:
     """使用 Python 直接执行 YAML"""
     print("\n🐍 使用 Python 直接执行 YAML 测试用例")
     print("=" * 70 + "\n")
@@ -118,7 +118,7 @@ async def _run_yaml_tests(yaml_files, tests_dir):
         traceback.print_exc()
 
 
-async def run_all_tests():
+async def run_all_tests() -> None:
     """运行所有 YAML 测试"""
     print("\n" + "=" * 70)
     print("🧪 运行所有 YAML 测试")

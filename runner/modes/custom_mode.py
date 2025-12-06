@@ -16,7 +16,7 @@ if runner_dir not in sys.path:
 from agent.agent import MidsceneAgent
 
 
-async def run_custom_task():
+async def run_custom_task() -> None:
     """运行用户提供的自定义任务。"""
     print("\n" + "=" * 70)
     print("自定义任务模式")
@@ -28,12 +28,14 @@ async def run_custom_task():
 
     if not task:
         print("❌ 未提供任务")
+        print("=" * 70)
         return
 
     api_key = os.getenv("DEEPSEEK_API_KEY")
     if not api_key:
         print("❌ 错误: 在环境中未找到 DEEPSEEK_API_KEY")
         print("请在 .env 文件中设置或导出它")
+        print("=" * 70)
         return
 
     print("\n" + "=" * 70)

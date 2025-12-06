@@ -23,7 +23,7 @@
 ## 架构
 
 ```
-用户输入（自然语言）
+   用户输入（自然语言）
          ↓
    LangGraph Agent（StateGraph + 流程控制）
          ↓
@@ -35,7 +35,7 @@
          ↓
    Midscene Orchestrator（会话管理）
          ↓
-   Midscene.js + Playwright（浏览器自动化）
+   Midscene.js(豆包视觉模型) + Playwright（浏览器自动化）
          ↓
    浏览器（Chrome/Chromium）
 ```

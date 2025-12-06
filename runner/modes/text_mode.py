@@ -11,7 +11,7 @@ import subprocess
 import sys
 
 
-async def run_text_tests():
+async def run_text_tests() -> None:
     """运行自然语言测试用例"""
     print("\n" + "=" * 70)
     print("📄 自然语言测试用例")
@@ -110,7 +110,7 @@ async def run_text_tests():
         traceback.print_exc()
 
 
-async def run_all_text_tests():
+async def run_all_text_tests() -> None:
     """运行所有自然语言测试"""
     print("\n" + "=" * 70)
     print("🧪 运行所有自然语言测试")
