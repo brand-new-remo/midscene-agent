@@ -37,7 +37,10 @@
       "mcp__filesystem__list_directory_with_sizes",
       "Bash(wc:*)",
       "Bash(python3 -m executor.yaml_executor:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(unzip:*)",
+      "Bash(python3 -m json.tool:*)",
+      "Bash(PYTHONPATH=/Users/remo/github/midscene-agent python:*)"
     ],
     "deny": [],
     "ask": []

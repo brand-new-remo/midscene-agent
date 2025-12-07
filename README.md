@@ -9,6 +9,7 @@
 - **流式响应**: 实时查看执行进度
 - **完整功能**: 充分利用 Midscene.js 所有 API
 - **双格式测试**: 支持 YAML 结构化测试和自然语言测试
+- **XMind 转换工具**: 将思维导图转换为自然语言测试文件
 
 ## 功能特性
 
@@ -127,6 +128,14 @@ midscene-agent/
 │   ├── executor/            # 测试执行器
 │   │   ├── yaml_executor.py # YAML 测试执行器
 │   │   └── text_executor.py # 自然语言测试执行器
+│   ├── converter/           # XMind 转换工具
+│   │   ├── __init__.py
+│   │   ├── cli.py           # 命令行接口
+│   │   ├── models.py        # 数据模型
+│   │   ├── xmind_parser.py  # XMind 文件解析器
+│   │   ├── text_generator.py # 自然语言文本生成器
+│   │   ├── utils.py         # 工具函数
+│   │   └── exceptions.py    # 异常处理
 │   ├── modes/               # 交互式菜单模式
 │   │   ├── yaml_mode.py     # YAML 测试模式
 │   │   ├── text_mode.py     # 自然语言测试模式
@@ -167,6 +176,65 @@ python -m executor.yaml_executor tests/yamls/basic_usage.yaml
 
 # 执行自然语言测试
 python -m executor.text_executor tests/texts/basic_usage.txt
+```
+
+### XMind 转换工具
+
+项目包含一个 **XMind 转换工具**，可以将 XMind 思维导图格式的测试用例转换为自然语言测试文件。
+
+#### 使用方法
+
+**转换单个 XMind 文件**:
+```bash
+python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/
+```
+
+**批量转换目录**:
+```bash
+python -m converter.cli -i xmind/ -o tests/texts/
+```
+
+**详细输出模式**:
+```bash
+python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/ --verbose
+```
+
+#### 功能特点
+
+- ✅ **XMind → 自然语言测试文件**：将 XMind 思维导图转换为 tests/texts/ 格式
+- ✅ **模块化输出**：每个模块生成独立的 .txt 文件
+- ✅ **占位符配置**：@web 配置使用占位符，便于后续填写
+- ✅ **零依赖**：仅使用 Python 标准库
+- ✅ **批量转换**：支持单个文件或目录批量转换
+
+#### XMind 结构要求
+
+```
+根节点: 版本信息 (如: "V5.60测试用例")
+└── 第1层: #模块名 (如: "#登录管理")
+    └── 第2层: 用例名 (如: "交互验证")
+        └── 第3层: 操作步骤 (多行，编号列表)
+            └── 第4层: 验证步骤 (编号列表)
+```
+
+#### 生成的文件格式
+
+转换后生成的文件遵循自然语言测试格式：
+
+```txt
+# 模块名
+
+@web:
+  url: https://example.com  # TODO: 请填写实际 URL
+  headless: false
+  viewportWidth: 1280
+  viewportHeight: 768
+
+@task: 用例名
+
+1. 步骤内容
+2. 步骤内容
+3. 验证步骤
 ```
 
 ### 测试文件格式

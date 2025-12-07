@@ -1,0 +1,19 @@
+# 登录管理
+
+@web:
+  url: https://example.com  # TODO: 请填写实际 URL
+  headless: false
+  viewportWidth: 1280
+  viewportHeight: 768
+
+@task: 交互验证
+
+1. 导航到 httpbin.org 首页
+2. 等待2秒钟让页面完全加载
+3. 截取一张 HTTPBin 首页的截图
+4. 验证页面是否正确显示了 API 端点信息
+5. 查看页面上可用的端点列表
+6. 提取并显示页面上显示的主要 API 端点名称和描述
+7. 验证API端点名是否等于https://localhost:3000
+8. 验证描述是否是：登录端点
+
