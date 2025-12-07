@@ -131,8 +131,9 @@ midscene-agent/
 │   │   ├── yaml_mode.py     # YAML 测试模式
 │   │   ├── text_mode.py     # 自然语言测试模式
 │   │   └── custom_mode.py   # 自定义任务模式
-│   ├── yamls/               # YAML 测试文件
-│   ├── texts/               # 自然语言测试文件
+│   ├── tests/              # 测试用例
+│   │   ├── yamls/           # YAML 测试文件
+│   │   └── texts/           # 自然语言测试文件
 │   ├── run.py               # 交互式启动器
 │   ├── check_config.py      # 配置检查
 │   └── requirements.txt     # Python 依赖
@@ -162,15 +163,15 @@ python run.py
 
 ```bash
 # 执行 YAML 测试
-python -m executor.yaml_executor yamls/basic_usage.yaml
+python -m executor.yaml_executor tests/yamls/basic_usage.yaml
 
 # 执行自然语言测试
-python -m executor.text_executor texts/basic_usage.txt
+python -m executor.text_executor tests/texts/basic_usage.txt
 ```
 
 ### 测试文件格式
 
-#### YAML 测试 (runner/yamls/)
+#### YAML 测试 (tests/yamls/)
 
 ```yaml
 web:
@@ -190,7 +191,7 @@ tasks:
           prompt: "Extract information"
 ```
 
-#### 自然语言测试 (runner/texts/)
+#### 自然语言测试 (tests/texts/)
 
 ```
 @web:

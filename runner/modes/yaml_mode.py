@@ -10,6 +10,8 @@ import os
 import subprocess
 import sys
 
+from utils.path_utils import get_tests_dir
+
 
 async def run_yaml_tests() -> None:
     """运行 YAML 测试用例"""
@@ -18,7 +20,7 @@ async def run_yaml_tests() -> None:
     print("=" * 70 + "\n")
 
     # 显示可用的 YAML 文件
-    tests_dir = os.path.join(os.path.dirname(__file__), "..", "yamls")
+    tests_dir = get_tests_dir("yamls")
     if not os.path.exists(tests_dir):
         print("❌ yamls 目录不存在")
         return
@@ -125,7 +127,7 @@ async def run_all_tests() -> None:
     print("=" * 70 + "\n")
 
     try:
-        tests_dir = os.path.join(os.path.dirname(__file__), "..", "yamls")
+        tests_dir = get_tests_dir("yamls")
         if not os.path.exists(tests_dir):
             print("❌ yamls 目录不存在")
             return

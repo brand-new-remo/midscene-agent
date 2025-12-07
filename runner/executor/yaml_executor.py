@@ -4,7 +4,7 @@
 
 使用方法:
     python -m executor.yaml_executor <yaml_file> [选项]
-    例如: python -m executor.yaml_executor yamls/basic_usage.yaml
+    例如: python -m executor.yaml_executor tests/yamls/basic_usage.yaml
 """
 
 import asyncio
@@ -70,17 +70,17 @@ def parse_arguments():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例:
-  %(prog)s yamls/basic_usage.yaml
-  %(prog)s yamls/*.yaml --concurrent 4
-  %(prog)s yamls/basic_usage.yaml --headed
-  %(prog)s yamls/*.yaml --continue-on-error --summary output.json
+  %(prog)s tests/yamls/basic_usage.yaml
+  %(prog)s tests/yamls/*.yaml --concurrent 4
+  %(prog)s tests/yamls/basic_usage.yaml --headed
+  %(prog)s tests/yamls/*.yaml --continue-on-error --summary output.json
         """
     )
 
     parser.add_argument(
         'files',
         nargs='+',
-        help='要执行的 YAML 文件或模式（如 yamls/*.yaml）'
+        help='要执行的 YAML 文件或模式（如 tests/yamls/*.yaml）'
     )
 
     parser.add_argument(

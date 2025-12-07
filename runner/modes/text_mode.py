@@ -10,6 +10,8 @@ import os
 import subprocess
 import sys
 
+from utils.path_utils import get_tests_dir
+
 
 async def run_text_tests() -> None:
     """运行自然语言测试用例"""
@@ -18,7 +20,7 @@ async def run_text_tests() -> None:
     print("=" * 70 + "\n")
 
     # 显示可用的文本文件
-    texts_dir = os.path.join(os.path.dirname(__file__), "..", "texts")
+    texts_dir = get_tests_dir("texts")
     if not os.path.exists(texts_dir):
         print("❌ texts 目录不存在")
         return
@@ -117,7 +119,7 @@ async def run_all_text_tests() -> None:
     print("=" * 70 + "\n")
 
     try:
-        texts_dir = os.path.join(os.path.dirname(__file__), "..", "texts")
+        texts_dir = get_tests_dir("texts")
         if not os.path.exists(texts_dir):
             print("❌ texts 目录不存在")
             return

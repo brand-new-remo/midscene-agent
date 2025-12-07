@@ -119,10 +119,10 @@ npm run quality:fix  # lint:fix + format:write + typecheck
 python run.py
 
 # 直接执行 YAML 测试
-python -m executor.yaml_executor yamls/basic_usage.yaml
+python -m executor.yaml_executor tests/yamls/basic_usage.yaml
 
 # 直接执行自然语言测试
-python -m executor.text_executor texts/basic_usage.txt
+python -m executor.text_executor tests/texts/basic_usage.txt
 
 # 检查配置
 python check_config.py
@@ -167,10 +167,10 @@ python run.py
 # 选择选项 1 或 3，然后选择特定测试
 
 # 方法 2: 直接执行 YAML 测试
-python -m executor.yaml_executor yamls/basic_usage.yaml
+python -m executor.yaml_executor tests/yamls/basic_usage.yaml
 
 # 方法 3: 直接执行自然语言测试
-python -m executor.text_executor texts/basic_usage.txt
+python -m executor.text_executor tests/texts/basic_usage.txt
 
 # 方法 4: 自定义任务
 python run.py
@@ -186,7 +186,7 @@ python run.py
 
 2. **运行/测试 Python 代码** (在 `runner/` 目录中):
    ```bash
-   python -m executor.yaml_executor yamls/your_test.yaml
+   python -m executor.yaml_executor tests/yamls/your_test.yaml
    ```
 
 3. **检查代码质量** (在 `server/` 目录中):
@@ -244,7 +244,7 @@ python run.py
 
 项目支持两种测试格式:
 
-#### YAML 测试格式 (runner/yamls/)
+#### YAML 测试格式 (tests/yamls/)
 
 结构化的测试定义，支持明确的操作类型:
 
@@ -266,7 +266,7 @@ tasks:
           prompt: "Extract information"
 ```
 
-#### 自然语言测试格式 (runner/texts/)
+#### 自然语言测试格式 (tests/texts/)
 
 使用自然语言描述的测试，AI 自动规划执行:
 
@@ -285,14 +285,14 @@ tasks:
 
 ### 测试文件
 
-**YAML 测试** (位于 `runner/yamls/`):
+**YAML 测试** (位于 `tests/yamls/`):
 - `basic_usage.yaml` - 基础自动化示例
 - `github_interaction.yaml` - GitHub 自动化
 - `baidu_query_demo.yaml` - 搜索查询演示
 - `search_results_demo.yaml` - 搜索结果处理
 - `httpbin_interaction.yaml` - HTTP 测试
 
-**自然语言测试** (位于 `runner/texts/`):
+**自然语言测试** (位于 `tests/texts/`):
 - `basic_usage.txt` - 基础自动化示例
 - `github_interaction.txt` - GitHub 自动化
 - `baidu_query_demo.txt` - 搜索查询演示
