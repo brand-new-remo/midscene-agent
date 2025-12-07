@@ -69,6 +69,21 @@ pip install -r requirements.txt
 # 配置环境变量
 cp .env.example .env
 # 编辑 .env 添加你的 API 密钥
+
+### 可选：启动 Agent Chat UI
+
+如果您想使用可视化界面与智能体交互，可以启动 Chat UI：
+
+```bash
+# 安装依赖
+cd chat
+pnpm install
+
+# 启动开发服务器
+pnpm dev
+# 或使用 npm
+npm run dev
+# Chat UI 运行在 http://localhost:3001
 ```
 
 ### 启动
@@ -146,6 +161,16 @@ midscene-agent/
 │   ├── run.py               # 交互式启动器
 │   ├── check_config.py      # 配置检查
 │   └── requirements.txt     # Python 依赖
+├── chat/                    # Agent Chat UI (Next.js)
+│   ├── src/
+│   │   ├── app/             # Next.js 应用
+│   │   ├── components/      # React 组件
+│   │   ├── hooks/           # 自定义 Hooks
+│   │   ├── lib/             # 工具库
+│   │   └── providers/       # React Providers
+│   ├── public/              # 静态资源
+│   ├── package.json
+│   └── next.config.mjs
 ├── docs/                    # 文档
 └── .env.example             # 环境变量模板
 ```

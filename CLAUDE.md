@@ -135,6 +135,36 @@ python -m converter.cli -i xmind/ -o tests/texts/  # 批量转换目录
 python check_config.py
 ```
 
+### Chat UI (chat/ 目录)
+
+```bash
+# 安装依赖 (推荐使用 pnpm)
+cd chat
+pnpm install
+
+# 或使用 npm
+npm install
+
+# 开发模式
+pnpm dev
+# 或
+npm run dev
+
+# 生产构建
+pnpm build
+# 或
+npm run build
+
+# 代码质量检查
+npm run lint
+npm run lint:fix
+npm run format
+npm run format:check
+
+# 类型检查
+npm run typecheck
+```
+
 ### 环境设置
 
 ```bash
@@ -146,7 +176,11 @@ npm install
 cd ../runner
 pip install -r requirements.txt
 
-# 3. 配置环境
+# 3. (可选) 安装 Chat UI 依赖
+cd ../chat
+pnpm install
+
+# 4. 配置环境
 cp .env.example .env
 # 使用您的 API 密钥编辑 .env:
 # - DEEPSEEK_API_KEY (必需)
@@ -154,11 +188,15 @@ cp .env.example .env
 # - OPENAI_BASE_URL (用于 Midscene 视觉模型)
 # - MIDSCENE_SERVER_URL (默认: http://localhost:3000)
 
-# 4. 启动服务器
+# 5. 启动服务器
 cd ../server
 npm start
 
-# 5. 在另一个终端运行测试
+# 6. (可选) 启动 Chat UI
+cd ../chat
+pnpm dev
+
+# 7. 在另一个终端运行测试
 cd ../runner
 python run.py
 ```
@@ -243,6 +281,7 @@ python run.py
 关键配置文件:
 - `runner/.env` - Python 环境变量 (API 密钥、服务器 URL)
 - `server/.env` - Node.js 环境变量 (端口、模型配置)
+- `chat/.env.local` - Chat UI 环境变量 (可选)
 - `.claude/settings.json` - Claude Code MCP 服务器配置
 
 ## 测试
@@ -400,6 +439,7 @@ lsof -ti:3000 | xargs kill
 ## 重要提示
 
 - 服务器必须在执行 Python 测试**之前**运行
+- Chat UI 是可选的，提供可视化界面与智能体交互
 - 每个测试创建自己的 Midscene 会话
 - WebSocket 流式传输在智能体配置中默认启用
 - 会话是隔离的 - 一个会话中的操作不会影响其他会话
@@ -467,6 +507,16 @@ midscene-agent/
 │   ├── run.py               # 交互式启动器
 │   ├── check_config.py      # 配置检查器
 │   └── requirements.txt     # Python 依赖
+├── chat/                    # Agent Chat UI (Next.js)
+│   ├── src/
+│   │   ├── app/             # Next.js 应用
+│   │   ├── components/      # React 组件
+│   │   ├── hooks/           # 自定义 Hooks
+│   │   ├── lib/             # 工具库
+│   │   └── providers/       # React Providers
+│   ├── public/              # 静态资源
+│   ├── package.json
+│   └── next.config.mjs
 ├── docs/                    # 文档
 ├── .claude/
 │   └── settings.json        # MCP 服务器配置
