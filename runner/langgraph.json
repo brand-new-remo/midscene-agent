@@ -1,0 +1,7 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "midscene_agent": "./langgraph_cli.py:graph"
+  },
+  "env": ".env"
+}

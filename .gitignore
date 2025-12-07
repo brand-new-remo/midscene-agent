@@ -63,6 +63,7 @@ temp/
 node_modules/
 **/node_modules/
 .npm/
+**/.langgraph_api/
 
 **/midscene_run/
 

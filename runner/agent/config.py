@@ -30,6 +30,7 @@ class Config:
     MIDSCENE_MODEL_NAME: str = os.getenv("MIDSCENE_MODEL_NAME", "doubao-seed-1.6-vision")
     MIDSCENE_COMMAND: str = os.getenv("MIDSCENE_COMMAND", "npx")
     MIDSCENE_ARGS: list = os.getenv("MIDSCENE_ARGS", "-y @midscene/mcp").split()
+    MIDSCENE_SERVER_URL: str = os.getenv("MIDSCENE_SERVER_URL", "http://localhost:3000")
 
     # 浏览器配置
     CHROME_PATH: Optional[str] = os.getenv("CHROME_PATH")
