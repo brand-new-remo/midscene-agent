@@ -100,13 +100,6 @@ async def main():
                 print("❌ 无效选择。请重试。\n")
                 continue
 
-            # 任务执行完成，直接退出
-            if choice in ["1", "2", "3", "4", "5"]:
-                print("\n" + "=" * 70)
-                print("✅ 任务执行完成！")
-                print("👋 感谢使用 Midscene Agent ！\n")
-                sys.exit(0)
-
             print()
 
         except KeyboardInterrupt:
