@@ -15,7 +15,6 @@ import re
 import argparse
 from typing import Dict, Any, Optional, List
 import json
-import aiohttp
 from datetime import datetime
 import glob
 

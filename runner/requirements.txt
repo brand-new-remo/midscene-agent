@@ -7,9 +7,6 @@ langchain-deepseek>=1.0.0
 # HTTP Client
 aiohttp>=3.9.0
 
-# MCP Protocol (for backward compatibility)
-mcp>=1.0.0
-
 # Async support
 asyncio-throttle>=1.0.0
 

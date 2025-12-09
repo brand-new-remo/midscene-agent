@@ -85,6 +85,12 @@ class MidsceneAgentAdapter:
             return
 
         user_input = user_message.content
+        # 类型转换：确保 user_input 是字符串类型
+        if isinstance(user_input, list):
+            # 如果是列表，取第一个元素作为输入
+            user_input = str(user_input[0]) if user_input else ""
+        else:
+            user_input = str(user_input)
         logger.info(f"📝 收到用户输入: {user_input[:100]}...")
 
         # 创建 Midscene 会话
@@ -136,9 +142,6 @@ class MidsceneAgentAdapter:
 
             # 创建会话配置
             session_config = SessionConfig(
-                model=self.config.MIDSCENE_MODEL_NAME,
-                base_url=self.config.OPENAI_BASE_URL,
-                api_key=self.config.OPENAI_API_KEY,
                 headless=True,
                 viewport_width=1920,
                 viewport_height=1080,

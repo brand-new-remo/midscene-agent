@@ -20,15 +20,16 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class SessionConfig:
-    """会话配置"""
-    model: str = "doubao-seed-1.6-vision"
-    base_url: Optional[str] = None
-    api_key: Optional[str] = None
+    """
+    会话配置 - 浏览器参数
+
+    注意：视觉模型相关配置（model, api_key, base_url 等）
+    应在 Node.js server 端通过环境变量配置，
+    以实现架构分离。
+    """
     headless: bool = True
     viewport_width: int = 1920
     viewport_height: int = 1080
-    wait_for_network_idle_timeout: int = 2000
-    action_timeout: int = 30000
 
 
 @dataclass
@@ -199,6 +200,8 @@ class MidsceneHTTPClient:
         if not self.websocket:
             raise RuntimeError("WebSocket 未连接")
 
+        # 类型断言：告诉 Pylance 这里 websocket 不是 None
+        assert self.websocket is not None
         await self.websocket.send_json({
             "type": "action",
             "sessionId": self.session_id,
@@ -211,12 +214,16 @@ class MidsceneHTTPClient:
         if not self.websocket:
             return
 
+        # 类型断言：告诉 Pylance 这里 websocket 不是 None
+        assert self.websocket is not None
         try:
             async for msg in self.websocket:
                 if msg.type == aiohttp.WSMsgType.TEXT:
                     data = json.loads(msg.data)
                     yield data
                 elif msg.type == aiohttp.WSMsgType.ERROR:
+                    # 类型断言：告诉 Pylance 这里 websocket 不是 None
+                    assert self.websocket is not None
                     logger.error(f"WebSocket error: {self.websocket.exception()}")
                     break
         except Exception as e:
@@ -334,6 +341,8 @@ class MidsceneHTTPClient:
             ws_url = self.base_url.replace("http", "ws") + "/ws"
             self.websocket = await self.session.ws_connect(ws_url)
 
+            # 类型断言：告诉 Pylance 这里 websocket 不是 None
+            assert self.websocket is not None
             # 订阅会话
             await self.websocket.send_json({
                 "type": "subscribe",
@@ -345,12 +354,16 @@ class MidsceneHTTPClient:
 
         except Exception as e:
             logger.warning(f"⚠️ WebSocket 连接失败: {e}")
+            # 确保在失败时重置 websocket 状态
+            self.websocket = None
             return False
 
     async def disconnect_websocket(self) -> None:
         """断开 WebSocket 连接"""
         if self.websocket:
             try:
+                # 类型断言：告诉 Pylance 这里 websocket 不是 None
+                assert self.websocket is not None
                 await self.websocket.send_json({
                     "type": "unsubscribe",
                     "sessionId": self.session_id

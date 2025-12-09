@@ -112,11 +112,10 @@ class MidsceneAgent:
                 raise MidsceneConnectionError(f"服务器不健康: {health}")
 
             # 3. 创建 Midscene 会话
+            # 注意：根据架构分离原则，只传递浏览器参数
+            # 视觉模型相关参数在 Node.js server 端通过环境变量配置
             logger.info("🌐 创建 Midscene 会话...")
             session_config = SessionConfig(
-                model=self.midscene_config.get("model", "doubao-seed-1.6-vision"),
-                base_url=self.midscene_config.get("base_url"),
-                api_key=self.midscene_config.get("api_key"),
                 headless=self.midscene_config.get("headless", True),
                 viewport_width=self.midscene_config.get("viewport_width", 1920),
                 viewport_height=self.midscene_config.get("viewport_height", 1080),
