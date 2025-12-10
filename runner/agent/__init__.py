@@ -14,7 +14,8 @@ Usage:
             print(event)
 """
 
-from agent.agent import MidsceneAgent
+# 使用相对导入
+from .agent import MidsceneAgent
 
 __version__ = "1.0.0"
 __author__ = "AI Automation Team"

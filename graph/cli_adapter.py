@@ -5,13 +5,11 @@ MidsceneAgent CLI 适配器
 处理消息流转换和会话生命周期管理。
 """
 
-import asyncio
-import os
-from typing import AsyncGenerator, Dict, Any, Optional
+from typing import AsyncGenerator, Dict, Any
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
-from agent.http_client import MidsceneHTTPClient, SessionConfig
-from agent.config import Config
-from agent.agent import MidsceneAgent
+from runner.agent.http_client import SessionConfig
+from runner.agent.config import Config
+from runner.agent.agent import MidsceneAgent
 
 logger = __import__("logging").getLogger(__name__)
 
@@ -51,10 +49,7 @@ class MidsceneAgentAdapter:
 
         logger.info("🔧 MidsceneAgent 适配器初始化完成")
 
-    async def process(
-        self,
-        state: Dict[str, Any]
-    ) -> AsyncGenerator[BaseMessage, None]:
+    async def process(self, state: Dict[str, Any]) -> AsyncGenerator[BaseMessage, None]:
         """
         处理 LangGraph 消息流
 
@@ -168,8 +163,12 @@ class MidsceneAgentAdapter:
         try:
             if self.agent.http_client.session and session_id:
                 # 删除会话
-                delete_url = f"{self.agent.http_client.base_url}/api/sessions/{session_id}"
-                async with self.agent.http_client.session.delete(delete_url) as response:
+                delete_url = (
+                    f"{self.agent.http_client.base_url}/api/sessions/{session_id}"
+                )
+                async with self.agent.http_client.session.delete(
+                    delete_url
+                ) as response:
                     if response.status == 200:
                         logger.info(f"✅ 删除会话成功: {session_id}")
                     else:
@@ -180,9 +179,7 @@ class MidsceneAgentAdapter:
             logger.error(f"清理会话时出错 {session_id}: {str(e)}")
 
     async def _execute(
-        self,
-        user_input: str,
-        session_id: str
+        self, user_input: str, session_id: str
     ) -> AsyncGenerator[str, None]:
         """
         执行用户输入
@@ -214,7 +211,11 @@ class MidsceneAgentAdapter:
                         agent_output = chunk.get("agent", {})
                         if "messages" in agent_output:
                             for msg in agent_output["messages"]:
-                                yield str(msg.content) if hasattr(msg, "content") else str(msg)
+                                yield (
+                                    str(msg.content)
+                                    if hasattr(msg, "content")
+                                    else str(msg)
+                                )
                     else:
                         yield str(chunk)
                 else:

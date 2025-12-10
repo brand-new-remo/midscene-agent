@@ -7,7 +7,7 @@ LangGraph 工具适配器
 
 from typing import Dict, Any, List
 from langchain_core.tools import tool
-from .definitions import TOOL_DEFINITIONS, TOOL_CATEGORY_NAVIGATION, TOOL_CATEGORY_INTERACTION, TOOL_CATEGORY_QUERY, TOOL_CATEGORY_TEST
+from runner.agent.tools.definitions import TOOL_DEFINITIONS, TOOL_CATEGORY_NAVIGATION, TOOL_CATEGORY_INTERACTION, TOOL_CATEGORY_QUERY, TOOL_CATEGORY_TEST
 
 logger = __import__("logging").getLogger(__name__)
 

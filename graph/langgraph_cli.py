@@ -11,7 +11,7 @@ LangGraph CLI 适配层
 
 from langgraph.graph import StateGraph, MessagesState, START, END
 from langchain_core.messages import HumanMessage, AIMessage
-from agent.cli_adapter import MidsceneAgentAdapter
+from graph.cli_adapter import MidsceneAgentAdapter
 
 logger = __import__("logging").getLogger(__name__)
 
@@ -44,14 +44,13 @@ def create_midscene_graph():
         """
         # 获取最新用户消息
         if not state.get("messages"):
-            return {
-                "messages": [AIMessage(content="❌ 未收到用户消息")]
-            }
+            return {"messages": [AIMessage(content="❌ 未收到用户消息")]}
 
         user_message = state["messages"][-1]
         if not isinstance(user_message, HumanMessage):
             return {
-                "messages": state["messages"] + [AIMessage(content="❌ 只支持 HumanMessage")]
+                "messages": state["messages"]
+                + [AIMessage(content="❌ 只支持 HumanMessage")]
             }
 
         user_input = str(user_message.content)
@@ -87,9 +86,7 @@ def create_midscene_graph():
         except Exception as e:
             error_msg = f"❌ 执行失败: {str(e)}"
             logger.error(f"{error_msg}\n{__import__('traceback').format_exc()}")
-            return {
-                "messages": state["messages"] + [AIMessage(content=error_msg)]
-            }
+            return {"messages": state["messages"] + [AIMessage(content=error_msg)]}
 
         finally:
             # 清理会话

@@ -14,12 +14,12 @@ from langchain_core.messages import HumanMessage
 from langgraph.graph import StateGraph, MessagesState, START, END
 from langgraph.prebuilt import ToolNode, tools_condition
 from pydantic import SecretStr
-from agent.http_client import (
+from .http_client import (
     MidsceneHTTPClient,
     SessionConfig,
     MidsceneConnectionError,
 )
-from agent.tools.definitions import (
+from .tools.definitions import (
     get_tool_definition,
     TOOL_DEFINITIONS,
     get_recommended_tool_set,

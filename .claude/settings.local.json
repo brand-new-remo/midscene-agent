@@ -43,7 +43,9 @@
       "Bash(PYTHONPATH=/Users/remo/github/midscene-agent python:*)",
       "Bash(source:*)",
       "Bash(conda:*)",
-      "Bash(langgraph:*)"
+      "Bash(langgraph:*)",
+      "Bash(export:*)",
+      "Bash(PYTHONPATH=/Users/duangangqiang/github/midscene:$PYTHONPATH python -c:*)"
     ],
     "deny": [],
     "ask": []
