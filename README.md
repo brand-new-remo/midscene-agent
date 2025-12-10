@@ -41,6 +41,18 @@
    浏览器（Chrome/Chromium）
 ```
 
+### LangGraph CLI 集成
+
+项目还提供了基于 **LangGraph CLI** 的可视化界面，支持通过自然语言与智能体对话：
+
+```
+graph/                          # LangGraph CLI 适配层
+├── langgraph_cli.py           # CLI 适配层，提供 Agent Chat UI
+├── cli_adapter.py             # CLI 适配器，处理消息流转换
+├── langgraph.json             # CLI 配置文件（使用绝对路径）
+└── langgraph_adapter.py       # 工具适配器（30+ 工具转换）
+```
+
 ## 快速开始
 
 ### 前置要求
@@ -99,6 +111,59 @@ cd runner
 python run.py
 ```
 
+### 使用 LangGraph CLI (Agent Chat UI)
+
+项目还提供了基于 **LangGraph CLI** 的可视化界面，支持通过自然语言与智能体对话：
+
+```bash
+# 安装 LangGraph CLI
+pip install langgraph-cli
+
+# 在项目根目录运行
+cd /Users/duangangqiang/github/midscene
+langgraph dev
+
+# 访问 Agent Chat UI
+# 浏览器打开: http://localhost:2024
+```
+
+**重要说明：langgraph.json 中的绝对路径**
+
+`graph/langgraph.json` 文件中使用了**绝对路径**（而非相对路径），这是因为：
+
+1. **LangGraph CLI 的工作目录问题**：LangGraph CLI 默认从当前工作目录查找配置文件，但如果从不同目录运行（如从 `runner/` 目录运行 Python 测试），相对路径会失效
+
+2. **跨目录调用的稳定性**：项目支持多种运行方式：
+   - 从根目录运行 `langgraph dev`（启动 Chat UI）
+   - 从 `runner/` 目录运行 `python run.py`（交互式启动器）
+   - 从任意位置执行测试文件
+
+3. **配置文件的可移植性**：绝对路径确保无论在哪个工作目录下启动，LangGraph 都能正确找到配置文件和依赖
+
+**langgraph.json 配置详解**：
+
+```json
+{
+  "dependencies": [".", "/Users/duangangqiang/github/midscene"],
+  "graphs": {
+    "midscene_agent": "/Users/duangangqiang/github/midscene/graph/langgraph_cli.py:graph"
+  },
+  "env": "/Users/duangangqiang/github/midscene/runner/.env"
+}
+```
+
+- `dependencies`: 定义了 Python 模块的搜索路径，确保能从 graph 模块导入 runner 包
+- `graphs`: 映射了图名称到具体的图函数，使用绝对路径确保 CLI 能正确定位
+- `env`: 指定环境变量文件路径，为 LangGraph 提供 DeepSeek API 等配置
+
+**Agent Chat UI 功能**：
+
+- ✅ **自然语言交互**：通过可视化界面直接与智能体对话
+- ✅ **实时流式响应**：查看操作执行的实时进度
+- ✅ **会话管理**：自动管理 Midscene 会话生命周期
+- ✅ **完整工具集**：支持所有 30+ 网页自动化工具
+- ✅ **错误处理**：友好的错误提示和异常捕获
+
 ## 项目结构
 
 ```
@@ -143,24 +208,33 @@ midscene-agent/
 │   ├── executor/            # 测试执行器
 │   │   ├── yaml_executor.py # YAML 测试执行器
 │   │   └── text_executor.py # 自然语言测试执行器
-│   ├── converter/           # XMind 转换工具
-│   │   ├── __init__.py
-│   │   ├── cli.py           # 命令行接口
-│   │   ├── models.py        # 数据模型
-│   │   ├── xmind_parser.py  # XMind 文件解析器
-│   │   ├── text_generator.py # 自然语言文本生成器
-│   │   ├── utils.py         # 工具函数
-│   │   └── exceptions.py    # 异常处理
 │   ├── modes/               # 交互式菜单模式
 │   │   ├── yaml_mode.py     # YAML 测试模式
 │   │   ├── text_mode.py     # 自然语言测试模式
 │   │   └── custom_mode.py   # 自定义任务模式
-│   ├── tests/              # 测试用例
-│   │   ├── yamls/           # YAML 测试文件
-│   │   └── texts/           # 自然语言测试文件
 │   ├── run.py               # 交互式启动器
 │   ├── check_config.py      # 配置检查
 │   └── requirements.txt     # Python 依赖
+├── tests/                   # 测试文件
+│   ├── yamls/               # YAML 测试文件
+│   └── texts/               # 自然语言测试文件
+├── converter/               # XMind 转换工具
+│   ├── __init__.py
+│   ├── cli.py               # 命令行接口
+│   ├── models.py            # 数据模型
+│   ├── xmind_parser.py      # XMind 文件解析器
+│   ├── text_generator.py    # 自然语言文本生成器
+│   ├── utils.py             # 工具函数
+│   ├── exceptions.py        # 异常处理
+│   └── requirements.txt     # 依赖列表
+├── xmind/                   # XMind 源文件
+│   └── V5.60测试用例.xmind   # 示例 XMind 测试用例
+├── graph/                   # LangGraph CLI 适配层
+│   ├── langgraph_cli.py     # CLI 适配层，提供 Agent Chat UI 支持
+│   ├── cli_adapter.py       # CLI 适配器，处理消息流转换和会话管理
+│   ├── langgraph.json       # CLI 配置文件（使用绝对路径）
+│   ├── langgraph_adapter.py # 工具适配器（30+ 工具转换）
+│   └── __init__.py          # 模块初始化
 ├── chat/                    # Agent Chat UI (Next.js)
 │   ├── src/
 │   │   ├── app/             # Next.js 应用
@@ -224,6 +298,12 @@ python -m converter.cli -i xmind/ -o tests/texts/
 python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/ --verbose
 ```
 
+**从 runner 目录调用**:
+```bash
+cd runner
+python -m converter.cli -i ../xmind/V5.60测试用例.xmind -o ../tests/texts/
+```
+
 #### 功能特点
 
 - ✅ **XMind → 自然语言测试文件**：将 XMind 思维导图转换为 tests/texts/ 格式
@@ -264,7 +344,7 @@ python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/ --verbo
 
 ### 测试文件格式
 
-#### YAML 测试 (tests/yamls/)
+#### YAML 测试 (位于 `tests/yamls/`)
 
 ```yaml
 web:
@@ -284,7 +364,7 @@ tasks:
           prompt: "Extract information"
 ```
 
-#### 自然语言测试 (tests/texts/)
+#### 自然语言测试 (位于 `tests/texts/`)
 
 ```
 @web:

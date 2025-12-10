@@ -49,12 +49,26 @@
 - `agent/agent.py` - 基于 LangGraph 的智能体，集成了 DeepSeek LLM
 - `agent/http_client.py` - 用于与 Node.js 通信的异步 HTTP/WebSocket 客户端
 - `agent/config.py` - 配置管理
-- `agent/tools/definitions.py` - 网页自动化操作的工具定义
-- `executor/yaml_executor.py` - YAML 测试文件执行器
-- `executor/text_executor.py` - 自然语言测试文件执行器
-- `converter/` - XMind 转换工具，将思维导图转换为自然语言测试文件
+- `agent/tools/definitions.py` - 网页自动化操作的工具定义（30+ 工具）
 - `modes/` - 交互式菜单的模式模块
 - `run.py` - 带有菜单的交互式启动器
+- `executor/` - 测试执行器模块
+- `requirements.txt` - Python 依赖列表
+
+**测试文件 (tests/):**
+- `yamls/` - YAML 格式测试文件
+- `texts/` - 自然语言测试文件
+
+**XMind 转换工具 (converter/):**
+- `cli.py` - 命令行接口
+- `xmind_parser.py` - XMind 文件解析器
+- `text_generator.py` - 自然语言文本生成器
+- `models.py` - 数据模型
+- `utils.py` - 工具函数
+- `exceptions.py` - 异常处理
+
+**XMind 文件 (xmind/):**
+- `V5.60测试用例.xmind` - 示例 XMind 测试用例
 
 **Node.js 端 (server/):**
 - `src/index.ts` - 主服务器入口，集成 Express + WebSocket
@@ -84,6 +98,62 @@
 - REST API 用于有状态操作（创建会话、执行操作/查询）
 - WebSocket 用于实时流式传输操作进度
 - 基于会话的状态管理
+
+**LangGraph CLI 集成 (graph/):**
+- `graph/langgraph_cli.py` - LangGraph CLI 适配层，提供 Agent Chat UI 支持
+- `graph/cli_adapter.py` - CLI 适配器，处理消息流转换和会话生命周期管理
+- `graph/langgraph.json` - LangGraph CLI 配置文件
+- `graph/langgraph_adapter.py` - 工具适配器，将 30+ Midscene 工具转换为 LangGraph 兼容格式
+
+## LangGraph CLI 使用说明
+
+### 启动 Agent Chat UI
+
+项目提供了基于 LangGraph CLI 的可视化界面，支持通过自然语言与智能体对话：
+
+```bash
+# 在项目根目录运行
+cd /Users/duangangqiang/github/midscene
+langgraph dev
+
+# 访问 Agent Chat UI
+# 浏览器打开: http://localhost:2024
+```
+
+**重要说明：langgraph.json 中的绝对路径**
+
+`graph/langgraph.json` 文件中使用了**绝对路径**（而非相对路径），这是因为：
+
+1. **LangGraph CLI 的工作目录问题**：LangGraph CLI 默认从当前工作目录查找配置文件，但如果从不同目录运行（如从 `runner/` 目录运行 Python 测试），相对路径会失效
+2. **跨目录调用的稳定性**：项目支持多种运行方式：
+   - 从根目录运行 `langgraph dev`（启动 Chat UI）
+   - 从 `runner/` 目录运行 `python run.py`（交互式启动器）
+   - 从任意位置执行测试文件
+3. **配置文件的可移植性**：绝对路径确保无论在哪个工作目录下启动，LangGraph 都能正确找到配置文件和依赖
+
+### langgraph.json 配置详解
+
+```json
+{
+  "dependencies": [".", "/Users/duangangqiang/github/midscene"],
+  "graphs": {
+    "midscene_agent": "/Users/duangangqiang/github/midscene/graph/langgraph_cli.py:graph"
+  },
+  "env": "/Users/duangangqiang/github/midscene/runner/.env"
+}
+```
+
+- `dependencies`: 定义了 Python 模块的搜索路径，确保能从 graph 模块导入 runner 包
+- `graphs`: 映射了图名称到具体的图函数，使用绝对路径确保 CLI 能正确定位
+- `env`: 指定环境变量文件路径，为 LangGraph 提供 DeepSeek API 等配置
+
+### Agent Chat UI 功能
+
+- ✅ **自然语言交互**：通过可视化界面直接与智能体对话
+- ✅ **实时流式响应**：查看操作执行的实时进度
+- ✅ **会话管理**：自动管理 Midscene 会话生命周期
+- ✅ **完整工具集**：支持所有 30+ 网页自动化工具
+- ✅ **错误处理**：友好的错误提示和异常捕获
 
 ## 常用命令
 
@@ -119,20 +189,30 @@ npm run quality:fix  # lint:fix + format:write + typecheck
 
 ```bash
 # 带有菜单的交互式启动器
+cd runner
 python run.py
 
 # 直接执行 YAML 测试
-python -m executor.yaml_executor tests/yamls/basic_usage.yaml
+python -m executor.yaml_executor ../../tests/yamls/basic_usage.yaml
 
 # 直接执行自然语言测试
-python -m executor.text_executor tests/texts/basic_usage.txt
-
-# XMind 转换工具
-python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/
-python -m converter.cli -i xmind/ -o tests/texts/  # 批量转换目录
+python -m executor.text_executor ../../tests/texts/basic_usage.txt
 
 # 检查配置
 python check_config.py
+```
+
+### XMind 转换工具 (converter/ 目录)
+
+```bash
+# 转换单个 XMind 文件
+python -m converter.cli -i ../xmind/V5.60测试用例.xmind -o ../tests/texts/
+
+# 批量转换目录
+python -m converter.cli -i ../xmind/ -o ../tests/texts/
+
+# 详细输出模式
+python -m converter.cli -i ../xmind/V5.60测试用例.xmind -o ../tests/texts/ --verbose
 ```
 
 ### Chat UI (chat/ 目录)
@@ -212,14 +292,19 @@ python run.py
 # 选择选项 1 或 3，然后选择特定测试
 
 # 方法 2: 直接执行 YAML 测试
-python -m executor.yaml_executor tests/yamls/basic_usage.yaml
+python -m executor.yaml_executor ../../tests/yamls/basic_usage.yaml
 
 # 方法 3: 直接执行自然语言测试
-python -m executor.text_executor tests/texts/basic_usage.txt
+python -m executor.text_executor ../../tests/texts/basic_usage.txt
 
 # 方法 4: 自定义任务
 python run.py
 # 选择选项 5，输入自然语言指令
+
+# 方法 5: 使用 LangGraph CLI（推荐）
+cd /Users/duangangqiang/github/midscene
+langgraph dev
+# 访问 http://localhost:2024，使用可视化界面
 ```
 
 ### 开发周期
@@ -231,7 +316,7 @@ python run.py
 
 2. **运行/测试 Python 代码** (在 `runner/` 目录中):
    ```bash
-   python -m executor.yaml_executor tests/yamls/your_test.yaml
+   python -m executor.yaml_executor ../../tests/yamls/your_test.yaml
    ```
 
 3. **检查代码质量** (在 `server/` 目录中):
@@ -290,7 +375,7 @@ python run.py
 
 项目支持两种测试格式:
 
-#### YAML 测试格式 (tests/yamls/)
+#### YAML 测试格式 (位于 `tests/yamls/`)
 
 结构化的测试定义，支持明确的操作类型:
 
@@ -312,7 +397,7 @@ tasks:
           prompt: "Extract information"
 ```
 
-#### 自然语言测试格式 (tests/texts/)
+#### 自然语言测试格式 (位于 `tests/texts/`)
 
 使用自然语言描述的测试，AI 自动规划执行:
 
@@ -361,17 +446,17 @@ tasks:
 
 **转换单个 XMind 文件**:
 ```bash
-python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/
+python -m converter.cli -i ../xmind/V5.60测试用例.xmind -o ../tests/texts/
 ```
 
 **批量转换目录**:
 ```bash
-python -m converter.cli -i xmind/ -o tests/texts/
+python -m converter.cli -i ../xmind/ -o ../tests/texts/
 ```
 
 **详细输出模式**:
 ```bash
-python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/ --verbose
+python -m converter.cli -i ../xmind/V5.60测试用例.xmind -o ../tests/texts/ --verbose
 ```
 
 #### XMind 结构要求
