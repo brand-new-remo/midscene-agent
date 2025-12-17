@@ -1,7 +1,7 @@
 {
-  "dependencies": [".", "/Users/duangangqiang/github/midscene"],
+  "dependencies": [".", "/e/code/midscene-agent"],
   "graphs": {
-    "midscene_agent": "/Users/duangangqiang/github/midscene/graph/langgraph_cli.py:graph"
+    "midscene_agent": "/e/code/midscene-agent/graph/langgraph_cli.py:graph"
   },
-  "env": "/Users/duangangqiang/github/midscene/runner/.env"
+  "env": "/e/code/midscene-agent/.env"
 }

@@ -185,34 +185,40 @@ npm run quality      # lint + format:check + typecheck
 npm run quality:fix  # lint:fix + format:write + typecheck
 ```
 
-### Python 运行器 (runner/ 目录)
+### Python 运行器 (UV 管理)
 
 ```bash
+# 安装依赖 (首次设置)
+uv venv
+source .venv/Scripts/activate  # Windows
+# 或
+source .venv/bin/activate       # Linux/macOS
+uv pip install -e .
+
 # 带有菜单的交互式启动器
-cd runner
-python run.py
+midscene
 
 # 直接执行 YAML 测试
-python -m executor.yaml_executor ../../tests/yamls/basic_usage.yaml
+midscene-yaml tests/yamls/basic_usage.yaml
 
 # 直接执行自然语言测试
-python -m executor.text_executor ../../tests/texts/basic_usage.txt
+midscene-text tests/texts/basic_usage.txt
 
 # 检查配置
-python check_config.py
+midscene-check
 ```
 
 ### XMind 转换工具 (converter/ 目录)
 
 ```bash
 # 转换单个 XMind 文件
-python -m converter.cli -i ../xmind/V5.60测试用例.xmind -o ../tests/texts/
+uv run python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/
 
 # 批量转换目录
-python -m converter.cli -i ../xmind/ -o ../tests/texts/
+uv run python -m converter.cli -i xmind/ -o tests/texts/
 
 # 详细输出模式
-python -m converter.cli -i ../xmind/V5.60测试用例.xmind -o ../tests/texts/ --verbose
+uv run python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/ --verbose
 ```
 
 ### Chat UI (chat/ 目录)
@@ -253,8 +259,11 @@ cd server
 npm install
 
 # 2. 安装 Python 依赖
-cd ../runner
-pip install -r requirements.txt
+uv venv
+source .venv/Scripts/activate  # Windows
+# 或
+source .venv/bin/activate       # Linux/macOS
+uv pip install -e .
 
 # 3. (可选) 安装 Chat UI 依赖
 cd ../chat
@@ -287,18 +296,17 @@ python run.py
 
 ```bash
 # 方法 1: 使用交互式启动器
-cd runner
-python run.py
+midscene
 # 选择选项 1 或 3，然后选择特定测试
 
 # 方法 2: 直接执行 YAML 测试
-python -m executor.yaml_executor ../../tests/yamls/basic_usage.yaml
+midscene-yaml tests/yamls/basic_usage.yaml
 
 # 方法 3: 直接执行自然语言测试
-python -m executor.text_executor ../../tests/texts/basic_usage.txt
+midscene-text tests/texts/basic_usage.txt
 
 # 方法 4: 自定义任务
-python run.py
+midscene
 # 选择选项 5，输入自然语言指令
 
 # 方法 5: 使用 LangGraph CLI（推荐）
@@ -314,9 +322,9 @@ langgraph dev
    npm run dev
    ```
 
-2. **运行/测试 Python 代码** (在 `runner/` 目录中):
+2. **运行/测试 Python 代码** (从项目根目录):
    ```bash
-   python -m executor.yaml_executor ../../tests/yamls/your_test.yaml
+   midscene-yaml tests/yamls/your_test.yaml
    ```
 
 3. **检查代码质量** (在 `server/` 目录中):
@@ -364,7 +372,7 @@ langgraph dev
 ## 配置
 
 关键配置文件:
-- `runner/.env` - Python 环境变量 (API 密钥、服务器 URL)
+- `.env` - Python 环境变量 (API 密钥、服务器 URL)
 - `server/.env` - Node.js 环境变量 (端口、模型配置)
 - `chat/.env.local` - Chat UI 环境变量 (可选)
 - `.claude/settings.json` - Claude Code MCP 服务器配置
@@ -446,17 +454,17 @@ tasks:
 
 **转换单个 XMind 文件**:
 ```bash
-python -m converter.cli -i ../xmind/V5.60测试用例.xmind -o ../tests/texts/
+uv run python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/
 ```
 
 **批量转换目录**:
 ```bash
-python -m converter.cli -i ../xmind/ -o ../tests/texts/
+uv run python -m converter.cli -i xmind/ -o tests/texts/
 ```
 
 **详细输出模式**:
 ```bash
-python -m converter.cli -i ../xmind/V5.60测试用例.xmind -o ../tests/texts/ --verbose
+uv run python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/ --verbose
 ```
 
 #### XMind 结构要求
@@ -564,7 +572,11 @@ midscene-agent/
 │   │   └── types/           # TypeScript 定义
 │   ├── package.json
 │   └── dist/                # 构建输出
-├── runner/                  # Python LangGraph 智能体
+├── runner/                  # Python LangGraph 智能体 (包)
+├── pyproject.toml           # UV 项目配置
+├── uv.lock                  # UV 锁定文件
+├── .env                     # 环境变量
+├── .venv/                   # UV 虚拟环境
 │   ├── agent/
 │   │   ├── agent.py         # 主智能体
 │   │   ├── http_client.py   # HTTP 客户端

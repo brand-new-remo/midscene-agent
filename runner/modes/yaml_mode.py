@@ -10,7 +10,7 @@ import os
 import subprocess
 import sys
 
-from utils.path_utils import get_tests_dir
+from runner.utils.path_utils import get_tests_dir
 
 
 async def run_yaml_tests() -> None:

@@ -74,13 +74,15 @@ cd server
 npm install
 cd ..
 
-# 安装 Python 依赖
-cd runner
-pip install -r requirements.txt
+# 安装 Python 依赖 (使用 UV)
+uv venv
+source .venv/Scripts/activate  # Windows
+# 或
+source .venv/bin/activate       # Linux/macOS
+uv pip install -e .
 
 # 配置环境变量
-cp .env.example .env
-# 编辑 .env 添加你的 API 密钥
+# .env 文件已在项目根目录 (如需修改请编辑根目录的 .env 文件)
 
 ### 可选：启动 Agent Chat UI
 
@@ -106,9 +108,14 @@ cd server
 npm start
 # 服务运行在 http://localhost:3000
 
-# 新终端：运行交互式启动器
-cd runner
-python run.py
+# 新终端：运行交互式启动器 (从项目根目录)
+source .venv/Scripts/activate  # Windows
+# 或
+source .venv/bin/activate       # Linux/macOS
+midscene
+
+# 或者直接使用 uv run
+uv run midscene
 ```
 
 ### 使用 LangGraph CLI (Agent Chat UI)
@@ -117,10 +124,9 @@ python run.py
 
 ```bash
 # 安装 LangGraph CLI
-pip install langgraph-cli
+uv pip install langgraph-cli
 
 # 在项目根目录运行
-cd /Users/duangangqiang/github/midscene
 langgraph dev
 
 # 访问 Agent Chat UI
@@ -197,6 +203,10 @@ midscene-agent/
 │   │   ├── config/          # 服务器配置
 │   │   └── types/           # TypeScript 类型定义
 │   └── package.json
+├── pyproject.toml           # UV 项目配置
+├── uv.lock                  # UV 锁定文件
+├── .env                     # 环境变量
+├── .venv/                   # UV 虚拟环境
 ├── runner/                  # Python LangGraph 智能体
 │   ├── agent/
 │   │   ├── agent.py         # LangGraph 智能体
@@ -254,8 +264,13 @@ midscene-agent/
 ### 交互式启动器
 
 ```bash
-cd runner
-python run.py
+source .venv/Scripts/activate  # Windows
+# 或
+source .venv/bin/activate       # Linux/macOS
+midscene
+
+# 或者直接使用 uv run
+uv run midscene
 ```
 
 菜单选项:
@@ -290,18 +305,20 @@ python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/
 
 **批量转换目录**:
 ```bash
-python -m converter.cli -i xmind/ -o tests/texts/
+uv run python -m converter.cli -i xmind/ -o tests/texts/
 ```
 
 **详细输出模式**:
 ```bash
-python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/ --verbose
+uv run python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/ --verbose
 ```
 
-**从 runner 目录调用**:
+**使用 uv 调用**:
 ```bash
-cd runner
-python -m converter.cli -i ../xmind/V5.60测试用例.xmind -o ../tests/texts/
+source .venv/Scripts/activate  # Windows
+# 或
+source .venv/bin/activate       # Linux/macOS
+uv run python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/
 ```
 
 #### 功能特点

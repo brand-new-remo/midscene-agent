@@ -22,7 +22,7 @@ if runner_dir not in sys.path:
     sys.path.insert(0, runner_dir)
 
 # 直接导入 agent 模块
-from agent.agent import MidsceneAgent
+from runner.agent.agent import MidsceneAgent
 
 
 class TextTestExecutor:

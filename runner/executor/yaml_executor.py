@@ -24,10 +24,10 @@ if runner_dir not in sys.path:
     sys.path.insert(0, runner_dir)
 
 # 直接导入 agent 模块（使用绝对导入）
-from agent.agent import MidsceneAgent
+from runner.agent.agent import MidsceneAgent
 
 # 导入模板系统
-from template.engine import TemplateEngine
+from runner.template.engine import TemplateEngine
 from template.context import ContextManager
 from template.types import TemplateCall
 

@@ -18,10 +18,10 @@ load_dotenv()
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # 导入配置检查函数
-from check_config import check_config
+from runner.check_config import check_config
 
 # 导入模式模块
-from modes import yaml_mode, text_mode, custom_mode
+from runner.modes import yaml_mode, text_mode, custom_mode
 
 
 def print_banner():
@@ -55,7 +55,7 @@ async def main():
 
     # 获取当前脚本目录下的 .env 文件路径
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    env_path = os.path.join(script_dir, ".env")
+    env_path = os.path.join(os.path.dirname(script_dir), ".env")
 
     # 检查 .env 是否存在
     if not os.path.exists(env_path):
@@ -118,3 +118,17 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\n👋 感谢使用 Midscene Agent ！\n")
         sys.exit(0)
+
+
+
+def main_wrapper():
+    """同步包装函数，用于CLI入口点"""
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\n👋 感谢使用 Midscene Agent ！\n")
+        sys.exit(0)
+
+
+if __name__ == "__main__":
+    main_wrapper()

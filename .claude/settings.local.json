@@ -46,7 +46,13 @@
       "Bash(langgraph:*)",
       "Bash(export:*)",
       "Bash(PYTHONPATH=/Users/duangangqiang/github/midscene:$PYTHONPATH python -c:*)",
-      "Bash(PYTHONPATH=/e/code/midscene-agent/runner:$PYTHONPATH python:*)"
+      "Bash(PYTHONPATH=/e/code/midscene-agent/runner:$PYTHONPATH python:*)",
+      "Bash(uv:*)",
+      "Bash(midscene-check:*)",
+      "Bash(midscene --help:*)",
+      "Bash(midscene --version)",
+      "Bash(midscene:*)",
+      "Bash(deactivate)"
     ],
     "deny": [],
     "ask": []
