@@ -17,7 +17,8 @@
       "Bash(PYTHONPATH=/Users/duangangqiang/github/midscene/src:$PYTHONPATH python:*)",
       "Bash(timeout 5 npx:*)",
       "Bash(tee:*)",
-      "Bash(timeout 60 python:*)"
+      "Bash(timeout 60 python:*)",
+      "mcp__filesystem__read_text_file"
     ],
     "deny": [],
     "ask": []

@@ -1,0 +1,132 @@
+# 基础登录模板
+# 适用于标准的用户名密码登录场景
+
+template:
+  name: "基础登录模板"
+  version: "1.0.0"
+  description: "标准用户名密码登录流程，支持错误处理和重试"
+  category: "authentication"
+  tags: ["login", "auth", "basic"]
+  author: "system"
+
+  parameters:
+    username:
+      type: "string"
+      required: true
+      description: "登录用户名"
+      default: "${user.default_username}"
+    password:
+      type: "string"
+      required: true
+      description: "登录密码"
+      default: "${user.default_password}"
+    url:
+      type: "url"
+      required: false
+      description: "登录页面URL"
+      default: "${app.login_url}"
+    remember_me:
+      type: "boolean"
+      required: false
+      description: "是否记住登录状态"
+      default: false
+    retry_count:
+      type: "number"
+      required: false
+      description: "登录失败重试次数"
+      default: 3
+
+  context:
+    # 默认选择器（可以覆盖）
+    username_selector: "input[name='username'], input[id='username'], input[placeholder*='用户名'], input[placeholder*='邮箱']"
+    password_selector: "input[name='password'], input[type='password']"
+    submit_selector: "button[type='submit'], input[type='submit'], button:contains('登录'), button:contains('登录'), a:contains('登录')"
+    error_selector: ".error, .alert-error, .login-error, .text-red, [class*='error']"
+
+  steps:
+    # 步骤 1: 导航到登录页面
+    - id: "navigate"
+      action: "ai"
+      params:
+        prompt: "导航到登录页面 ${url}，等待页面完全加载"
+      description: "导航到登录页面"
+
+    # 步骤 2: 输入用户名
+    - id: "input_username"
+      action: "aiInput"
+      params:
+        locate: "用户名输入框"
+        value: "${username}"
+      description: "输入用户名"
+
+    # 步骤 3: 输入密码
+    - id: "input_password"
+      action: "aiInput"
+      params:
+        locate: "密码输入框"
+        value: "${password}"
+      description: "输入密码"
+
+    # 步骤 4: 可选的记住我
+    - id: "remember_me"
+      action: "aiTap"
+      params:
+        locate: "记住我选项, 记住密码选项"
+      condition: "${remember_me} == true"
+      description: "勾选记住我"
+
+    # 步骤 5: 点击登录按钮
+    - id: "click_submit"
+      action: "aiTap"
+      params:
+        locate: "登录按钮"
+      description: "点击登录按钮"
+
+    # 步骤 6: 等待并验证登录结果
+    - id: "wait_for_response"
+      action: "aiWaitFor"
+      params:
+        assertion: "等待页面响应，检查是否出现错误信息或跳转到主页"
+        timeoutMs: 30000
+      description: "等待登录响应"
+
+    # 步骤 7: 检查登录结果
+    - id: "check_login_result"
+      action: "aiAssert"
+      params:
+        assertion: "检查是否登录成功（页面跳转到主页且显示用户信息，或URL包含dashboard、home等）"
+        continueOnError: true
+      description: "验证登录结果"
+
+    # 步骤 8: 如果失败，检查错误信息
+    - id: "check_error"
+      action: "aiAssert"
+      params:
+        assertion: "提取并显示登录错误信息（如果有）"
+        continueOnError: true
+      condition: "last_assertion_failed == true"
+      description: "获取错误信息"
+
+    # 步骤 9: 成功后的操作
+    - id: "verify_user_info"
+      action: "aiAssert"
+      params:
+        assertion: "验证用户已登录，确认显示用户名、头像或用户菜单"
+      condition: "last_assertion_success == true"
+      description: "验证用户登录状态"
+
+  post_steps:
+    # 无论成功失败都记录结果
+    - id: "log_result"
+      action: "aiString"
+      params:
+        prompt: "提取当前页面的URL和标题，记录登录结果"
+        name: "login_result"
+      description: "记录登录结果"
+
+    - id: "screenshot"
+      action: "logScreenshot"
+      params:
+        title: "登录${'成功' if last_assertion_success else '失败'}"
+        content: "用户 ${username} 的登录${'成功' if last_assertion_success else '失败'} 截图"
+      description: "截取登录结果"

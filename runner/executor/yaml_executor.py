@@ -26,6 +26,11 @@ if runner_dir not in sys.path:
 # 直接导入 agent 模块（使用绝对导入）
 from agent.agent import MidsceneAgent
 
+# 导入模板系统
+from template.engine import TemplateEngine
+from template.context import ContextManager
+from template.types import TemplateCall
+
 
 def replace_env_vars(obj: Any) -> Any:
     """
@@ -133,6 +138,24 @@ class YamlTestRunner:
         self.agent: Optional[MidsceneAgent] = None
         self.results = []
         self.ai_action_context = self.config.get("agent", {}).get("aiActionContext", "")
+
+        # 初始化模板系统
+        from template.registry import TemplateRegistry
+        import os
+        templates_dir = os.path.join(os.path.dirname(__file__), '..', 'templates')
+        registry = TemplateRegistry(templates_dir)
+
+        self.template_engine = TemplateEngine(registry)
+        self.context_manager = ContextManager()
+
+        # 初始化全局上下文
+        global_context = {
+            "web_url": self.config.get("web", {}).get("url", ""),
+            "headless": self.config.get("web", {}).get("headless", False),
+            "viewport_width": self.config.get("web", {}).get("viewportWidth", 1280),
+            "viewport_height": self.config.get("web", {}).get("viewportHeight", 768),
+        }
+        self.context_manager.update_global(global_context)
 
     async def initialize_agent(self):
         """初始化 Midscene Agent"""
@@ -249,6 +272,9 @@ class YamlTestRunner:
                 # JavaScript 执行
                 elif action_type == "javascript":
                     await self._execute_javascript(action_content)
+                # 模板调用
+                elif action_type == "template":
+                    await self._execute_template(action_content)
                 else:
                     print(f"  ⚠️ 未知操作类型: {action_type}")
             except Exception as e:
@@ -566,6 +592,68 @@ class YamlTestRunner:
             print(f"  ✅ JavaScript 执行完成")
         except Exception as e:
             print(f"  ❌ JavaScript 执行失败: {e}")
+
+    async def _execute_template(self, content: Any):
+        """执行模板调用"""
+        if self.agent is None:
+            print(f"  ❌ Agent 未初始化")
+            return
+
+        if isinstance(content, str):
+            # 简化格式：直接使用模板名称
+            template_name = content
+            parameters = {}
+        else:
+            # 完整格式：包含模板名称和参数
+            template_name = content.get("name", "")
+            parameters = content.get("parameters", {})
+
+        if not template_name:
+            print(f"  ❌ 模板调用缺少模板名称")
+            return
+
+        print(f"\n📦 执行模板: {template_name}")
+        if parameters:
+            print(f"  📝 参数: {json.dumps(parameters, ensure_ascii=False, indent=2)}")
+
+        try:
+            # 从注册表获取模板
+            template = self.template_engine.registry.get_template(template_name)
+            if not template:
+                print(f"  ❌ 未找到模板: {template_name}")
+                return
+
+            # 更新模板上下文
+            self.context_manager.update_template({
+                "template_name": template_name,
+                **parameters
+            })
+            template_context = self.context_manager.get_context_for_template()
+
+            # 创建模板调用对象
+            template_call = TemplateCall(
+                name=template_name,
+                parameters=parameters,
+                context=template_context
+            )
+
+            # 展开模板
+            expanded_steps = await self.template_engine.expand_template_call(
+                template_call
+            )
+
+            print(f"  📊 模板展开为 {len(expanded_steps)} 个步骤")
+
+            # 执行展开后的步骤
+            for i, step in enumerate(expanded_steps, 1):
+                print(f"\n  ▶️ 步骤 {i}/{len(expanded_steps)}")
+                await self.execute_step(step)
+
+            print(f"  ✅ 模板执行完成: {template_name}")
+        except Exception as e:
+            print(f"  ❌ 模板执行失败: {e}")
+            import traceback
+            traceback.print_exc()
 
     async def run(self):
         """运行所有任务"""

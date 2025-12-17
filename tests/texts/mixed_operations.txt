@@ -1,0 +1,35 @@
+# 混合操作测试
+# 演示模板调用与AI自动操作的结合
+
+@web:
+  url: https://example.com
+  headless: false
+
+@task: 完整业务流程测试
+
+1. 登录系统 (使用 demo/demo123)
+2. 导航到产品页面
+3. 使用模板 search.simple 搜索
+   参数: keyword="智能手机", result_count=10
+4. 点击第一个搜索结果
+5. 在搜索结果中查找"iPhone 15"并点击
+6. 选择产品规格（颜色、存储容量）
+7. 添加到购物车
+8. 进入购物车页面
+9. 点击结算按钮
+10. 填写收货信息
+11. 选择支付方式
+12. 确认订单
+13. 验证订单创建成功
+14. 使用模板 common.screenshot 截图
+    参数: title="订单确认", content="完整的购物流程测试结果"
+
+@task: 混合模式验证
+
+1. 使用模板 login.basic 登录
+   参数: username="test_user", password="test123"
+2. 手动操作：点击"我的订单"菜单
+3. 使用模板 search.simple 搜索历史订单
+   参数: keyword="iPhone", result_count=5
+4. AI操作：验证订单列表是否显示
+5. 模板截图：记录验证结果

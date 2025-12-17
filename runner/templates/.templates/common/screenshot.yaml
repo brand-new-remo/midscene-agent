@@ -1,0 +1,38 @@
+# 通用截图模板
+# 用于快速截取页面截图并添加描述
+
+template:
+  name: "通用截图模板"
+  version: "1.0.0"
+  description: "快速截取页面截图，支持自定义标题和描述"
+  category: "common"
+  tags: ["screenshot", "debug"]
+  author: "system"
+
+  parameters:
+    title:
+      type: "string"
+      required: false
+      description: "截图标题"
+      default: "页面截图"
+    content:
+      type: "string"
+      required: false
+      description: "截图描述"
+      default: "自动截取的页面截图"
+    full_page:
+      type: "boolean"
+      required: false
+      description: "是否截取完整页面"
+      default: false
+
+  steps:
+    # 步骤 1: 截取截图
+    - id: "take_screenshot"
+      action: "logScreenshot"
+      params:
+        title: "${title}"
+        content: "${content}"
+      description: "截取页面截图"
+
+  post_steps: []

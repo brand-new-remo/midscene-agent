@@ -1,0 +1,25 @@
+# 模板系统演示
+# 展示如何使用操作模板简化测试用例
+
+@web:
+  url: https://example.com
+  headless: false
+  viewportWidth: 1280
+  viewportHeight: 768
+
+@task: 模板调用演示
+
+1. 使用模板 login.basic 进行登录
+   参数: username="demo_user", password="demo123"
+2. 验证登录成功
+3. 使用模板 search.simple 搜索
+   参数: keyword="模板系统演示", result_count=5
+4. 使用模板 common.screenshot 截图
+   参数: title="演示完成", content="模板系统演示成功"
+
+@task: 简化调用演示
+
+1. 登录系统 (使用 demo_user/demo123)
+2. 搜索内容
+3. 验证结果
+4. 截取最终结果

@@ -1,0 +1,27 @@
+# 使用模板的登录测试
+# 演示如何通过模板简化登录流程
+
+@web:
+  url: https://example.com
+  headless: false
+
+@task: 标准用户登录
+
+1. 使用模板 login.basic 进行登录
+   参数: username="standard_user", password="password123"
+2. 验证登录成功，确认显示用户信息
+3. 截取登录后的主页截图
+
+@task: 管理员登录
+
+1. 使用模板 login.basic 进行登录
+   参数: username="admin", password="admin123", remember_me=true
+2. 验证管理员权限
+3. 截取管理员面板截图
+
+@task: 记住登录状态
+
+1. 使用模板 login.basic 进行登录
+   参数: username="test_user", password="test123", remember_me=true
+2. 刷新页面验证是否保持登录状态
+3. 截取验证结果
