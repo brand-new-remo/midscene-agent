@@ -14,10 +14,10 @@ tasks:
       - ai: 查看页面左侧的导航菜单，找到桥接到桌面 Chrome这个菜单项
       - ai: 点击左侧导航菜单中的桥接到桌面 Chrome菜单项
       - ai: 等待2秒钟后导航跳转完成
-      - aiAssert: 检查页面中间是否显示了Chrome 桥接模式（Bridge Mode）文字
+      - aiAssert: "页面中间显示了Chrome 桥接模式（Bridge Mode）文字"
       - logScreenshot:
           content: "Chrome 桥接模式页面详情"
       - aiQuery:
           name: "页面信息"
           prompt: "提取右侧导航快速开始下面的子步骤为列表"
-      - aiAssert: "快速开始是否包含5个步骤"
+      - aiAssert: "快速开始部分包含5个步骤"

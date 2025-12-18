@@ -72,12 +72,22 @@ const handleScroll = async (
   if (!direction) {
     throw new Error('aiScroll requires "direction" parameter');
   }
-  await agent.aiScroll(params.locate, {
+  // v1.0.1 兼容性：scrollType 值变化
+  const scrollTypeMap: Record<string, string> = {
+    'once': 'singleAction',
+    'untilBottom': 'scrollToBottom',
+    'untilTop': 'scrollToTop',
+  };
+
+  const mappedScrollType = scrollTypeMap[params.scrollType || 'once'] || 'singleAction';
+
+  // 先尝试最简单的调用方式
+  await agent.aiScroll(params.locate || undefined, {
     direction,
-    scrollType: params.scrollType || 'once',
+    scrollType: mappedScrollType as any,
     distance:
       typeof params.distance === 'string' ? parseInt(params.distance, 10) : params.distance || 500,
-  });
+  } as any);
   return { success: true, action: 'scroll', direction };
 };
 

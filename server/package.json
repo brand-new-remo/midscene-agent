@@ -31,7 +31,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@midscene/web": "^0.30.9",
+    "@midscene/web": "^1.0.1",
     "@playwright/test": "^1.57.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
