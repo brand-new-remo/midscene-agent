@@ -2,19 +2,22 @@
 # 演示基本的网页自动化、查询和流式响应功能
 
 web:
-  url: https://midscenejs.com/zh/index.html
+  url: https://midscenejs.com/zh/introduction
   headless: false
-  viewportWidth: 1280
-  viewportHeight: 768
+  viewportWidth: 1920
+  viewportHeight: 1080
 
 tasks:
   - name: 基础网页自动化示例
     flow:
       - ai: 导航到页面并等待完全加载
-      - ai: 点击左侧导航菜单中的"MCP 服务"菜单项
-      - aiAssert: 检查是否显示了"使用场景"部分
+      - ai: 查看页面左侧的导航菜单，找到桥接到桌面 Chrome这个菜单项
+      - ai: 点击左侧导航菜单中的桥接到桌面 Chrome菜单项
+      - ai: 等待2秒钟后导航跳转完成
+      - aiAssert: 检查页面中间是否显示了Chrome 桥接模式（Bridge Mode）文字
       - logScreenshot:
-          content: "基础自动化示例执行结果"
+          content: "Chrome 桥接模式页面详情"
       - aiQuery:
           name: "页面信息"
-          prompt: "提取当前页面的标题、主要导航菜单项和主要内容区域的文本"
+          prompt: "提取右侧导航快速开始下面的子步骤为列表"
+      - aiAssert: "快速开始是否包含5个步骤"

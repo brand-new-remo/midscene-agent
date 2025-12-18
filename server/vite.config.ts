@@ -1,9 +1,6 @@
-/* eslint-disable import/order */
 import { resolve } from 'path';
 import { fileURLToPath } from 'url';
-
 import { defineConfig } from 'vite';
-/* eslint-enable import/order */
 
 const dirname = fileURLToPath(new URL('.', import.meta.url));
 

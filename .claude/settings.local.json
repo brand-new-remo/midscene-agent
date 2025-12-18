@@ -52,7 +52,8 @@
       "Bash(midscene --help:*)",
       "Bash(midscene --version)",
       "Bash(midscene:*)",
-      "Bash(deactivate)"
+      "Bash(deactivate)",
+      "Bash(midscene-yaml:*)"
     ],
     "deny": [],
     "ask": []
