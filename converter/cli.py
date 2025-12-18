@@ -7,15 +7,20 @@ import sys
 from pathlib import Path
 from typing import List
 
-from .xmind_parser import XMindParser
+from .exceptions import ConverterError
 from .text_generator import TextGenerator
 from .utils import (
-    find_xmind_files, ensure_output_dir, validate_input_file, validate_input_dir
+    ensure_output_dir,
+    find_xmind_files,
+    validate_input_dir,
+    validate_input_file,
 )
-from .exceptions import ConverterError
+from .xmind_parser import XMindParser
 
 
-def convert_single_file(input_path: str, output_dir: str, verbose: bool = False) -> List[Path]:
+def convert_single_file(
+    input_path: str, output_dir: str, verbose: bool = False
+) -> List[Path]:
     """转换单个 XMind 文件"""
     input_file_path = validate_input_file(input_path)
     output_dir_path = ensure_output_dir(output_dir)
@@ -44,7 +49,9 @@ def convert_single_file(input_path: str, output_dir: str, verbose: bool = False)
     return generated_files
 
 
-def convert_directory(input_dir: str, output_dir: str, verbose: bool = False) -> List[Path]:
+def convert_directory(
+    input_dir: str, output_dir: str, verbose: bool = False
+) -> List[Path]:
     """批量转换目录中的所有 XMind 文件"""
     input_dir_path = validate_input_dir(input_dir)
     output_dir_path = ensure_output_dir(output_dir)
@@ -87,29 +94,13 @@ def convert_directory(input_dir: str, output_dir: str, verbose: bool = False) ->
 
 def main():
     """主函数"""
-    parser = argparse.ArgumentParser(
-        description='XMind 转换为自然语言测试文件'
-    )
+    parser = argparse.ArgumentParser(description="XMind 转换为自然语言测试文件")
     parser.add_argument(
-        '-i', '--input',
-        required=True,
-        help='输入的 XMind 文件路径或目录'
+        "-i", "--input", required=True, help="输入的 XMind 文件路径或目录"
     )
-    parser.add_argument(
-        '-o', '--output',
-        required=True,
-        help='输出目录路径'
-    )
-    parser.add_argument(
-        '--verbose',
-        action='store_true',
-        help='显示详细输出'
-    )
-    parser.add_argument(
-        '--version',
-        action='version',
-        version='%(prog)s 1.0.0'
-    )
+    parser.add_argument("-o", "--output", required=True, help="输出目录路径")
+    parser.add_argument("--verbose", action="store_true", help="显示详细输出")
+    parser.add_argument("--version", action="version", version="%(prog)s 1.0.0")
 
     parsed_args = parser.parse_args()
 
@@ -120,7 +111,7 @@ def main():
     input_path = Path(parsed_args.input)
 
     if input_path.is_file():
-        if not input_path.suffix.lower() == '.xmind':
+        if not input_path.suffix.lower() == ".xmind":
             print(f"错误: {input_path} 不是 .xmind 文件", file=sys.stderr)
             sys.exit(1)
 
@@ -138,5 +129,5 @@ def main():
     print(f"\n转换完成！生成了 {len(generated_files)} 个文件")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

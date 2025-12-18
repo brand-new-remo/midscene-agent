@@ -5,9 +5,17 @@ LangGraph 工具适配器
 支持在 LangGraph CLI 中使用完整的 30+ 工具。
 """
 
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+
 from langchain_core.tools import tool
-from runner.agent.tools.definitions import TOOL_DEFINITIONS, TOOL_CATEGORY_NAVIGATION, TOOL_CATEGORY_INTERACTION, TOOL_CATEGORY_QUERY, TOOL_CATEGORY_TEST
+
+from runner.agent.tools.definitions import (
+    TOOL_CATEGORY_INTERACTION,
+    TOOL_CATEGORY_NAVIGATION,
+    TOOL_CATEGORY_QUERY,
+    TOOL_CATEGORY_TEST,
+    TOOL_DEFINITIONS,
+)
 
 logger = __import__("logging").getLogger(__name__)
 
@@ -66,16 +74,13 @@ def _adapt_tool_signature(tool_name: str, tool_def: Dict[str, Any]):
                 "success": True,
                 "tool": tool_name,
                 "params": kwargs,
-                "message": f"工具 {tool_name} 已执行"
+                "message": f"工具 {tool_name} 已执行",
             }
 
         except Exception as e:
             error_msg = f"工具 '{tool_name}' 执行错误: {str(e)}"
             logger.error(error_msg)
-            return {
-                "success": False,
-                "error": error_msg
-            }
+            return {"success": False, "error": error_msg}
 
     # 设置工具属性
     adapted_tool.name = tool_name

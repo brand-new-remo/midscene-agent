@@ -6,12 +6,13 @@ MidsceneAgent 配置管理
 """
 
 import os
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
 from dotenv import load_dotenv
 
 # 从 .env 文件加载环境变量
 # 相对于当前文件的路径
-env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
+env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
 load_dotenv(env_path)
 
 
@@ -27,7 +28,9 @@ class Config:
     DEEPSEEK_TEMPERATURE: float = float(os.getenv("DEEPSEEK_TEMPERATURE", "0"))
 
     # Midscene 配置
-    MIDSCENE_MODEL_NAME: str = os.getenv("MIDSCENE_MODEL_NAME", "doubao-seed-1.6-vision")
+    MIDSCENE_MODEL_NAME: str = os.getenv(
+        "MIDSCENE_MODEL_NAME", "doubao-seed-1.6-vision"
+    )
     MIDSCENE_COMMAND: str = os.getenv("MIDSCENE_COMMAND", "npx")
     MIDSCENE_ARGS: list = os.getenv("MIDSCENE_ARGS", "-y @midscene/mcp").split()
     MIDSCENE_SERVER_URL: str = os.getenv("MIDSCENE_SERVER_URL", "http://localhost:3000")

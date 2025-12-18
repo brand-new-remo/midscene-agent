@@ -7,8 +7,9 @@ Midscene Agent 示例快速启动器
 """
 
 import asyncio
-import sys
 import os
+import sys
+
 from dotenv import load_dotenv
 
 # 加载环境变量
@@ -21,7 +22,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from runner.check_config import check_config
 
 # 导入模式模块
-from runner.modes import yaml_mode, text_mode, custom_mode
+from runner.modes import custom_mode, text_mode, yaml_mode
 
 
 def print_banner():
@@ -108,6 +109,7 @@ async def main():
         except Exception as e:
             print(f"\n❌ 错误: {e}")
             import traceback
+
             traceback.print_exc()
             input("\n按 Enter 键继续...")
 
@@ -118,7 +120,6 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\n👋 感谢使用 Midscene Agent ！\n")
         sys.exit(0)
-
 
 
 def main_wrapper():

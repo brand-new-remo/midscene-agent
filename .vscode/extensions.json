@@ -1,0 +1,16 @@
+{
+    "recommendations": [
+        "ms-python.python",
+        "ms-python.pylance",
+        "ms-python.black-formatter",
+        "ms-python.debugpy",
+        "ms-python.vscode-python-envs",
+        "esbenp.prettier-vscode",
+        "mikestead.dotenv",
+        "stylelint.vscode-stylelint",
+        "redhat.vscode-yaml",
+        "yzhang.markdown-all-in-one",
+        "eamodio.gitlens",
+        "bradlc.vscode-tailwindcss",
+    ]
+}

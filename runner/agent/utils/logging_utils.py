@@ -10,7 +10,7 @@ from typing import Optional
 def setup_logging(
     level: int = logging.INFO,
     format_string: Optional[str] = None,
-    log_file: Optional[str] = None
+    log_file: Optional[str] = None,
 ) -> None:
     """
     设置日志配置。

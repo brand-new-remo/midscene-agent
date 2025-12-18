@@ -25,7 +25,7 @@ async def run_yaml_tests() -> None:
         print("❌ yamls 目录不存在")
         return
 
-    yaml_files = [f for f in os.listdir(tests_dir) if f.endswith('.yaml')]
+    yaml_files = [f for f in os.listdir(tests_dir) if f.endswith(".yaml")]
 
     if not yaml_files:
         print("❌ 未找到 YAML 测试文件")
@@ -52,7 +52,7 @@ async def _run_yaml_tests(yaml_files, tests_dir) -> None:
     choice = input("\n你的选择: ").strip()
 
     try:
-        if choice.lower() == 'all':
+        if choice.lower() == "all":
             # 运行所有测试
             print(f"\n🚀 运行所有 YAML 测试用例...\n")
             for file in yaml_files:
@@ -63,14 +63,14 @@ async def _run_yaml_tests(yaml_files, tests_dir) -> None:
                 # 使用 subprocess 调用执行器
                 runner_dir = os.path.dirname(os.path.dirname(__file__))
                 result = subprocess.run(
-                    [sys.executable, '-m', 'executor.yaml_executor', yaml_path],
-                    cwd=runner_dir
+                    [sys.executable, "-m", "executor.yaml_executor", yaml_path],
+                    cwd=runner_dir,
                 )
                 if result.returncode == 0:
                     print(f"\n✅ {file} 执行完成\n")
                 else:
                     print(f"\n❌ {file} 执行失败\n")
-        elif choice.lower() == 'a':
+        elif choice.lower() == "a":
             # 运行单个测试
             idx = input(f"输入测试编号 (1-{len(yaml_files)}): ").strip()
             idx = int(idx) - 1
@@ -82,8 +82,8 @@ async def _run_yaml_tests(yaml_files, tests_dir) -> None:
                 # 使用 subprocess 调用执行器
                 runner_dir = os.path.dirname(os.path.dirname(__file__))
                 result = subprocess.run(
-                    [sys.executable, '-m', 'executor.yaml_executor', yaml_path],
-                    cwd=runner_dir
+                    [sys.executable, "-m", "executor.yaml_executor", yaml_path],
+                    cwd=runner_dir,
                 )
                 if result.returncode == 0:
                     print(f"\n✅ {yaml_files[idx]} 执行完成\n")
@@ -93,7 +93,7 @@ async def _run_yaml_tests(yaml_files, tests_dir) -> None:
                 print("❌ 无效编号")
         else:
             # 解析多个编号
-            selected_indices = [int(x.strip()) - 1 for x in choice.split(',')]
+            selected_indices = [int(x.strip()) - 1 for x in choice.split(",")]
             for idx in selected_indices:
                 if 0 <= idx < len(yaml_files):
                     yaml_path = os.path.join(tests_dir, yaml_files[idx])
@@ -102,8 +102,8 @@ async def _run_yaml_tests(yaml_files, tests_dir) -> None:
                     print(f"{'='*70}")
                     # 使用 subprocess 调用执行器
                     result = subprocess.run(
-                        [sys.executable, '-m', 'executor.yaml_executor', yaml_path],
-                        cwd=os.path.dirname(__file__)
+                        [sys.executable, "-m", "executor.yaml_executor", yaml_path],
+                        cwd=os.path.dirname(__file__),
                     )
                     if result.returncode == 0:
                         print(f"\n✅ {yaml_files[idx]} 执行完成\n")
@@ -117,6 +117,7 @@ async def _run_yaml_tests(yaml_files, tests_dir) -> None:
     except Exception as e:
         print(f"❌ 执行失败: {e}")
         import traceback
+
         traceback.print_exc()
 
 
@@ -132,7 +133,7 @@ async def run_all_tests() -> None:
             print("❌ yamls 目录不存在")
             return
 
-        yaml_files = [f for f in os.listdir(tests_dir) if f.endswith('.yaml')]
+        yaml_files = [f for f in os.listdir(tests_dir) if f.endswith(".yaml")]
 
         if not yaml_files:
             print("❌ 未找到 YAML 测试文件")
@@ -149,8 +150,8 @@ async def run_all_tests() -> None:
             print(f"{'='*70}")
             # 使用 subprocess 调用执行器
             result = subprocess.run(
-                [sys.executable, '-m', 'executor.yaml_executor', yaml_path],
-                cwd=os.path.dirname(__file__)
+                [sys.executable, "-m", "executor.yaml_executor", yaml_path],
+                cwd=os.path.dirname(__file__),
             )
             if result.returncode == 0:
                 print(f"\n✅ {file} 执行完成\n")
@@ -165,4 +166,5 @@ async def run_all_tests() -> None:
     except Exception as e:
         print(f"❌ 测试执行失败: {e}")
         import traceback
+
         traceback.print_exc()

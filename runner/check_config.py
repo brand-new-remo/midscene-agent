@@ -5,8 +5,9 @@
 提供配置检查功能。
 """
 
-import os
 import asyncio
+import os
+
 import aiohttp
 from dotenv import load_dotenv
 
@@ -33,7 +34,7 @@ def check_config():
     required_vars = {
         "DEEPSEEK_API_KEY": "DeepSeek API 密钥",
         "OPENAI_API_KEY": "视觉模型 API 密钥 (可选)",
-        "MIDSCENE_SERVER_URL": "Node.js 服务地址 (可选)"
+        "MIDSCENE_SERVER_URL": "Node.js 服务地址 (可选)",
     }
 
     for var, desc in required_vars.items():
@@ -50,11 +51,14 @@ def check_config():
     # 检查 Node.js 服务
     print("\n[INFO] 检查 Node.js 服务...")
     try:
+
         async def check_server():
             async with aiohttp.ClientSession() as session:
                 try:
                     timeout = aiohttp.ClientTimeout(total=2)
-                    async with session.get("http://localhost:3000/api/health", timeout=timeout) as response:
+                    async with session.get(
+                        "http://localhost:3000/api/health", timeout=timeout
+                    ) as response:
                         if response.status == 200:
                             health = await response.json()
                             print(f"[OK] Node.js 服务运行正常")

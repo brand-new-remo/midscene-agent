@@ -292,6 +292,24 @@ python -m executor.yaml_executor tests/yamls/basic_usage.yaml
 python -m executor.text_executor tests/texts/basic_usage.txt
 ```
 
+### 格式化代码
+
+**⚠️ 重要**: 每次修改 Python 代码后，请务必运行格式化命令，保持代码风格一致！
+
+```bash
+# 格式化整个项目
+midscene-format
+
+# 格式化指定文件
+midscene-format runner/agent/agent.py
+
+# 格式化指定目录
+midscene-format runner/
+
+# 使用 uv run 运行
+uv run midscene-format
+```
+
 ### XMind 转换工具
 
 项目包含一个 **XMind 转换工具**，可以将 XMind 思维导图格式的测试用例转换为自然语言测试文件。

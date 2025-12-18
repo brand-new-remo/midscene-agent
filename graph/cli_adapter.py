@@ -5,11 +5,13 @@ MidsceneAgent CLI 适配器
 处理消息流转换和会话生命周期管理。
 """
 
-from typing import AsyncGenerator, Dict, Any
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
-from runner.agent.http_client import SessionConfig
-from runner.agent.config import Config
+from typing import Any, AsyncGenerator, Dict
+
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
+
 from runner.agent.agent import MidsceneAgent
+from runner.agent.config import Config
+from runner.agent.http_client import SessionConfig
 
 logger = __import__("logging").getLogger(__name__)
 

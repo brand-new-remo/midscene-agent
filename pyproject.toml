@@ -4,10 +4,8 @@ version = "1.0.0"
 description = "AI-driven web automation framework"
 requires-python = ">=3.10"
 readme = "README.md"
-license = {text = "MIT"}
-authors = [
-    {name = "AI Automation Team", email = "team@example.com"}
-]
+license = { text = "MIT" }
+authors = [{ name = "AI Automation Team", email = "team@example.com" }]
 keywords = ["automation", "web", "ai", "langgraph"]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -29,6 +27,7 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "pyyaml>=6.0",
     "typing-extensions>=4.0.0",
+    "langgraph-cli[inmem]>=0.4.9",
 ]
 
 [project.optional-dependencies]
@@ -46,6 +45,7 @@ midscene = "runner.run:main_wrapper"
 midscene-check = "runner.check_config:check_config"
 midscene-yaml = "runner.executor.yaml_executor:main"
 midscene-text = "runner.executor.text_executor:main"
+midscene-format = "runner.format:main"
 
 [build-system]
 requires = ["hatchling"]

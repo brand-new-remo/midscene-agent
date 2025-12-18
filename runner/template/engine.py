@@ -9,19 +9,19 @@ import copy
 import re
 from typing import Any, Dict, List, Optional, Set
 
-from .types import Template, TemplateStep, TemplateCall, CompiledTemplate
 from .context import ContextManager
-from .registry import TemplateRegistry
 from .exceptions import (
-    TemplateError,
-    TemplateNotFoundError,
-    TemplateValidationError,
-    TemplateCompilationError,
     CircularTemplateReferenceError,
     EngineError,
     ParameterError,
     ParameterValidationError,
+    TemplateCompilationError,
+    TemplateError,
+    TemplateNotFoundError,
+    TemplateValidationError,
 )
+from .registry import TemplateRegistry
+from .types import CompiledTemplate, Template, TemplateCall, TemplateStep
 
 
 class TemplateEngine:
@@ -34,7 +34,11 @@ class TemplateEngine:
     - 上下文注入：自动注入全局和局部上下文
     """
 
-    def __init__(self, registry: TemplateRegistry, context_manager: Optional[ContextManager] = None):
+    def __init__(
+        self,
+        registry: TemplateRegistry,
+        context_manager: Optional[ContextManager] = None,
+    ):
         """初始化模板引擎
 
         Args:
@@ -52,9 +56,9 @@ class TemplateEngine:
 
         # 编译统计
         self._compile_stats = {
-            'total_compilations': 0,
-            'cache_hits': 0,
-            'cache_misses': 0,
+            "total_compilations": 0,
+            "cache_hits": 0,
+            "cache_misses": 0,
         }
 
     async def expand_template_call(
@@ -79,12 +83,14 @@ class TemplateEngine:
         template_name = template_call.name
 
         # 检查缓存
-        cache_key = self._get_cache_key(template_name, template_call.parameters, template_call.context)
+        cache_key = self._get_cache_key(
+            template_name, template_call.parameters, template_call.context
+        )
         if cache_key in self._compiled_cache:
-            self._compile_stats['cache_hits'] += 1
+            self._compile_stats["cache_hits"] += 1
             compiled_template = self._compiled_cache[cache_key]
         else:
-            self._compile_stats['cache_misses'] += 1
+            self._compile_stats["cache_misses"] += 1
 
             # 获取模板
             try:
@@ -110,7 +116,7 @@ class TemplateEngine:
             # 缓存编译结果
             self._compiled_cache[cache_key] = compiled_template
 
-        self._compile_stats['total_compilations'] += 1
+        self._compile_stats["total_compilations"] += 1
 
         # 设置会话上下文
         if session_id:
@@ -141,8 +147,7 @@ class TemplateEngine:
         # 检测循环引用
         if template_name in self._compiling:
             raise CircularTemplateReferenceError(
-                template_name,
-                list(self._compiling) + [template_name]
+                template_name, list(self._compiling) + [template_name]
             )
 
         self._compiling.add(template_name)
@@ -156,29 +161,35 @@ class TemplateEngine:
 
             # 添加常规步骤
             for step in template.steps:
-                expanded_steps = await self._expand_step(step, parameters, merged_context)
+                expanded_steps = await self._expand_step(
+                    step, parameters, merged_context
+                )
                 all_steps.extend(expanded_steps)
 
             # 添加后置步骤
             for step in template.post_steps:
-                expanded_steps = await self._expand_step(step, parameters, merged_context)
+                expanded_steps = await self._expand_step(
+                    step, parameters, merged_context
+                )
                 all_steps.extend(expanded_steps)
 
             # 处理条件步骤
             for conditional_step in template.conditional_steps:
-                condition = conditional_step.get('condition')
+                condition = conditional_step.get("condition")
                 if condition and self._evaluate_condition(condition, merged_context):
-                    steps = conditional_step.get('steps', [])
+                    steps = conditional_step.get("steps", [])
                     for step_data in steps:
                         step = TemplateStep(
-                            id=step_data.get('id', ''),
-                            action=step_data.get('action', ''),
-                            params=step_data.get('params', {}),
-                            description=step_data.get('description'),
-                            condition=step_data.get('condition'),
-                            continue_on_error=step_data.get('continue_on_error', False),
+                            id=step_data.get("id", ""),
+                            action=step_data.get("action", ""),
+                            params=step_data.get("params", {}),
+                            description=step_data.get("description"),
+                            condition=step_data.get("condition"),
+                            continue_on_error=step_data.get("continue_on_error", False),
                         )
-                        expanded_steps = await self._expand_step(step, parameters, merged_context)
+                        expanded_steps = await self._expand_step(
+                            step, parameters, merged_context
+                        )
                         all_steps.extend(expanded_steps)
 
             # 替换步骤中的变量
@@ -249,16 +260,16 @@ class TemplateEngine:
             return []
 
         # 处理嵌套模板调用
-        if step.action == 'template':
+        if step.action == "template":
             return await self._expand_nested_template(step, parameters, context)
 
         # 处理常规步骤
         expanded_step = {
-            'id': step.id,
-            'action': step.action,
-            'params': copy.deepcopy(step.params),
-            'description': step.description,
-            'continue_on_error': step.continue_on_error,
+            "id": step.id,
+            "action": step.action,
+            "params": copy.deepcopy(step.params),
+            "description": step.description,
+            "continue_on_error": step.continue_on_error,
         }
 
         # 替换参数和上下文变量
@@ -282,12 +293,12 @@ class TemplateEngine:
         Returns:
             展开后的步骤列表
         """
-        template_params = step.params.get('parameters', {})
-        template_context = step.params.get('context', {})
+        template_params = step.params.get("parameters", {})
+        template_context = step.params.get("context", {})
 
         # 创建嵌套模板调用
         nested_call = TemplateCall(
-            name=step.params['name'],
+            name=step.params["name"],
             parameters=template_params,
             context=template_context,
         )
@@ -318,10 +329,7 @@ class TemplateEngine:
                 for key, value in obj.items()
             }
         elif isinstance(obj, list):
-            return [
-                self._substitute_variables(item, context)
-                for item in obj
-            ]
+            return [self._substitute_variables(item, context) for item in obj]
         else:
             return obj
 
@@ -339,10 +347,7 @@ class TemplateEngine:
         Returns:
             替换后的步骤列表
         """
-        return [
-            self._substitute_variables(step, context)
-            for step in steps
-        ]
+        return [self._substitute_variables(step, context) for step in steps]
 
     def _evaluate_condition(self, condition: str, context: Dict[str, Any]) -> bool:
         """评估条件表达式
@@ -362,10 +367,12 @@ class TemplateEngine:
 
             # 安全评估（仅允许特定操作符）
             allowed_names = {
-                'True': True, 'False': False, 'None': None,
-                'and': lambda a, b: a and b,
-                'or': lambda a, b: a or b,
-                'not': lambda a: not a,
+                "True": True,
+                "False": False,
+                "None": None,
+                "and": lambda a, b: a and b,
+                "or": lambda a, b: a or b,
+                "not": lambda a: not a,
             }
 
             # 简单的条件求值（注意：实际使用中需要更严格的安全控制）
@@ -388,10 +395,12 @@ class TemplateEngine:
         errors = []
 
         for i, step in enumerate(steps):
-            if not step.get('action'):
+            if not step.get("action"):
                 errors.append(f"Step {i} is missing action")
 
-            if step.get('action') == 'template' and 'name' not in step.get('params', {}):
+            if step.get("action") == "template" and "name" not in step.get(
+                "params", {}
+            ):
                 errors.append(f"Step {i} is missing template name")
 
         if errors:
@@ -422,9 +431,9 @@ class TemplateEngine:
         """清空编译缓存"""
         self._compiled_cache.clear()
         self._compile_stats = {
-            'total_compilations': 0,
-            'cache_hits': 0,
-            'cache_misses': 0,
+            "total_compilations": 0,
+            "cache_hits": 0,
+            "cache_misses": 0,
         }
 
     def get_cache_info(self) -> Dict[str, Any]:
@@ -434,18 +443,18 @@ class TemplateEngine:
             缓存信息字典
         """
         cache_hit_rate = 0
-        if self._compile_stats['total_compilations'] > 0:
+        if self._compile_stats["total_compilations"] > 0:
             cache_hit_rate = (
-                self._compile_stats['cache_hits'] /
-                self._compile_stats['total_compilations']
+                self._compile_stats["cache_hits"]
+                / self._compile_stats["total_compilations"]
             )
 
         return {
-            'cache_size': len(self._compiled_cache),
-            'total_compilations': self._compile_stats['total_compilations'],
-            'cache_hits': self._compile_stats['cache_hits'],
-            'cache_misses': self._compile_stats['cache_misses'],
-            'hit_rate': f"{cache_hit_rate:.2%}",
+            "cache_size": len(self._compiled_cache),
+            "total_compilations": self._compile_stats["total_compilations"],
+            "cache_hits": self._compile_stats["cache_hits"],
+            "cache_misses": self._compile_stats["cache_misses"],
+            "hit_rate": f"{cache_hit_rate:.2%}",
         }
 
     def get_statistics(self) -> Dict[str, Any]:
@@ -457,9 +466,9 @@ class TemplateEngine:
         registry_stats = self.registry.get_statistics()
 
         return {
-            'registry': registry_stats,
-            'cache': self.get_cache_info(),
-            'compiling': list(self._compiling),
+            "registry": registry_stats,
+            "cache": self.get_cache_info(),
+            "compiling": list(self._compiling),
         }
 
     def __repr__(self) -> str:

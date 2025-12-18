@@ -56,7 +56,7 @@ async def run_custom_task() -> None:
         midscene_server_url=os.getenv("MIDSCENE_SERVER_URL", "http://localhost:3000"),
         midscene_config=midscene_config,
         tool_set="full",
-        enable_websocket=True
+        enable_websocket=True,
     )
 
     try:
@@ -73,4 +73,5 @@ async def run_custom_task() -> None:
     except Exception as e:
         print(f"❌ Error: {e}")
         import traceback
+
         traceback.print_exc()

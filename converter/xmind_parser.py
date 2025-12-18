@@ -4,13 +4,19 @@ XMind 文件解析器
 
 import json
 import re
-from typing import List, Dict, Any, Optional
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
+from .exceptions import ValidationError, XMindParseError
 from .models import (
-    XMindNode, NodeType, Module, TestCase, Step, WebConfig, ParsedDocument
+    Module,
+    NodeType,
+    ParsedDocument,
+    Step,
+    TestCase,
+    WebConfig,
+    XMindNode,
 )
-from .exceptions import XMindParseError, ValidationError
 from .utils import extract_xmind_content
 
 
@@ -25,7 +31,7 @@ class XMindParser:
         """解析 XMind 文件"""
         content, content_type = extract_xmind_content(xmind_path)
 
-        if content_type == 'json':
+        if content_type == "json":
             return self._parse_json_content(content, xmind_path)
         else:
             raise XMindParseError(f"暂不支持 content.xml 格式: {xmind_path}")
@@ -38,22 +44,26 @@ class XMindParser:
             raise XMindParseError(f"JSON 解析失败: {e}", xmind_path.name)
 
         if not isinstance(data, list) or len(data) == 0:
-            raise XMindParseError("无效的 XMind 格式: content.json 不是数组或为空", xmind_path.name)
+            raise XMindParseError(
+                "无效的 XMind 格式: content.json 不是数组或为空", xmind_path.name
+            )
 
         sheet = data[0]
-        if 'rootTopic' not in sheet:
+        if "rootTopic" not in sheet:
             raise XMindParseError("无效的 XMind 格式: 缺少 rootTopic", xmind_path.name)
 
         document = ParsedDocument()
-        root_topic = sheet['rootTopic']
+        root_topic = sheet["rootTopic"]
         self._parse_topic_tree(root_topic, document, level=0)
 
         return document
 
-    def _parse_topic_tree(self, topic: Dict[str, Any], document: ParsedDocument, level: int):
+    def _parse_topic_tree(
+        self, topic: Dict[str, Any], document: ParsedDocument, level: int
+    ):
         """递归解析主题树"""
-        title = topic.get('title', '').strip()
-        topic_id = topic.get('id', '')
+        title = topic.get("title", "").strip()
+        topic_id = topic.get("id", "")
 
         if level == 0:
             document.version = title
@@ -69,8 +79,8 @@ class XMindParser:
             elif node_type == NodeType.VERIFICATION:
                 self._parse_verifications(topic, level)
 
-        children = topic.get('children', {})
-        attached = children.get('attached', [])
+        children = topic.get("children", {})
+        attached = children.get("attached", [])
 
         for child in attached:
             self._parse_topic_tree(child, document, level + 1)
@@ -79,10 +89,10 @@ class XMindParser:
         """识别节点类型"""
         title = title.strip()
 
-        if level == 1 and title.startswith('#'):
+        if level == 1 and title.startswith("#"):
             return NodeType.MODULE
 
-        if level == 2 and not title.startswith('#'):
+        if level == 2 and not title.startswith("#"):
             return NodeType.TESTCASE
 
         if level == 3:
@@ -97,30 +107,32 @@ class XMindParser:
 
     def _is_step_title(self, title: str) -> bool:
         """判断是否为步骤标题"""
-        lines = title.split('\n')
+        lines = title.split("\n")
         for line in lines:
             line = line.strip()
             if not line:
                 continue
-            if re.match(r'^\d+\.', line):
+            if re.match(r"^\d+\.", line):
                 return True
         return False
 
     def _is_verification_title(self, title: str) -> bool:
         """判断是否为验证标题"""
-        lines = title.split('\n')
+        lines = title.split("\n")
         for line in lines:
             line = line.strip()
             if not line:
                 continue
-            if re.match(r'^\d+\.', line):
+            if re.match(r"^\d+\.", line):
                 return True
         return False
 
-    def _parse_module(self, topic: Dict[str, Any], document: ParsedDocument, level: int):
+    def _parse_module(
+        self, topic: Dict[str, Any], document: ParsedDocument, level: int
+    ):
         """解析模块节点"""
-        title = topic.get('title', '').strip()
-        if title.startswith('#'):
+        title = topic.get("title", "").strip()
+        if title.startswith("#"):
             module_name = title[1:].strip()
         else:
             module_name = title
@@ -133,7 +145,7 @@ class XMindParser:
         if self.current_module is None:
             raise ValidationError("测试用例必须在模块下")
 
-        title = topic.get('title', '').strip()
+        title = topic.get("title", "").strip()
         self.current_testcase = TestCase(name=title)
         self.current_module.testcases.append(self.current_testcase)
 
@@ -142,7 +154,7 @@ class XMindParser:
         if self.current_testcase is None:
             raise ValidationError("步骤必须在测试用例下")
 
-        title = topic.get('title', '').strip()
+        title = topic.get("title", "").strip()
         steps = self._parse_step_lines(title)
 
         for step in steps:
@@ -153,32 +165,36 @@ class XMindParser:
         if self.current_testcase is None:
             raise ValidationError("验证步骤必须在测试用例下")
 
-        title = topic.get('title', '').strip()
+        title = topic.get("title", "").strip()
         verifications = self._parse_step_lines(title, is_verification=True)
 
         for step in verifications:
             self.current_testcase.steps.append(step)
 
-    def _parse_step_lines(self, content: str, is_verification: bool = False) -> List[Step]:
+    def _parse_step_lines(
+        self, content: str, is_verification: bool = False
+    ) -> List[Step]:
         """解析步骤行"""
         steps = []
-        lines = content.split('\n')
+        lines = content.split("\n")
 
         for line in lines:
             line = line.strip()
             if not line:
                 continue
 
-            match = re.match(r'^(\d+)\.\s*(.*)', line)
+            match = re.match(r"^(\d+)\.\s*(.*)", line)
             if match:
                 number = int(match.group(1))
                 step_content = match.group(2).strip()
 
                 if step_content:
-                    steps.append(Step(
-                        number=number,
-                        content=step_content,
-                        is_verification=is_verification
-                    ))
+                    steps.append(
+                        Step(
+                            number=number,
+                            content=step_content,
+                            is_verification=is_verification,
+                        )
+                    )
 
         return steps

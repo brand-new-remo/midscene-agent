@@ -6,12 +6,13 @@ HTTP 客户端用于与 Node.js Midscene 服务通信
 """
 
 import asyncio
-import aiohttp
 import json
 import logging
-from typing import Dict, Any, Optional, AsyncGenerator, List
-from dataclasses import dataclass, asdict
 from contextlib import asynccontextmanager
+from dataclasses import asdict, dataclass
+from typing import Any, AsyncGenerator, Dict, List, Optional
+
+import aiohttp
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -27,6 +28,7 @@ class SessionConfig:
     应在 Node.js server 端通过环境变量配置，
     以实现架构分离。
     """
+
     headless: bool = True
     viewport_width: int = 1920
     viewport_height: int = 1080
@@ -35,6 +37,7 @@ class SessionConfig:
 @dataclass
 class ActionResult:
     """动作执行结果"""
+
     success: bool
     result: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
@@ -55,7 +58,7 @@ class MidsceneHTTPClient:
         Args:
             base_url: Node.js 服务器地址
         """
-        self.base_url = base_url.rstrip('/')
+        self.base_url = base_url.rstrip("/")
         self.session: Optional[aiohttp.ClientSession] = None
         self.session_id: Optional[str] = None
         self.websocket: Optional[aiohttp.ClientWebSocketResponse] = None
@@ -84,8 +87,7 @@ class MidsceneHTTPClient:
         )
 
         self.session = aiohttp.ClientSession(
-            connector=self.connector,
-            timeout=aiohttp.ClientTimeout(total=300)
+            connector=self.connector, timeout=aiohttp.ClientTimeout(total=300)
         )
 
         logger.info(f"HTTP 客户端已连接到 {self.base_url}")
@@ -116,8 +118,7 @@ class MidsceneHTTPClient:
 
         try:
             async with self.session.post(
-                f"{self.base_url}/api/sessions",
-                json=asdict(config)
+                f"{self.base_url}/api/sessions", json=asdict(config)
             ) as response:
                 if response.status == 200:
                     data = await response.json()
@@ -136,10 +137,7 @@ class MidsceneHTTPClient:
             raise RuntimeError(error_msg)
 
     async def execute_action(
-        self,
-        action: str,
-        params: Optional[Dict[str, Any]] = None,
-        stream: bool = False
+        self, action: str, params: Optional[Dict[str, Any]] = None, stream: bool = False
     ) -> AsyncGenerator[Dict[str, Any], None]:
         """
         执行网页动作
@@ -170,10 +168,7 @@ class MidsceneHTTPClient:
                 # HTTP 请求
                 async with self.session.post(
                     f"{self.base_url}/api/sessions/{self.session_id}/action",
-                    json={
-                        "action": action,
-                        "params": params or {}
-                    }
+                    json={"action": action, "params": params or {}},
                 ) as response:
                     if response.status == 200:
                         result = await response.json()
@@ -183,7 +178,7 @@ class MidsceneHTTPClient:
                         yield {
                             "success": False,
                             "error": f"HTTP {response.status}: {error_text}",
-                            "timestamp": int(asyncio.get_event_loop().time() * 1000)
+                            "timestamp": int(asyncio.get_event_loop().time() * 1000),
                         }
 
         except Exception as e:
@@ -192,22 +187,26 @@ class MidsceneHTTPClient:
             yield {
                 "success": False,
                 "error": error_msg,
-                "timestamp": int(asyncio.get_event_loop().time() * 1000)
+                "timestamp": int(asyncio.get_event_loop().time() * 1000),
             }
 
-    async def _send_websocket_action(self, action: str, params: Optional[Dict[str, Any]]) -> None:
+    async def _send_websocket_action(
+        self, action: str, params: Optional[Dict[str, Any]]
+    ) -> None:
         """通过 WebSocket 发送动作"""
         if not self.websocket:
             raise RuntimeError("WebSocket 未连接")
 
         # 类型断言：告诉 Pylance 这里 websocket 不是 None
         assert self.websocket is not None
-        await self.websocket.send_json({
-            "type": "action",
-            "sessionId": self.session_id,
-            "action": action,
-            "params": params or {}
-        })
+        await self.websocket.send_json(
+            {
+                "type": "action",
+                "sessionId": self.session_id,
+                "action": action,
+                "params": params or {},
+            }
+        )
 
     async def _listen_websocket(self) -> AsyncGenerator[Dict[str, Any], None]:
         """监听 WebSocket 消息"""
@@ -232,9 +231,7 @@ class MidsceneHTTPClient:
             logger.info("WebSocket listener closed")
 
     async def execute_query(
-        self,
-        query: str,
-        params: Optional[Dict[str, Any]] = None
+        self, query: str, params: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
         查询页面信息
@@ -257,10 +254,7 @@ class MidsceneHTTPClient:
         try:
             async with self.session.post(
                 f"{self.base_url}/api/sessions/{self.session_id}/query",
-                json={
-                    "query": query,
-                    "params": params or {}
-                }
+                json={"query": query, "params": params or {}},
             ) as response:
                 if response.status == 200:
                     result = await response.json()
@@ -273,7 +267,7 @@ class MidsceneHTTPClient:
                     return {
                         "success": False,
                         "error": error_msg,
-                        "timestamp": int(asyncio.get_event_loop().time() * 1000)
+                        "timestamp": int(asyncio.get_event_loop().time() * 1000),
                     }
         except Exception as e:
             error_msg = f"查询时出错: {str(e)}"
@@ -281,7 +275,7 @@ class MidsceneHTTPClient:
             return {
                 "success": False,
                 "error": error_msg,
-                "timestamp": int(asyncio.get_event_loop().time() * 1000)
+                "timestamp": int(asyncio.get_event_loop().time() * 1000),
             }
 
     async def get_sessions(self) -> List[Dict[str, Any]]:
@@ -344,10 +338,9 @@ class MidsceneHTTPClient:
             # 类型断言：告诉 Pylance 这里 websocket 不是 None
             assert self.websocket is not None
             # 订阅会话
-            await self.websocket.send_json({
-                "type": "subscribe",
-                "sessionId": self.session_id
-            })
+            await self.websocket.send_json(
+                {"type": "subscribe", "sessionId": self.session_id}
+            )
 
             logger.info("✅ WebSocket 连接成功")
             return True
@@ -364,10 +357,9 @@ class MidsceneHTTPClient:
             try:
                 # 类型断言：告诉 Pylance 这里 websocket 不是 None
                 assert self.websocket is not None
-                await self.websocket.send_json({
-                    "type": "unsubscribe",
-                    "sessionId": self.session_id
-                })
+                await self.websocket.send_json(
+                    {"type": "unsubscribe", "sessionId": self.session_id}
+                )
                 await self.websocket.close()
                 self.websocket = None
                 logger.info("🔌 WebSocket 连接已断开")
@@ -393,7 +385,7 @@ class MidsceneHTTPClient:
                     return {
                         "status": "unhealthy",
                         "error": error_msg,
-                        "timestamp": int(asyncio.get_event_loop().time() * 1000)
+                        "timestamp": int(asyncio.get_event_loop().time() * 1000),
                     }
         except Exception as e:
             error_msg = f"健康检查时出错: {str(e)}"
@@ -401,7 +393,7 @@ class MidsceneHTTPClient:
             return {
                 "status": "error",
                 "error": error_msg,
-                "timestamp": int(asyncio.get_event_loop().time() * 1000)
+                "timestamp": int(asyncio.get_event_loop().time() * 1000),
             }
 
     async def cleanup(self) -> None:
@@ -450,9 +442,11 @@ class MidsceneHTTPClient:
 
 class MidsceneConnectionError(Exception):
     """当连接到 Midscene 服务器失败时抛出"""
+
     pass
 
 
 class MidsceneActionError(Exception):
     """当执行动作失败时抛出"""
+
     pass

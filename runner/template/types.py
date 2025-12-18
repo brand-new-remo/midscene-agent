@@ -11,15 +11,17 @@ from typing import Any, Dict, List, Optional, Union
 
 class ContextScope(Enum):
     """上下文作用域枚举"""
-    GLOBAL = "global"        # 全局上下文 - 所有测试共享
-    SESSION = "session"      # 会话上下文 - 当前测试会话
-    TEMPLATE = "template"    # 模板上下文 - 当前模板执行
-    STEP = "step"           # 步骤上下文 - 当前步骤
+
+    GLOBAL = "global"  # 全局上下文 - 所有测试共享
+    SESSION = "session"  # 会话上下文 - 当前测试会话
+    TEMPLATE = "template"  # 模板上下文 - 当前模板执行
+    STEP = "step"  # 步骤上下文 - 当前步骤
 
 
 @dataclass
 class TemplateParameter:
     """模板参数定义"""
+
     name: str
     type: str  # "string", "number", "boolean", "url", "selector"
     required: bool = False
@@ -56,13 +58,13 @@ class TemplateParameter:
 
         if self.type == "number":
             try:
-                return float(value) if '.' in str(value) else int(value)
+                return float(value) if "." in str(value) else int(value)
             except (ValueError, TypeError):
                 return value
         elif self.type == "boolean":
             if isinstance(value, bool):
                 return value
-            return str(value).lower() in ('true', '1', 'yes', 'on')
+            return str(value).lower() in ("true", "1", "yes", "on")
 
         return value
 
@@ -70,6 +72,7 @@ class TemplateParameter:
 @dataclass
 class TemplateStep:
     """模板步骤定义"""
+
     id: str
     action: str  # 操作类型，如 "ai", "aiInput", "aiTap" 等
     params: Dict[str, Any] = field(default_factory=dict)
@@ -81,6 +84,7 @@ class TemplateStep:
 @dataclass
 class Template:
     """模板数据类"""
+
     name: str
     version: str = "1.0.0"
     description: str = ""
@@ -121,26 +125,30 @@ class Template:
         # 解析步骤
         steps = []
         for step_data in template_data.get("steps", []):
-            steps.append(TemplateStep(
-                id=step_data.get("id", ""),
-                action=step_data.get("action", ""),
-                params=step_data.get("params", {}),
-                description=step_data.get("description"),
-                condition=step_data.get("condition"),
-                continue_on_error=step_data.get("continue_on_error", False),
-            ))
+            steps.append(
+                TemplateStep(
+                    id=step_data.get("id", ""),
+                    action=step_data.get("action", ""),
+                    params=step_data.get("params", {}),
+                    description=step_data.get("description"),
+                    condition=step_data.get("condition"),
+                    continue_on_error=step_data.get("continue_on_error", False),
+                )
+            )
 
         # 解析后置步骤
         post_steps = []
         for step_data in template_data.get("post_steps", []):
-            post_steps.append(TemplateStep(
-                id=step_data.get("id", ""),
-                action=step_data.get("action", ""),
-                params=step_data.get("params", {}),
-                description=step_data.get("description"),
-                condition=step_data.get("condition"),
-                continue_on_error=step_data.get("continue_on_error", False),
-            ))
+            post_steps.append(
+                TemplateStep(
+                    id=step_data.get("id", ""),
+                    action=step_data.get("action", ""),
+                    params=step_data.get("params", {}),
+                    description=step_data.get("description"),
+                    condition=step_data.get("condition"),
+                    continue_on_error=step_data.get("continue_on_error", False),
+                )
+            )
 
         return cls(
             name=template_data.get("name", ""),
@@ -227,6 +235,7 @@ class Template:
 @dataclass
 class TemplateCall:
     """模板调用定义"""
+
     name: str
     parameters: Dict[str, Any] = field(default_factory=dict)
     context: Dict[str, Any] = field(default_factory=dict)
@@ -261,6 +270,7 @@ class TemplateCall:
 @dataclass
 class CompiledTemplate:
     """编译后的模板（已展开参数）"""
+
     name: str
     steps: List[Dict[str, Any]]
     context: Dict[str, Any]

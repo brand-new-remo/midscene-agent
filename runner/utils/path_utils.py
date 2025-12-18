@@ -13,9 +13,7 @@ def get_project_root() -> str:
     Returns:
         项目根目录的绝对路径
     """
-    return os.path.abspath(os.path.join(
-        os.path.dirname(__file__), "..", ".."
-    ))
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 
 def get_tests_dir(test_type: str) -> str:
@@ -36,7 +34,7 @@ def get_tests_dir(test_type: str) -> str:
     Raises:
         FileNotFoundError: 当找不到测试目录时抛出
     """
-    if test_type not in ('yamls', 'texts'):
+    if test_type not in ("yamls", "texts"):
         raise ValueError(f"test_type 必须是 'yamls' 或 'texts'，不能是 '{test_type}'")
 
     # 方法1: 使用当前文件位置向上查找3级到项目根目录

@@ -6,19 +6,20 @@
 """
 
 import os
-import yaml
-from typing import Dict, List, Optional, Set
 from pathlib import Path
+from typing import Dict, List, Optional, Set
 
-from .types import Template, TemplateCall
+import yaml
+
 from .exceptions import (
-    TemplateNotFoundError,
-    TemplateValidationError,
+    InvalidTemplateFormatError,
     RegistryError,
     RegistryLoadError,
     TemplateAlreadyExistsError,
-    InvalidTemplateFormatError,
+    TemplateNotFoundError,
+    TemplateValidationError,
 )
+from .types import Template, TemplateCall
 
 
 class TemplateRegistry:
@@ -63,26 +64,26 @@ class TemplateRegistry:
             return
 
         try:
-            with open(self.registry_file, 'r', encoding='utf-8') as f:
+            with open(self.registry_file, "r", encoding="utf-8") as f:
                 registry_data = yaml.safe_load(f) or {}
 
-            templates_metadata = registry_data.get('templates', {})
+            templates_metadata = registry_data.get("templates", {})
 
             for template_name, metadata in templates_metadata.items():
                 try:
                     # 加载模板文件
-                    template = self._load_template_from_file(metadata['path'])
+                    template = self._load_template_from_file(metadata["path"])
                     self._templates[template_name] = template
                     self._template_metadata[template_name] = metadata
 
                     # 更新分类索引
-                    category = metadata.get('category', 'general')
+                    category = metadata.get("category", "general")
                     if category not in self._categories:
                         self._categories[category] = set()
                     self._categories[category].add(template_name)
 
                     # 更新标签索引
-                    tags = metadata.get('tags', [])
+                    tags = metadata.get("tags", [])
                     for tag in tags:
                         if tag not in self._tags:
                             self._tags[tag] = set()
@@ -97,13 +98,12 @@ class TemplateRegistry:
     def _save_registry(self):
         """保存模板注册表"""
         registry_data = {
-            'templates': {
-                name: metadata
-                for name, metadata in self._template_metadata.items()
+            "templates": {
+                name: metadata for name, metadata in self._template_metadata.items()
             }
         }
 
-        with open(self.registry_file, 'w', encoding='utf-8') as f:
+        with open(self.registry_file, "w", encoding="utf-8") as f:
             yaml.dump(registry_data, f, default_flow_style=False, allow_unicode=True)
 
     def _load_template_from_file(self, relative_path: str) -> Template:
@@ -124,13 +124,12 @@ class TemplateRegistry:
             raise FileNotFoundError(f"Template file not found: {template_path}")
 
         try:
-            with open(template_path, 'r', encoding='utf-8') as f:
+            with open(template_path, "r", encoding="utf-8") as f:
                 template_data = yaml.safe_load(f)
 
-            if not template_data or 'template' not in template_data:
+            if not template_data or "template" not in template_data:
                 raise InvalidTemplateFormatError(
-                    str(template_path),
-                    "Missing 'template' key in template file"
+                    str(template_path), "Missing 'template' key in template file"
                 )
 
             template = Template.from_dict(template_data)
@@ -138,16 +137,14 @@ class TemplateRegistry:
 
         except yaml.YAMLError as e:
             raise InvalidTemplateFormatError(
-                str(template_path),
-                f"Invalid YAML format: {e}"
+                str(template_path), f"Invalid YAML format: {e}"
             )
         except Exception as e:
-            raise InvalidTemplateFormatError(
-                str(template_path),
-                str(e)
-            )
+            raise InvalidTemplateFormatError(str(template_path), str(e))
 
-    def register_template(self, template: Template, metadata: Optional[Dict] = None) -> str:
+    def register_template(
+        self, template: Template, metadata: Optional[Dict] = None
+    ) -> str:
         """注册模板
 
         Args:
@@ -160,7 +157,7 @@ class TemplateRegistry:
         Raises:
             TemplateAlreadyExistsError: 模板已存在
         """
-        template_name = metadata.get('name') if metadata else None
+        template_name = metadata.get("name") if metadata else None
         if not template_name:
             template_name = template.name
 
@@ -169,14 +166,14 @@ class TemplateRegistry:
 
         # 准备元数据
         template_metadata = {
-            'name': template_name,
-            'category': template.category,
-            'tags': template.tags,
-            'author': template.author,
-            'version': template.version,
-            'description': template.description,
-            'path': f"custom/{template_name}.yaml",  # 默认路径
-            'popularity': 0,
+            "name": template_name,
+            "category": template.category,
+            "tags": template.tags,
+            "author": template.author,
+            "version": template.version,
+            "description": template.description,
+            "path": f"custom/{template_name}.yaml",  # 默认路径
+            "popularity": 0,
         }
 
         if metadata:
@@ -187,12 +184,12 @@ class TemplateRegistry:
         self._template_metadata[template_name] = template_metadata
 
         # 更新索引
-        category = template_metadata['category']
+        category = template_metadata["category"]
         if category not in self._categories:
             self._categories[category] = set()
         self._categories[category].add(template_name)
 
-        for tag in template_metadata['tags']:
+        for tag in template_metadata["tags"]:
             if tag not in self._tags:
                 self._tags[tag] = set()
             self._tags[tag].add(template_name)
@@ -219,14 +216,14 @@ class TemplateRegistry:
         metadata = self._template_metadata.pop(template_name)
 
         # 从分类索引中删除
-        category = metadata.get('category', 'general')
+        category = metadata.get("category", "general")
         if category in self._categories:
             self._categories[category].discard(template_name)
             if not self._categories[category]:
                 del self._categories[category]
 
         # 从标签索引中删除
-        for tag in metadata.get('tags', []):
+        for tag in metadata.get("tags", []):
             if tag in self._tags:
                 self._tags[tag].discard(template_name)
                 if not self._tags[tag]:
@@ -268,7 +265,9 @@ class TemplateRegistry:
 
         return template
 
-    def list_templates(self, category: Optional[str] = None, tag: Optional[str] = None) -> List[str]:
+    def list_templates(
+        self, category: Optional[str] = None, tag: Optional[str] = None
+    ) -> List[str]:
         """列出模板
 
         Args:
@@ -351,11 +350,13 @@ class TemplateRegistry:
 
         for template_name, metadata in self._template_metadata.items():
             # 在名称、描述、标签中搜索
-            searchable_text = ' '.join([
-                template_name.lower(),
-                metadata.get('description', '').lower(),
-                ' '.join(metadata.get('tags', [])).lower(),
-            ])
+            searchable_text = " ".join(
+                [
+                    template_name.lower(),
+                    metadata.get("description", "").lower(),
+                    " ".join(metadata.get("tags", [])).lower(),
+                ]
+            )
 
             if query in searchable_text:
                 results.append(template_name)
@@ -396,8 +397,10 @@ class TemplateRegistry:
         # 检查参数
         for param_name, param in template.parameters.items():
             # 验证参数类型
-            if param.type not in ['string', 'number', 'boolean', 'url', 'selector']:
-                errors.append(f"Invalid parameter type for '{param_name}': {param.type}")
+            if param.type not in ["string", "number", "boolean", "url", "selector"]:
+                errors.append(
+                    f"Invalid parameter type for '{param_name}': {param.type}"
+                )
 
             # 检查默认值类型
             if param.default is not None and not param.validate(param.default):
@@ -423,16 +426,12 @@ class TemplateRegistry:
             统计信息字典
         """
         return {
-            'total_templates': len(self._templates),
-            'categories': {
-                name: len(templates)
-                for name, templates in self._categories.items()
+            "total_templates": len(self._templates),
+            "categories": {
+                name: len(templates) for name, templates in self._categories.items()
             },
-            'tags': {
-                name: len(templates)
-                for name, templates in self._tags.items()
-            },
-            'cache_size': len(self._cache),
+            "tags": {name: len(templates) for name, templates in self._tags.items()},
+            "cache_size": len(self._cache),
         }
 
     def clear_cache(self):

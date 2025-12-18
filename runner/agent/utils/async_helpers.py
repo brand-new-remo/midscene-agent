@@ -3,14 +3,11 @@
 """
 
 import asyncio
-from typing import Callable, Any, Optional
+from typing import Any, Callable, Optional
 
 
 async def create_task_with_timeout(
-    coro: Callable,
-    timeout: Optional[float] = None,
-    *args,
-    **kwargs
+    coro: Callable, timeout: Optional[float] = None, *args, **kwargs
 ) -> Any:
     """
     创建并等待带超时的任务。
@@ -40,10 +37,7 @@ async def create_task_with_timeout(
 
 
 async def run_with_timeout(
-    func: Callable,
-    timeout: Optional[float] = None,
-    *args,
-    **kwargs
+    func: Callable, timeout: Optional[float] = None, *args, **kwargs
 ) -> Any:
     """
     在执行器中运行同步函数并设置超时。
@@ -65,8 +59,7 @@ async def run_with_timeout(
     try:
         if timeout:
             return await asyncio.wait_for(
-                loop.run_in_executor(None, func, *args, **kwargs),
-                timeout=timeout
+                loop.run_in_executor(None, func, *args, **kwargs), timeout=timeout
             )
         else:
             return await loop.run_in_executor(None, func, *args, **kwargs)

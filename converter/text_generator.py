@@ -2,10 +2,10 @@
 自然语言测试文件生成器
 """
 
-from typing import List
 from pathlib import Path
+from typing import List
 
-from .models import ParsedDocument, Module, TestCase, Step
+from .models import Module, ParsedDocument, Step, TestCase
 from .utils import sanitize_filename
 
 
@@ -25,7 +25,7 @@ class TextGenerator:
         for module in document.modules:
             output_file = output_dir / f"{sanitize_filename(module.name)}.txt"
             content = self._generate_module_file(module)
-            output_file.write_text(content, encoding='utf-8')
+            output_file.write_text(content, encoding="utf-8")
             generated_files.append(output_file)
 
         return generated_files

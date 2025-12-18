@@ -3,11 +3,12 @@ XMind 转换工具的工具函数
 """
 
 import os
-import zipfile
 import tempfile
+import zipfile
 from pathlib import Path
 from typing import List, Tuple
-from .exceptions import ConverterFileNotFoundError, ConverterError
+
+from .exceptions import ConverterError, ConverterFileNotFoundError
 
 
 def ensure_output_dir(output_dir: str) -> Path:
@@ -24,7 +25,7 @@ def validate_input_file(input_path: str) -> Path:
         raise ConverterFileNotFoundError(f"输入文件不存在: {input_path}")
     if not path.is_file():
         raise ConverterError(f"输入路径不是文件: {input_path}")
-    if not path.suffix.lower() == '.xmind':
+    if not path.suffix.lower() == ".xmind":
         raise ConverterError(f"文件不是 .xmind 格式: {input_path}")
     return path
 
@@ -44,13 +45,13 @@ def find_xmind_files(input_path: str | Path) -> List[Path]:
     path = Path(input_path)
 
     if path.is_file():
-        if path.suffix.lower() == '.xmind':
+        if path.suffix.lower() == ".xmind":
             return [path]
         else:
             return []
 
-    xmind_files = list(path.glob('**/*.xmind'))
-    xmind_files.extend(list(path.glob('**/*.XMind')))
+    xmind_files = list(path.glob("**/*.xmind"))
+    xmind_files.extend(list(path.glob("**/*.XMind")))
     return sorted(set(xmind_files))
 
 
@@ -58,21 +59,24 @@ def sanitize_filename(filename: str) -> str:
     """清理文件名，移除非法字符"""
     invalid_chars = '<>:"/\\|?*'
     for char in invalid_chars:
-        filename = filename.replace(char, '_')
-    filename = filename.strip('. ')
+        filename = filename.replace(char, "_")
+    filename = filename.strip(". ")
     if not filename:
-        filename = 'unnamed'
+        filename = "unnamed"
     return filename
 
 
 def is_xmind_file(file_path: Path) -> bool:
     """检查文件是否为有效的 XMind 文件"""
-    if not file_path.suffix.lower() == '.xmind':
+    if not file_path.suffix.lower() == ".xmind":
         return False
 
     try:
-        with zipfile.ZipFile(file_path, 'r') as zip_file:
-            return 'content.json' in zip_file.namelist() or 'content.xml' in zip_file.namelist()
+        with zipfile.ZipFile(file_path, "r") as zip_file:
+            return (
+                "content.json" in zip_file.namelist()
+                or "content.xml" in zip_file.namelist()
+            )
     except zipfile.BadZipFile:
         return False
 
@@ -80,15 +84,17 @@ def is_xmind_file(file_path: Path) -> bool:
 def extract_xmind_content(xmind_path: Path) -> Tuple[str, str]:
     """提取 XMind 文件中的 content.json 或 content.xml 内容"""
     try:
-        with zipfile.ZipFile(xmind_path, 'r') as zip_file:
-            if 'content.json' in zip_file.namelist():
-                content = zip_file.read('content.json').decode('utf-8')
-                return content, 'json'
-            elif 'content.xml' in zip_file.namelist():
-                content = zip_file.read('content.xml').decode('utf-8')
-                return content, 'xml'
+        with zipfile.ZipFile(xmind_path, "r") as zip_file:
+            if "content.json" in zip_file.namelist():
+                content = zip_file.read("content.json").decode("utf-8")
+                return content, "json"
+            elif "content.xml" in zip_file.namelist():
+                content = zip_file.read("content.xml").decode("utf-8")
+                return content, "xml"
             else:
-                raise ConverterError(f"XMind 文件不包含 content.json 或 content.xml: {xmind_path}")
+                raise ConverterError(
+                    f"XMind 文件不包含 content.json 或 content.xml: {xmind_path}"
+                )
     except zipfile.BadZipFile:
         raise ConverterError(f"无效的 XMind 文件: {xmind_path}")
 
@@ -97,9 +103,9 @@ def extract_xmind_to_temp(xmind_path: Path) -> Path:
     """将 XMind 文件提取到临时目录并返回路径"""
     import shutil
 
-    temp_dir = Path(tempfile.mkdtemp(prefix='xmind_'))
+    temp_dir = Path(tempfile.mkdtemp(prefix="xmind_"))
     try:
-        with zipfile.ZipFile(xmind_path, 'r') as zip_file:
+        with zipfile.ZipFile(xmind_path, "r") as zip_file:
             zip_file.extractall(temp_dir)
         return temp_dir
     except zipfile.BadZipFile:

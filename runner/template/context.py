@@ -6,9 +6,10 @@
 """
 
 import re
-from typing import Any, Dict, List, Optional, Union, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+from .exceptions import ContextAccessError, ContextError, ContextNotFoundError
 from .types import ContextScope
-from .exceptions import ContextError, ContextNotFoundError, ContextAccessError
 
 
 class ContextManager:
@@ -47,17 +48,23 @@ class ContextManager:
 
     def _init_default_global_context(self):
         """初始化默认全局上下文"""
-        self.set_global("system", {
-            "name": "Midscene Test System",
-            "version": "1.0.0",
-            "environment": "production",
-        })
+        self.set_global(
+            "system",
+            {
+                "name": "Midscene Test System",
+                "version": "1.0.0",
+                "environment": "production",
+            },
+        )
 
-        self.set_global("browser", {
-            "viewportWidth": 1280,
-            "viewportHeight": 768,
-            "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        })
+        self.set_global(
+            "browser",
+            {
+                "viewportWidth": 1280,
+                "viewportHeight": 768,
+                "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            },
+        )
 
     def set_global(self, key: str, value: Any):
         """设置全局上下文变量"""
@@ -102,7 +109,9 @@ class ContextManager:
             self._contexts[scope] = {}
         self._contexts[scope][key] = value
 
-    def get(self, key: str, scope: ContextScope = ContextScope.GLOBAL, default: Any = None) -> Any:
+    def get(
+        self, key: str, scope: ContextScope = ContextScope.GLOBAL, default: Any = None
+    ) -> Any:
         """获取指定作用域的上下文变量
 
         如果在指定作用域未找到，会按照继承链向上查找。
@@ -115,7 +124,10 @@ class ContextManager:
         for inherited_scope in self._inheritance_chain:
             if inherited_scope == scope:
                 continue
-            if inherited_scope in self._contexts and key in self._contexts[inherited_scope]:
+            if (
+                inherited_scope in self._contexts
+                and key in self._contexts[inherited_scope]
+            ):
                 return self._contexts[inherited_scope][key]
 
         return default
@@ -179,10 +191,7 @@ class ContextManager:
 
     def get_all_contexts(self) -> Dict[ContextScope, Dict[str, Any]]:
         """获取所有上下文（用于调试）"""
-        return {
-            scope: context.copy()
-            for scope, context in self._contexts.items()
-        }
+        return {scope: context.copy() for scope, context in self._contexts.items()}
 
     def merge_contexts(self, *contexts: Dict[str, Any]) -> Dict[str, Any]:
         """合并多个上下文字典
@@ -215,7 +224,9 @@ class ContextManager:
         """批量更新步骤上下文"""
         self._contexts[ContextScope.STEP].update(variables)
 
-    def get_context_for_template(self, template_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def get_context_for_template(
+        self, template_context: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """获取模板执行时的完整上下文
 
         合并全局、会话和模板上下文，模板上下文优先级最高。
@@ -251,7 +262,9 @@ class ContextManager:
         merged = self.merge_contexts(*all_contexts)
         return merged
 
-    def substitute_variables(self, text: str, context: Optional[Dict[str, Any]] = None) -> str:
+    def substitute_variables(
+        self, text: str, context: Optional[Dict[str, Any]] = None
+    ) -> str:
         """在文本中替换变量引用
 
         支持以下格式：
@@ -274,7 +287,7 @@ class ContextManager:
             context = self.get_context_for_template()
 
         # 变量引用模式：${var} 或 ${var:default}
-        pattern = r'\$\{([^}:]+)(?::([^}]*))?\}'
+        pattern = r"\$\{([^}:]+)(?::([^}]*))?\}"
 
         def replace_var(match):
             var_path = match.group(1).strip()
@@ -304,7 +317,7 @@ class ContextManager:
         Returns:
             嵌套的值，如果路径不存在则返回 None
         """
-        keys = path.split('.')
+        keys = path.split(".")
         value = context
 
         try:
@@ -322,7 +335,7 @@ class ContextManager:
             path: 点分隔的路径
             value: 要设置的值
         """
-        keys = path.split('.')
+        keys = path.split(".")
         target = context
 
         # 导航到父级字典

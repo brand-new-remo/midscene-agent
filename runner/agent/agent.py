@@ -7,22 +7,20 @@ Midscene Agent，使用 HTTP 客户端替代 MCP stdio
 """
 
 import logging
-from typing import List, Dict, Any, Optional, AsyncGenerator
+from typing import Any, AsyncGenerator, Dict, List, Optional
+
+from langchain_core.messages import HumanMessage
 from langchain_core.tools import BaseTool, tool
 from langchain_deepseek import ChatDeepSeek
-from langchain_core.messages import HumanMessage
-from langgraph.graph import StateGraph, MessagesState, START, END
+from langgraph.graph import END, START, MessagesState, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 from pydantic import SecretStr
-from .http_client import (
-    MidsceneHTTPClient,
-    SessionConfig,
-    MidsceneConnectionError,
-)
+
+from .http_client import MidsceneConnectionError, MidsceneHTTPClient, SessionConfig
 from .tools.definitions import (
-    get_tool_definition,
     TOOL_DEFINITIONS,
     get_recommended_tool_set,
+    get_tool_definition,
 )
 
 # 配置日志
@@ -221,17 +219,37 @@ class MidsceneAgent:
 
                 # 动作类 API - 通过 executeAction 调用
                 action_apis = {
-                    "navigate", "aiTap", "aiDoubleClick", "aiRightClick",
-                    "aiInput", "aiScroll", "aiKeyboardPress", "aiHover",
-                    "aiWaitFor", "aiAction", "setActiveTab",
-                    "evaluateJavaScript", "logScreenshot", "freezePageContext",
-                    "unfreezePageContext", "runYaml", "setAIActionContext"
+                    "navigate",
+                    "aiTap",
+                    "aiDoubleClick",
+                    "aiRightClick",
+                    "aiInput",
+                    "aiScroll",
+                    "aiKeyboardPress",
+                    "aiHover",
+                    "aiWaitFor",
+                    "aiAction",
+                    "setActiveTab",
+                    "evaluateJavaScript",
+                    "logScreenshot",
+                    "freezePageContext",
+                    "unfreezePageContext",
+                    "runYaml",
+                    "setAIActionContext",
                 }
 
                 # 查询类 API - 通过 executeQuery 调用
                 query_apis = {
-                    "aiAssert", "aiAsk", "aiQuery", "aiBoolean", "aiNumber", "aiString",
-                    "aiLocate", "getTabs", "getConsoleLogs", "playwrightExample"
+                    "aiAssert",
+                    "aiAsk",
+                    "aiQuery",
+                    "aiBoolean",
+                    "aiNumber",
+                    "aiString",
+                    "aiLocate",
+                    "getTabs",
+                    "getConsoleLogs",
+                    "playwrightExample",
                 }
 
                 if midscene_api_name in action_apis:
@@ -274,8 +292,9 @@ class MidsceneAgent:
 
     def _generate_pydantic_model(self, tool_name: str, params: Dict):
         """生成 Pydantic 模型"""
-        from pydantic import BaseModel, Field
         from typing import Optional
+
+        from pydantic import BaseModel, Field
 
         fields = {}
         annotations = {}
@@ -372,7 +391,7 @@ class MidsceneAgent:
         title = kwargs.get("name", "screenshot")
         options = {
             "fullPage": kwargs.get("fullPage", False),
-            "content": kwargs.get("content")
+            "content": kwargs.get("content"),
         }
 
         async for event in self.http_client.execute_action(

@@ -206,6 +206,15 @@ midscene-text tests/texts/basic_usage.txt
 
 # 检查配置
 midscene-check
+
+# 格式化 Python 代码
+midscene-format
+
+# 格式化指定文件
+midscene-format runner/agent/agent.py
+
+# 格式化指定目录
+midscene-format runner/
 ```
 
 ### XMind 转换工具 (converter/ 目录)
@@ -322,15 +331,26 @@ langgraph dev
    npm run dev
    ```
 
-2. **运行/测试 Python 代码** (从项目根目录):
+2. **修改代码** (Python/TypeScript 文件)
+
+3. **格式化代码** (项目根目录):
+   ```bash
+   midscene-format  # 格式化整个项目
+   # 或
+   midscene-format runner/  # 格式化指定目录
+   ```
+
+4. **运行/测试 Python 代码** (从项目根目录):
    ```bash
    midscene-yaml tests/yamls/your_test.yaml
    ```
 
-3. **检查代码质量** (在 `server/` 目录中):
+5. **检查代码质量** (在 `server/` 目录中):
    ```bash
    npm run quality
    ```
+
+⚠️ **重要**: 每次修改 Python 代码后，请务必运行 `midscene-format` 格式化代码，保持代码风格一致！
 
 ### 会话管理
 
@@ -537,6 +557,7 @@ lsof -ti:3000 | xargs kill
 - WebSocket 流式传输在智能体配置中默认启用
 - 会话是隔离的 - 一个会话中的操作不会影响其他会话
 - 日志写入 `server/logs/` (error.log, combined.log)
+- **⚠️ 代码格式化**: 每次修改 Python 代码后，务必运行 `midscene-format` 命令格式化代码，保持代码风格一致！
 
 ## 项目结构
 

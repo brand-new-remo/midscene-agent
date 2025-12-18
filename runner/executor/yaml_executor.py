@@ -7,29 +7,31 @@
     例如: python -m executor.yaml_executor tests/yamls/basic_usage.yaml
 """
 
-import asyncio
-import yaml
-import os
-import sys
-import re
 import argparse
-from typing import Dict, Any, Optional, List
-import json
-from datetime import datetime
+import asyncio
 import glob
+import json
+import os
+import re
+import sys
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+import yaml
 
 # 添加 runner 到 sys.path，以便能够导入 agent 包
 runner_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if runner_dir not in sys.path:
     sys.path.insert(0, runner_dir)
 
+from template.context import ContextManager
+from template.types import TemplateCall
+
 # 直接导入 agent 模块（使用绝对导入）
 from runner.agent.agent import MidsceneAgent
 
 # 导入模板系统
 from runner.template.engine import TemplateEngine
-from template.context import ContextManager
-from template.types import TemplateCall
 
 
 def replace_env_vars(obj: Any) -> Any:
@@ -140,9 +142,11 @@ class YamlTestRunner:
         self.ai_action_context = self.config.get("agent", {}).get("aiActionContext", "")
 
         # 初始化模板系统
-        from template.registry import TemplateRegistry
         import os
-        templates_dir = os.path.join(os.path.dirname(__file__), '..', 'templates')
+
+        from template.registry import TemplateRegistry
+
+        templates_dir = os.path.join(os.path.dirname(__file__), "..", "templates")
         registry = TemplateRegistry(templates_dir)
 
         self.template_engine = TemplateEngine(registry)
@@ -624,17 +628,14 @@ class YamlTestRunner:
                 return
 
             # 更新模板上下文
-            self.context_manager.update_template({
-                "template_name": template_name,
-                **parameters
-            })
+            self.context_manager.update_template(
+                {"template_name": template_name, **parameters}
+            )
             template_context = self.context_manager.get_context_for_template()
 
             # 创建模板调用对象
             template_call = TemplateCall(
-                name=template_name,
-                parameters=parameters,
-                context=template_context
+                name=template_name, parameters=parameters, context=template_context
             )
 
             # 展开模板
@@ -653,6 +654,7 @@ class YamlTestRunner:
         except Exception as e:
             print(f"  ❌ 模板执行失败: {e}")
             import traceback
+
             traceback.print_exc()
 
     async def run(self):
