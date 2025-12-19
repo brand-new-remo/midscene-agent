@@ -12,6 +12,16 @@ import { createWebSocketServer } from './websocket/index';
 import { startServer } from './server/start';
 import MidsceneOrchestrator from './orchestrator/index';
 
+// 过滤掉 Midscene 的报告日志
+const originalConsoleLog = console.log;
+console.log = (...args: unknown[]) => {
+  const message = args.join(' ');
+  if (message.includes('Midscene - report file updated')) {
+    return; // 跳过这个日志
+  }
+  originalConsoleLog(...args);
+};
+
 // 创建 Express 应用
 const app = createApp();
 

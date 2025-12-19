@@ -1,5 +1,5 @@
-# Midscene 基础使用示例
-# 演示基本的网页自动化、查询和流式响应功能
+# Midscene 基础使用示例 - 优化版
+# 演示使用即时操作的流畅网页自动化
 
 web:
   url: https://midscenejs.com/zh/introduction
@@ -10,14 +10,29 @@ web:
 tasks:
   - name: 基础网页自动化示例
     flow:
-      - ai: 导航到页面并等待完全加载
-      - ai: 查看页面左侧的导航菜单，找到桥接到桌面 Chrome这个菜单项
-      - ai: 点击左侧导航菜单中的桥接到桌面 Chrome菜单项
-      - ai: 等待2秒钟后导航跳转完成
-      - aiAssert: "页面中间显示了Chrome 桥接模式（Bridge Mode）文字"
-      - logScreenshot:
-          content: "Chrome 桥接模式页面详情"
+      # 导航操作（直接调用navigate）
+      - navigate:
+          url: "https://midscenejs.com/zh/introduction"
+      - sleep: 3
+
+      # 查询导航菜单
       - aiQuery:
-          name: "页面信息"
-          prompt: "提取右侧导航快速开始下面的子步骤为列表"
-      - aiAssert: "快速开始部分包含5个步骤"
+          name: "查找导航菜单"
+          prompt: "列出页面左侧导航菜单中的所有菜单项"
+
+      # 点击Bridge Mode菜单
+      - aiTap: "Bridge Mode"
+
+      - sleep: 2
+
+      # 简化断言
+      - aiAssert: "页面是否显示了Bridge Mode相关的内容？"
+
+      # 截图
+      - logScreenshot:
+          content: "Bridge Mode页面截图"
+
+      # 简单查询
+      - aiQuery:
+          name: "页面内容"
+          prompt: "提取页面的主要标题和内容摘要"

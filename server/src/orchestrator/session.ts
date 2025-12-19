@@ -74,7 +74,7 @@ export const createSession = async (
     const playwrightConfig = buildPlaywrightConfig(config);
 
     // 创建 Playwright 浏览器实例
-    const browser = await chromium.launch({ headless: playwrightConfig.headless });
+    const browser = await chromium.launch({ headless: false });
 
     // 创建新页面
     const page = await browser.newPage({

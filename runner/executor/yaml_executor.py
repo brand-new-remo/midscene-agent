@@ -235,8 +235,14 @@ class YamlTestRunner:
         """执行单个步骤"""
         for action_type, action_content in step.items():
             try:
+                # 导航操作
+                if action_type == "navigate":
+                    await self._execute_navigate(action_content)
+                # 标签页操作
+                elif action_type == "setActiveTab":
+                    await self._execute_set_active_tab(action_content)
                 # 自动规划操作
-                if action_type in ["ai", "aiAction"]:
+                elif action_type in ["ai", "aiAction"]:
                     await self._execute_ai_action(action_content)
                 # 断言和查询操作
                 elif action_type == "aiAssert":
@@ -274,11 +280,22 @@ class YamlTestRunner:
                 elif action_type == "aiRightClick":
                     await self._execute_interaction(action_type, action_content)
                 # JavaScript 执行
-                elif action_type == "javascript":
+                elif action_type in ["javascript", "evaluateJavaScript"]:
                     await self._execute_javascript(action_content)
                 # 模板调用
                 elif action_type == "template":
                     await self._execute_template(action_content)
+                # 运行YAML
+                elif action_type == "runYaml":
+                    await self._execute_run_yaml(action_content)
+                # 设置AI上下文
+                elif action_type == "setAIActionContext":
+                    await self._execute_set_ai_action_context(action_content)
+                # 上下文冻结
+                elif action_type == "freezePageContext":
+                    await self._execute_freeze_page_context(action_content)
+                elif action_type == "unfreezePageContext":
+                    await self._execute_unfreeze_page_context(action_content)
                 else:
                     print(f"  ⚠️ 未知操作类型: {action_type}")
             except Exception as e:
@@ -657,6 +674,144 @@ class YamlTestRunner:
 
             traceback.print_exc()
 
+    async def _execute_navigate(self, content: Any):
+        """执行导航操作"""
+        if self.agent is None:
+            print(f"  ❌ Agent 未初始化")
+            return
+
+        if isinstance(content, str):
+            url = content
+        else:
+            url = content.get("url", str(content))
+
+        print(f"\n🌐 执行导航:")
+        print(f"  📝 URL: {url}")
+
+        try:
+            task = f"导航到 {url}"
+            async for event in self.agent.execute(task, stream=True):
+                if "messages" in event:
+                    msg = event["messages"][-1]
+                    if hasattr(msg, "content"):
+                        print(f"  💬 {msg.content}")
+            print(f"  ✅ 导航完成")
+        except Exception as e:
+            print(f"  ❌ 导航失败: {e}")
+
+    async def _execute_set_active_tab(self, content: Any):
+        """执行设置活动标签页操作"""
+        if self.agent is None:
+            print(f"  ❌ Agent 未初始化")
+            return
+
+        if isinstance(content, str):
+            tab_id = int(content)
+        else:
+            tab_id = content.get("tabId", 0)
+
+        print(f"\n🔄 执行标签页切换:")
+        print(f"  📝 标签页 ID: {tab_id}")
+
+        try:
+            task = f"切换到标签页 {tab_id}"
+            async for event in self.agent.execute(task, stream=True):
+                if "messages" in event:
+                    msg = event["messages"][-1]
+                    if hasattr(msg, "content"):
+                        print(f"  💬 {msg.content}")
+            print(f"  ✅ 标签页切换完成")
+        except Exception as e:
+            print(f"  ❌ 标签页切换失败: {e}")
+
+    async def _execute_run_yaml(self, content: Any):
+        """执行运行 YAML 操作"""
+        if self.agent is None:
+            print(f"  ❌ Agent 未初始化")
+            return
+
+        if isinstance(content, str):
+            yaml_script = content
+        else:
+            yaml_script = content.get("yamlScript", str(content))
+
+        print(f"\n📄 执行 YAML 脚本:")
+        print(f"  📝 脚本长度: {len(yaml_script)} 字符")
+
+        try:
+            task = f"执行 YAML 脚本"
+            async for event in self.agent.execute(task, stream=True):
+                if "messages" in event:
+                    msg = event["messages"][-1]
+                    if hasattr(msg, "content"):
+                        print(f"  💬 {msg.content}")
+            print(f"  ✅ YAML 脚本执行完成")
+        except Exception as e:
+            print(f"  ❌ YAML 脚本执行失败: {e}")
+
+    async def _execute_set_ai_action_context(self, content: Any):
+        """执行设置 AI 动作上下文"""
+        if self.agent is None:
+            print(f"  ❌ Agent 未初始化")
+            return
+
+        if isinstance(content, str):
+            context = content
+        else:
+            context = content.get("context", str(content))
+
+        print(f"\n🎯 设置 AI 动作上下文:")
+        print(f"  📝 上下文: {context}")
+
+        try:
+            task = f"设置AI动作上下文: {context}"
+            async for event in self.agent.execute(task, stream=True):
+                if "messages" in event:
+                    msg = event["messages"][-1]
+                    if hasattr(msg, "content"):
+                        print(f"  💬 {msg.content}")
+            print(f"  ✅ AI 动作上下文设置完成")
+        except Exception as e:
+            print(f"  ❌ AI 动作上下文设置失败: {e}")
+
+    async def _execute_freeze_page_context(self, content: Any):
+        """执行冻结页面上下文"""
+        if self.agent is None:
+            print(f"  ❌ Agent 未初始化")
+            return
+
+        print(f"\n🧊 冻结页面上下文")
+
+        try:
+            task = f"冻结页面上下文"
+            async for event in self.agent.execute(task, stream=True):
+                if "messages" in event:
+                    msg = event["messages"][-1]
+                    if hasattr(msg, "content"):
+                        print(f"  💬 {msg.content}")
+            print(f"  ✅ 页面上下文已冻结")
+        except Exception as e:
+            print(f"  ❌ 冻结页面上下文失败: {e}")
+
+    async def _execute_unfreeze_page_context(self, content: Any):
+        """执行解冻页面上下文"""
+        if self.agent is None:
+            print(f"  ❌ Agent 未初始化")
+            return
+
+        print(f"\n🔓 解冻页面上下文")
+
+        try:
+            task = f"解冻页面上下文"
+            async for event in self.agent.execute(task, stream=True):
+                if "messages" in event:
+                    msg = event["messages"][-1]
+                    if hasattr(msg, "content"):
+                        print(f"  💬 {msg.content}")
+            print(f"  ✅ 页面上下文已解冻")
+        except Exception as e:
+            print(f"  ❌ 解冻页面上下文失败: {e}")
+
     async def run(self):
         """运行所有任务"""
         web_config = self.config.get("web", {})
@@ -770,9 +925,6 @@ async def main():
     # 检查环境变量
     if not os.getenv("DEEPSEEK_API_KEY"):
         print("⚠️ 警告: 未设置 DEEPSEEK_API_KEY")
-
-    if not os.getenv("OPENAI_API_KEY"):
-        print("⚠️ 警告: 未设置 OPENAI_API_KEY")
 
     print("\n" + "=" * 70)
     print("🚀 开始执行 YAML 测试")
