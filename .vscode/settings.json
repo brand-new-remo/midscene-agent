@@ -10,7 +10,9 @@
         "**/.venv": true,
         "**/dist": true,
         "**/build": true,
-        "**/*.pyc": true
+        "**/*.pyc": true,
+        "**/.langgraph_api": true,
+        "**/.next": true,
     },
     "editor.formatOnSave": true,
     "editor.rulers": [
