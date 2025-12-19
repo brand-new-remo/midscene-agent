@@ -3,9 +3,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-# 默认格式化当前目录，如果传入目录参数就格式化指定目录
-target = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(".")
-
 
 def format_code(path: Path):
     """格式化 Python 文件"""
@@ -14,5 +11,12 @@ def format_code(path: Path):
     print(f"✅ Finished formatting: {path}")
 
 
-if __name__ == "__main__":
+def main():
+    """主函数 - entry point"""
+    # 默认格式化当前目录，如果传入目录参数就格式化指定目录
+    target = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(".")
     format_code(target)
+
+
+if __name__ == "__main__":
+    main()

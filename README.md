@@ -298,17 +298,26 @@ python -m executor.text_executor tests/texts/basic_usage.txt
 
 ```bash
 # 格式化整个项目
-midscene-format
+uv run ./format.py
 
-# 格式化指定文件
-midscene-format runner/agent/agent.py
-
-# 格式化指定目录
-midscene-format runner/
-
-# 使用 uv run 运行
-uv run midscene-format
+# 格式化指定文件或目录
+uv run ./format.py runner/
 ```
+
+### 类型检查
+
+**⚠️ 重要**: 每次修改 Python 代码后，请务必运行类型检查，确保类型安全！
+
+```bash
+# 对整个项目进行类型检查
+uv run ./typecheck.py
+```
+
+**⚠️ 重要提示**：每次修改 Python 代码后，请在**项目根目录**执行以下命令：
+1. `uv run ./format.py` - 格式化代码（使用 black）
+2. `uv run ./typecheck.py` - 类型检查（使用 pyright）
+
+这两个命令能确保代码格式一致性和类型安全。
 
 ### XMind 转换工具
 

@@ -207,15 +207,21 @@ midscene-text tests/texts/basic_usage.txt
 # 检查配置
 midscene-check
 
-# 格式化 Python 代码
-midscene-format
+# ⚠️ 格式化 Python 代码（修改 Python 代码后必须运行）
+uv run ./format.py
 
-# 格式化指定文件
-midscene-format runner/agent/agent.py
+# 格式化指定目录或文件
+uv run ./format.py runner/
 
-# 格式化指定目录
-midscene-format runner/
+# ⚠️ 类型检查（修改 Python 代码后必须运行）
+uv run ./typecheck.py
 ```
+
+**⚠️ 重要提示**：每次修改 Python 代码后，请在**项目根目录**执行以下命令：
+1. `uv run ./format.py` - 格式化代码（使用 black）
+2. `uv run ./typecheck.py` - 类型检查（使用 pyright）
+
+这两个命令能确保代码格式一致性和类型安全。
 
 ### XMind 转换工具 (converter/ 目录)
 
@@ -333,11 +339,13 @@ langgraph dev
 
 2. **修改代码** (Python/TypeScript 文件)
 
-3. **格式化代码** (项目根目录):
+3. **⚠️ 格式化代码和类型检查** (项目根目录):
    ```bash
-   midscene-format  # 格式化整个项目
+   uv run ./format.py  # 格式化整个项目
    # 或
-   midscene-format runner/  # 格式化指定目录
+   uv run ./format.py runner/  # 格式化指定目录
+
+   uv run ./typecheck.py  # 类型检查
    ```
 
 4. **运行/测试 Python 代码** (从项目根目录):
@@ -350,7 +358,11 @@ langgraph dev
    npm run quality
    ```
 
-⚠️ **重要**: 每次修改 Python 代码后，请务必运行 `midscene-format` 格式化代码，保持代码风格一致！
+⚠️ **重要**: 每次修改 Python 代码后，请务必运行以下命令：
+1. `uv run ./format.py` - 格式化代码（使用 black）
+2. `uv run ./typecheck.py` - 类型检查（使用 pyright）
+
+这两个命令能确保代码格式一致性和类型安全！
 
 ### 会话管理
 
@@ -640,3 +652,73 @@ midscene-agent/
 │   └── settings.json        # MCP 服务器配置
 └── README.md                # 项目文档
 ```
+
+## 代码质量工具
+
+### 格式化工具 (format.py)
+
+项目使用 **Black** 作为 Python 代码格式化工具。
+
+**使用方法**:
+```bash
+# 格式化整个项目
+uv run ./format.py
+
+# 格式化指定目录或文件
+uv run ./format.py runner/
+```
+
+**功能特点**:
+- 自动调整代码缩进、空格和换行
+- 确保代码风格一致性
+- 支持指定目录或文件格式化
+
+### 类型检查工具 (typecheck.py)
+
+项目使用 **Pyright** (Microsoft 的 Python 类型检查器) 进行静态类型检查。
+
+**前置条件**:
+- 已安装 Node.js（包含 npm）
+- 已全局安装 pyright：
+  ```bash
+  npm install -g pyright
+  ```
+
+**使用方法**:
+```bash
+# 对整个项目进行类型检查
+uv run ./typecheck.py
+```
+
+**功能特点**:
+- 静态类型检查，发现潜在的类型错误
+- 输出机器可读的 JSON 格式结果
+- 支持 Pylance 简单模式
+- 不允许自动安装 pyright，需手动全局安装
+
+**输出格式**:
+```json
+{
+  "tool": "pyright",
+  "status": "success|error",
+  "generalDiagnostics": [...],
+  ...
+}
+```
+
+**错误示例**:
+```json
+{
+  "tool": "pyright",
+  "status": "error",
+  "reason": "pyright_not_installed",
+  "message": "未检测到全局安装的 pyright。",
+  "hint": "请执行：npm install -g pyright"
+}
+```
+
+**⚠️ 重要提示**: 每次修改 Python 代码后，请在项目根目录执行：
+1. `uv run ./format.py` - 格式化代码
+2. `uv run ./typecheck.py` - 类型检查
+
+这两个命令是代码质量保证的重要环节，确保代码格式一致性和类型安全！
