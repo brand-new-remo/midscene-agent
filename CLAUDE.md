@@ -14,6 +14,33 @@
 
 该架构使用 Python 和 Node.js 组件之间的 HTTP + WebSocket 通信，实现稳定、功能丰富的网页自动化。
 
+## Midscene 文档资源
+
+项目包含 **Midscene.js v1.0.2 中文文档**，位于 `midscene-doc-zh/` 目录。当需要查询 Midscene API、配置或使用方法时，应优先查阅此目录。
+
+**文档结构:**
+- `api.mdx` - API 参考
+- `web-api-reference.mdx` - Web API 详细参考
+- `integrate-with-playwright.mdx` - Playwright 集成指南
+- `integrate-with-puppeteer.mdx` - Puppeteer 集成指南
+- `integrate-with-any-interface.mdx` - 通用接口集成
+- `model-config.mdx` - 模型配置
+- `model-strategy.mdx` - 模型策略
+- `model-common-config.mdx` - 通用模型配置
+- `caching.mdx` - 缓存机制
+- `bridge-mode.mdx` - Bridge 模式
+- `mcp.mdx` - MCP 集成
+- `command-line-tools.mdx` - 命令行工具
+- `automate-with-scripts-in-yaml.mdx` - YAML 脚本自动化
+- `faq.md` - 常见问题
+- `common/` - 通用配置文档（环境设置、故障排除等）
+
+**使用场景:**
+- 查询 Midscene API 用法 → 查阅 `api.mdx` 或 `web-api-reference.mdx`
+- 配置 AI 模型 → 查阅 `model-config.mdx`、`model-strategy.mdx`
+- 集成问题 → 查阅 `integrate-with-*.mdx`
+- 故障排除 → 查阅 `faq.md` 或 `common/troubleshooting-llm-connectivity.mdx`
+
 ## 高层架构
 
 ```
