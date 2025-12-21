@@ -8,7 +8,7 @@
 - **HTTP + WebSocket**: 更稳定的通信协议
 - **流式响应**: 实时查看执行进度
 - **完整功能**: 充分利用 Midscene.js 所有 API
-- **双格式测试**: 支持 YAML 结构化测试和自然语言测试
+- **自然语言测试**: 支持自然语言测试文件
 - **XMind 转换工具**: 将思维导图转换为自然语言测试文件
 
 ## 功能特性
@@ -216,17 +216,14 @@ midscene-agent/
 │   │   │   └── definitions.py
 │   │   └── utils/           # 工具函数
 │   ├── executor/            # 测试执行器
-│   │   ├── yaml_executor.py # YAML 测试执行器
 │   │   └── text_executor.py # 自然语言测试执行器
 │   ├── modes/               # 交互式菜单模式
-│   │   ├── yaml_mode.py     # YAML 测试模式
 │   │   ├── text_mode.py     # 自然语言测试模式
 │   │   └── custom_mode.py   # 自定义任务模式
 │   ├── run.py               # 交互式启动器
 │   ├── check_config.py      # 配置检查
 │   └── requirements.txt     # Python 依赖
 ├── tests/                   # 测试文件
-│   ├── yamls/               # YAML 测试文件
 │   └── texts/               # 自然语言测试文件
 ├── converter/               # XMind 转换工具
 │   ├── __init__.py
@@ -275,21 +272,16 @@ uv run midscene
 
 菜单选项:
 
-1. 运行单个 YAML 测试
-2. 运行所有 YAML 测试
-3. 运行单个自然语言测试
-4. 运行所有自然语言测试
-5. 自定义任务模式
-6. 检查配置
+1. 运行单个自然语言测试
+2. 运行所有自然语言测试
+3. 自定义任务模式
+4. 检查配置
 
 ### 直接执行测试
 
 ```bash
-# 执行 YAML 测试
-python -m executor.yaml_executor tests/yamls/basic_usage.yaml
-
 # 执行自然语言测试
-python -m executor.text_executor tests/texts/basic_usage.txt
+midscene-text tests/texts/basic_usage.txt
 ```
 
 ### 格式化代码
@@ -387,26 +379,6 @@ uv run python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/
 ```
 
 ### 测试文件格式
-
-#### YAML 测试 (位于 `tests/yamls/`)
-
-```yaml
-web:
-  url: https://example.com
-  headless: false
-  viewportWidth: 1280
-  viewportHeight: 768
-
-tasks:
-  - name: Example Task
-    flow:
-      - ai: Navigate and perform actions
-      - aiAssert: Check result
-      - logScreenshot: Capture result
-      - aiQuery:
-          name: "Data"
-          prompt: "Extract information"
-```
 
 #### 自然语言测试 (位于 `tests/texts/`)
 

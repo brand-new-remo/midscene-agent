@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from runner.check_config import check_config
 
 # 导入模式模块
-from runner.modes import custom_mode, text_mode, yaml_mode
+from runner.modes import custom_mode, text_mode
 
 
 def print_banner():
@@ -37,15 +37,12 @@ def print_banner():
 def print_menu():
     """打印主菜单。"""
     print("选择功能:\n")
-    print("📝 YAML 测试用例:")
-    print("  1. 运行单个 YAML 测试")
-    print("  2. 运行所有 YAML 测试")
-    print("\n📄 自然语言测试用例:")
-    print("  3. 运行单个自然语言测试")
-    print("  4. 运行所有自然语言测试")
+    print("📄 自然语言测试用例:")
+    print("  1. 运行单个自然语言测试")
+    print("  2. 运行所有自然语言测试")
     print("\n其他:")
-    print("  5. 自定义任务模式")
-    print("  6. 检查配置")
+    print("  3. 自定义任务模式")
+    print("  4. 检查配置")
     print("  0. 退出")
     print()
 
@@ -67,7 +64,7 @@ async def main():
         print_menu()
 
         try:
-            choice = input("输入你的选择 (0-6): ").strip()
+            choice = input("输入你的选择 (0-4): ").strip()
             print()
 
             if choice == "0":
@@ -75,26 +72,18 @@ async def main():
                 sys.exit(0)
 
             elif choice == "1":
-                print("📝 正在运行 YAML 测试用例...\n")
-                await yaml_mode.run_yaml_tests()
-
-            elif choice == "2":
-                print("🧪 正在运行所有 YAML 测试...\n")
-                await yaml_mode.run_all_tests()
-
-            elif choice == "3":
                 print("📄 正在运行自然语言测试用例...\n")
                 await text_mode.run_text_tests()
 
-            elif choice == "4":
+            elif choice == "2":
                 print("🧪 正在运行所有自然语言测试...\n")
                 await text_mode.run_all_text_tests()
 
-            elif choice == "5":
+            elif choice == "3":
                 print("🎯 启动自定义任务模式...\n")
                 await custom_mode.run_custom_task()
 
-            elif choice == "6":
+            elif choice == "4":
                 check_config()
 
             else:

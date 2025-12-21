@@ -33,8 +33,6 @@ def check_config():
     # 检查必要的配置
     required_vars = {
         "DEEPSEEK_API_KEY": "DeepSeek API 密钥",
-        "OPENAI_API_KEY": "视觉模型 API 密钥 (可选)",
-        "MIDSCENE_SERVER_URL": "Node.js 服务地址 (可选)",
     }
 
     for var, desc in required_vars.items():

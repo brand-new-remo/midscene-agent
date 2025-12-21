@@ -6,9 +6,8 @@
 """
 
 import re
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
-from .exceptions import ContextAccessError, ContextError, ContextNotFoundError
 from .types import ContextScope
 
 

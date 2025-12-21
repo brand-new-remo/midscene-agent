@@ -26,7 +26,7 @@ def get_tests_dir(test_type: str) -> str:
     3. 如果旧路径也不存在，抛出 FileNotFoundError
 
     Args:
-        test_type: 测试类型，应为 'yamls' 或 'texts'
+        test_type: 测试类型，应为 'texts'
 
     Returns:
         测试目录的绝对路径
@@ -34,8 +34,8 @@ def get_tests_dir(test_type: str) -> str:
     Raises:
         FileNotFoundError: 当找不到测试目录时抛出
     """
-    if test_type not in ("yamls", "texts"):
-        raise ValueError(f"test_type 必须是 'yamls' 或 'texts'，不能是 '{test_type}'")
+    if test_type != "texts":
+        raise ValueError(f"test_type 必须是 'texts'，不能是 '{test_type}'")
 
     # 方法1: 使用当前文件位置向上查找3级到项目根目录
     current_dir = os.path.dirname(__file__)  # runner/utils

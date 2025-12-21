@@ -56,7 +56,6 @@
 - `requirements.txt` - Python 依赖列表
 
 **测试文件 (tests/):**
-- `yamls/` - YAML 格式测试文件
 - `texts/` - 自然语言测试文件
 
 **XMind 转换工具 (converter/):**
@@ -198,9 +197,6 @@ uv pip install -e .
 # 带有菜单的交互式启动器
 midscene
 
-# 直接执行 YAML 测试
-midscene-yaml tests/yamls/basic_usage.yaml
-
 # 直接执行自然语言测试
 midscene-text tests/texts/basic_usage.txt
 
@@ -312,19 +308,16 @@ python run.py
 ```bash
 # 方法 1: 使用交互式启动器
 midscene
-# 选择选项 1 或 3，然后选择特定测试
+# 选择选项 1，然后选择特定测试
 
-# 方法 2: 直接执行 YAML 测试
-midscene-yaml tests/yamls/basic_usage.yaml
-
-# 方法 3: 直接执行自然语言测试
+# 方法 2: 直接执行自然语言测试
 midscene-text tests/texts/basic_usage.txt
 
-# 方法 4: 自定义任务
+# 方法 3: 自定义任务
 midscene
-# 选择选项 5，输入自然语言指令
+# 选择选项 3，输入自然语言指令
 
-# 方法 5: 使用 LangGraph CLI（推荐）
+# 方法 4: 使用 LangGraph CLI（推荐）
 cd /Users/duangangqiang/github/midscene
 langgraph dev
 # 访问 http://localhost:2024，使用可视化界面
@@ -350,7 +343,7 @@ langgraph dev
 
 4. **运行/测试 Python 代码** (从项目根目录):
    ```bash
-   midscene-yaml tests/yamls/your_test.yaml
+   midscene-text tests/texts/your_test.txt
    ```
 
 5. **检查代码质量** (在 `server/` 目录中):
@@ -413,29 +406,7 @@ langgraph dev
 
 ### 测试格式
 
-项目支持两种测试格式:
-
-#### YAML 测试格式 (位于 `tests/yamls/`)
-
-结构化的测试定义，支持明确的操作类型:
-
-```yaml
-web:
-  url: https://example.com
-  headless: false
-  viewportWidth: 1280
-  viewportHeight: 768
-
-tasks:
-  - name: Example Task
-    flow:
-      - ai: Navigate and perform actions
-      - aiAssert: Check result
-      - logScreenshot: Capture result
-      - aiQuery:
-          name: "Data"
-          prompt: "Extract information"
-```
+项目使用自然语言测试格式:
 
 #### 自然语言测试格式 (位于 `tests/texts/`)
 
@@ -455,13 +426,6 @@ tasks:
 ```
 
 ### 测试文件
-
-**YAML 测试** (位于 `tests/yamls/`):
-- `basic_usage.yaml` - 基础自动化示例
-- `github_interaction.yaml` - GitHub 自动化
-- `baidu_query_demo.yaml` - 搜索查询演示
-- `search_results_demo.yaml` - 搜索结果处理
-- `httpbin_interaction.yaml` - HTTP 测试
 
 **自然语言测试** (位于 `tests/texts/`):
 - `basic_usage.txt` - 基础自动化示例
@@ -618,7 +582,6 @@ midscene-agent/
 │   │   │   └── definitions.py
 │   │   └── utils/           # 工具函数
 │   ├── executor/            # 测试执行器
-│   │   ├── yaml_executor.py # YAML 测试执行器
 │   │   └── text_executor.py # 自然语言测试执行器
 │   ├── converter/           # XMind 转换工具
 │   │   ├── __init__.py
@@ -629,10 +592,8 @@ midscene-agent/
 │   │   ├── utils.py         # 工具函数
 │   │   └── exceptions.py    # 异常处理
 │   ├── modes/               # 交互式菜单模式
-│   │   ├── yaml_mode.py     # YAML 测试模式
 │   │   ├── text_mode.py     # 自然语言测试模式
 │   │   └── custom_mode.py   # 自定义任务模式
-│   ├── yamls/               # YAML 测试文件
 │   ├── texts/               # 自然语言测试文件
 │   ├── run.py               # 交互式启动器
 │   ├── check_config.py      # 配置检查器

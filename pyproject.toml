@@ -43,7 +43,6 @@ dev = [
 [project.scripts]
 midscene = "runner.run:main_wrapper"
 midscene-check = "runner.check_config:check_config"
-midscene-yaml = "runner.executor.yaml_executor:main"
 midscene-text = "runner.executor.text_executor:main"
 
 [build-system]
