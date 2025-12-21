@@ -10,6 +10,7 @@ export {
   OrchestratorInterface,
   QueryParams,
   QueryType,
+  ScrollOptions,
   Session,
   SessionConfig,
   SessionInfo,

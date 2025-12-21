@@ -92,6 +92,9 @@ export interface ActionParams {
   // 通用选项参数
   /** 其他动作特定的选项配置 */
   options?: Record<string, unknown>;
+
+  // 索引签名，允许任意属性
+  [key: string]: unknown;
 }
 
 /**
@@ -127,6 +130,12 @@ export interface ActionResult {
   title?: string;
   /** 设置的上下文信息 */
   context?: string;
+
+  // 时间相关字段（用于去重和性能监控）
+  /** 动作执行时间戳（Unix 毫秒时间戳） */
+  timestamp?: number;
+  /** 动作执行耗时（毫秒） */
+  duration?: number;
 }
 
 /**
@@ -163,4 +172,17 @@ export interface ActionOptions {
 
   /** WebSocket 连接实例（流式响应时必需） */
   websocket?: WebSocket;
+}
+
+/**
+ * 滚动选项接口
+ * @description 定义 AI 智能滚动动作的选项配置
+ */
+export interface ScrollOptions {
+  /** 滚动方向 */
+  direction: 'up' | 'down' | 'left' | 'right';
+  /** 滚动类型 */
+  scrollType: 'singleAction' | 'scrollToBottom' | 'scrollToTop';
+  /** 滚动距离（像素） */
+  distance: number;
 }

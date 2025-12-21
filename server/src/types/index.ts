@@ -31,6 +31,8 @@ export type {
   ActionRecord,
   /** 动作执行选项接口 */
   ActionOptions,
+  /** 滚动选项接口 */
+  ScrollOptions,
 } from './action.js';
 
 // ====================

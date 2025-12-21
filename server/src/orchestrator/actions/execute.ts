@@ -1,4 +1,10 @@
-import type { ActionOptions, ActionParams, ActionResult, ActionType } from '../types.js';
+import type {
+  ActionOptions,
+  ActionParams,
+  ActionResult,
+  ActionType,
+  ScrollOptions,
+} from '../types.js';
 import { handleActionError, executeAndRecord } from '../action-history.js';
 import type { Session, ActionRecord } from '../types.js';
 import type WebSocket from 'ws';
@@ -74,20 +80,21 @@ const handleScroll = async (
   }
   // v1.0.1 兼容性：scrollType 值变化
   const scrollTypeMap: Record<string, string> = {
-    'once': 'singleAction',
-    'untilBottom': 'scrollToBottom',
-    'untilTop': 'scrollToTop',
+    once: 'singleAction',
+    untilBottom: 'scrollToBottom',
+    untilTop: 'scrollToTop',
   };
 
   const mappedScrollType = scrollTypeMap[params.scrollType || 'once'] || 'singleAction';
 
   // 先尝试最简单的调用方式
-  await agent.aiScroll(params.locate || undefined, {
+  const scrollOptions: ScrollOptions = {
     direction,
-    scrollType: mappedScrollType as any,
+    scrollType: mappedScrollType as 'singleAction' | 'scrollToBottom' | 'scrollToTop',
     distance:
       typeof params.distance === 'string' ? parseInt(params.distance, 10) : params.distance || 500,
-  } as any);
+  };
+  await agent.aiScroll(params.locate || undefined, scrollOptions);
   return { success: true, action: 'scroll', direction };
 };
 
@@ -193,7 +200,10 @@ const handleRightClick = async (
  * @returns 动作执行结果
  * @description 使用 AI 自然语言指令执行复杂的网页操作，AI 会自主决策并执行相应动作
  */
-const handleAiAction = async (agent: PlaywrightAgent, params: ActionParams): Promise<ActionResult> => {
+const handleAiAction = async (
+  agent: PlaywrightAgent,
+  params: ActionParams
+): Promise<ActionResult> => {
   const { prompt } = params;
   if (!prompt) {
     throw new Error('aiAction requires "prompt" parameter');
@@ -277,7 +287,10 @@ const handleLogScreenshot = async (
  * @returns 动作执行结果
  * @description 执行预定义的 YAML 脚本，YAML 脚本包含一系列自动化步骤
  */
-const handleRunYaml = async (agent: PlaywrightAgent, params: ActionParams): Promise<ActionResult> => {
+const handleRunYaml = async (
+  agent: PlaywrightAgent,
+  params: ActionParams
+): Promise<ActionResult> => {
   const { yamlScript } = params;
   if (!yamlScript) {
     throw new Error('runYaml requires "yamlScript" parameter');

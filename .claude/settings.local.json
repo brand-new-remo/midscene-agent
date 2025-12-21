@@ -58,7 +58,8 @@
       "Bash(netstat:*)",
       "Bash(findstr:*)",
       "Bash(taskkill:*)",
-      "Bash(wmic:*)"
+      "Bash(wmic:*)",
+      "Bash(midscene-text tests/texts/basic_usage.txt)"
     ],
     "deny": [],
     "ask": []

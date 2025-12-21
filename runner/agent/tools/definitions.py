@@ -180,15 +180,16 @@ TOOL_DEFINITIONS = {
         "required": False,
     },
     # ========== AI 自动规划工具 ==========
-    "midscene_aiAction": {
-        "description": "使用 AI 自动规划并执行一系列 UI 动作。这是 Midscene 的核心 API，AI 会自动分解任务并执行",
-        "params": {
-            "prompt": "要执行的 UI 动作描述，可以使用自然语言，如'在搜索框中输入 JavaScript，然后点击搜索按钮'",
-            "cacheable?": "是否启用缓存，默认 True",
-        },
-        "category": TOOL_CATEGORY_INTERACTION,
-        "required": True,
-    },
+    # "midscene_aiAction": {
+    #     "description": "使用 AI 自动规划并执行一系列 UI 动作。这是 Midscene 的核心 API，AI 会自动分解任务并执行",
+    #     "params": {
+    #         "prompt": "要执行的 UI 动作描述，可以使用自然语言，如'在搜索框中输入 JavaScript，然后点击搜索按钮'",
+    #         "cacheable?": "是否启用缓存，默认 True",
+    #     },
+    #     "category": TOOL_CATEGORY_INTERACTION,
+    #     "required": True,
+    # },
+    # 已禁用 - 通用工具容易卡住，使用具体工具（aiScroll、aiTap 等）代替
     "midscene_evaluateJavaScript": {
         "description": "在当前页面上下文中执行 JavaScript 表达式，并返回结果",
         "params": {
@@ -315,7 +316,7 @@ RECOMMENDED_TOOL_SETS = {
             "midscene_aiHover",
             "midscene_aiWaitFor",
             "midscene_aiAssert",
-            "midscene_aiAction",
+            # "midscene_aiAction",  # 已禁用 - 通用工具容易卡住
             "midscene_aiLocate",
             "midscene_logScreenshot",
             "midscene_getTabs",

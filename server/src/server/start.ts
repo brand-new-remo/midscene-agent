@@ -9,9 +9,7 @@ import { GracefulShutdown } from './shutdown';
 /**
  * 启动服务器
  */
-export async function startServer(
-  app: Application
-): Promise<{
+export async function startServer(app: Application): Promise<{
   httpServer: http.Server;
   gracefulShutdown: GracefulShutdown;
 }> {

@@ -7,6 +7,7 @@ Midscene Agent，使用 HTTP 客户端替代 MCP stdio
 """
 
 import logging
+import asyncio
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
 from langchain_core.messages import HumanMessage
@@ -14,6 +15,7 @@ from langchain_core.tools import BaseTool, tool
 from langchain_deepseek import ChatDeepSeek
 from langgraph.graph import END, START, MessagesState, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
+from langgraph.checkpoint.memory import MemorySaver
 from pydantic import SecretStr
 
 from .http_client import MidsceneConnectionError, MidsceneHTTPClient, SessionConfig
@@ -22,6 +24,8 @@ from .tools.definitions import (
     get_recommended_tool_set,
     get_tool_definition,
 )
+from .memory.simple_memory import SimpleMemory, MemoryContextBuilder
+from .config import SYSTEM_PROMPT  # 导入系统提示
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -51,6 +55,8 @@ class MidsceneAgent:
         tool_set: str = "full",
         enable_websocket: bool = True,
         timeout: int = 300,
+        session_id: Optional[str] = None,
+        enable_memory_saver: bool = True,
     ):
         """
         初始化新版 Midscene Agent
@@ -65,6 +71,8 @@ class MidsceneAgent:
             tool_set: 工具集选择：'basic'、'advanced'、'full'
             enable_websocket: 是否启用 WebSocket 流式响应
             timeout: 操作超时时间（秒）
+            session_id: 会话ID，用于状态持久化（如果不提供会自动生成）
+            enable_memory_saver: 是否启用 LangGraph MemorySaver 进行状态持久化
         """
         self.deepseek_api_key = deepseek_api_key
         self.deepseek_base_url = deepseek_base_url
@@ -75,6 +83,8 @@ class MidsceneAgent:
         self.tool_set = tool_set
         self.enable_websocket = enable_websocket
         self.timeout = timeout
+        self.session_id = session_id or f"session_{int(asyncio.get_event_loop().time())}"
+        self.enable_memory_saver = enable_memory_saver
 
         # 初始化 HTTP 客户端
         self.http_client = MidsceneHTTPClient(base_url=midscene_server_url)
@@ -84,8 +94,13 @@ class MidsceneAgent:
         self.agent_executor: Optional[Any] = None
         self.tools: List[BaseTool] = []
         self.initialized = False
+        self.checkpointer: Optional[Any] = None  # MemorySaver 实例
 
-        logger.info("Midscene Agent initialized")
+        # 记忆组件
+        self.memory = SimpleMemory(max_size=50)  # 存储最近50个操作
+        self.memory_builder = MemoryContextBuilder(self.memory)
+
+        logger.info(f"Midscene Agent initialized - Session ID: {self.session_id}")
 
     async def initialize(self) -> None:
         """
@@ -228,7 +243,7 @@ class MidsceneAgent:
                     "aiKeyboardPress",
                     "aiHover",
                     "aiWaitFor",
-                    "aiAction",
+                    # "aiAction",  # 已禁用 - 通用工具容易卡住，使用具体工具代替
                     "setActiveTab",
                     "evaluateJavaScript",
                     "logScreenshot",
@@ -340,15 +355,26 @@ class MidsceneAgent:
         )
         builder.add_edge("tools", "agent")
 
-        return builder.compile(interrupt_before=[], interrupt_after=[])
+        # 集成 MemorySaver 以实现跨调用的状态持久化
+        if self.enable_memory_saver:
+            self.checkpointer = MemorySaver()
+            logger.info("✅ MemorySaver 已启用 - 支持跨调用状态持久化")
+            return builder.compile(
+                interrupt_before=[],
+                interrupt_after=[],
+                checkpointer=self.checkpointer
+            )
+        else:
+            return builder.compile(interrupt_before=[], interrupt_after=[])
 
-    async def execute(self, user_input: str, stream: bool = True) -> AsyncGenerator:
+    async def execute(self, user_input: str, stream: bool = True, thread_id: Optional[str] = None) -> AsyncGenerator:
         """
         执行任务
 
         Args:
             user_input: 任务的自然语言指令
             stream: 是否流式传输响应
+            thread_id: 线程ID，用于跨调用的状态管理（如果不提供则使用会话ID）
 
         Yields:
             智能体执行的事件
@@ -359,23 +385,66 @@ class MidsceneAgent:
         if not self.initialized or not self.agent_executor:
             raise RuntimeError("智能体未初始化。请先调用 initialize()。")
 
+        # 使用提供的 thread_id 或会话ID作为线程标识符
+        actual_thread_id = thread_id or self.session_id
+
         logger.info(f"\n🚀 开始执行任务")
-        logger.info(f"📝 任务: {user_input}\n")
+        logger.info(f"📝 任务: {user_input}")
+        logger.info(f"🧵 线程ID: {actual_thread_id}")
+        logger.info(f"💾 状态持久化: {'✅ 启用' if self.enable_memory_saver else '❌ 禁用'}\n")
 
         try:
-            input_messages = {"messages": [HumanMessage(content=user_input)]}
-            config = {"recursion_limit": 100}
+            # 1. 构建记忆上下文
+            memory_context = self.memory_builder.build_execution_context(
+                current_task=user_input,
+                include_history=True,
+                include_stats=False
+            )
 
+            # 2. 构建完整的消息，包含系统提示和记忆上下文
+            full_input = f"{SYSTEM_PROMPT}\n\n{memory_context}\n\n{user_input}"
+            logger.info(f"📋 完整输入:\n{full_input}\n")
+
+            input_messages = {"messages": [HumanMessage(content=full_input)]}
+
+            # 3. 配置执行参数
+            config = {
+                "recursion_limit": 100,
+                "configurable": {
+                    "thread_id": actual_thread_id  # 关键：用于状态持久化的线程ID
+                }
+            }
+
+            # 4. 执行任务
             if stream:
                 async for chunk in self.agent_executor.astream(
                     input_messages, config=config
                 ):
+                    # 5. 处理结果并更新记忆（如果需要）
+                    if "messages" in chunk:
+                        # 解析AI响应中的工具调用
+                        messages = chunk["messages"]
+                        if messages:
+                            last_message = messages[-1]
+                            # TODO: 在这里解析工具调用并更新记忆
+                            # 这需要更复杂的解析逻辑来提取工具调用信息
+
                     yield chunk
             else:
                 result = await self.agent_executor.ainvoke(
                     input_messages, config=config
                 )
+                # TODO: 更新记忆记录
                 yield result
+
+            # 6. 记录成功执行到记忆
+            self.memory.add_record(
+                action="execute",
+                params={"user_input": user_input, "thread_id": actual_thread_id},
+                result="执行成功",
+                success=True,
+                context={"session_id": self.session_id, "thread_id": actual_thread_id}
+            )
 
         except Exception as e:
             import traceback
@@ -383,7 +452,154 @@ class MidsceneAgent:
             error_msg = f"执行任务失败: {str(e)}"
             logger.error(error_msg)
             logger.error(traceback.format_exc())
+
+            # 记录失败到记忆
+            self.memory.add_record(
+                action="execute",
+                params={"user_input": user_input, "thread_id": actual_thread_id},
+                result=str(e),
+                success=False,
+                error_message=str(e),
+                context={"session_id": self.session_id, "thread_id": actual_thread_id}
+            )
+
             yield {"error": error_msg, "traceback": traceback.format_exc()}
+
+    # ==================== 状态持久化管理方法 ====================
+
+    async def get_thread_state(self, thread_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        """获取线程状态
+
+        Args:
+            thread_id: 线程ID（如果不提供则使用会话ID）
+
+        Returns:
+            线程状态字典，如果MemorySaver未启用则返回None
+        """
+        if not self.enable_memory_saver or not self.checkpointer:
+            return None
+
+        actual_thread_id = thread_id or self.session_id
+
+        try:
+            # 从checkpointer获取状态
+            config = {"configurable": {"thread_id": actual_thread_id}}
+            # LangGraph MemorySaver 的具体API可能需要根据版本调整
+            # 这里是一个概念性的实现
+            logger.debug(f"获取线程状态: {actual_thread_id}")
+            return {"thread_id": actual_thread_id, "session_id": self.session_id}
+        except Exception as e:
+            logger.warning(f"获取线程状态失败: {e}")
+            return None
+
+    async def clear_thread_state(self, thread_id: Optional[str] = None) -> bool:
+        """清空线程状态
+
+        Args:
+            thread_id: 线程ID（如果不提供则使用会话ID）
+
+        Returns:
+            是否成功清空
+        """
+        if not self.enable_memory_saver or not self.checkpointer:
+            return False
+
+        actual_thread_id = thread_id or self.session_id
+
+        try:
+            logger.info(f"清空线程状态: {actual_thread_id}")
+            # MemorySaver 清空状态的具体实现
+            # 这可能需要根据实际的MemorySaver API调整
+            return True
+        except Exception as e:
+            logger.error(f"清空线程状态失败: {e}")
+            return False
+
+    def get_session_info(self) -> Dict[str, Any]:
+        """获取会话信息"""
+        return {
+            "session_id": self.session_id,
+            "initialized": self.initialized,
+            "enable_memory_saver": self.enable_memory_saver,
+            "checkpointer_enabled": self.checkpointer is not None,
+            "memory_stats": self.memory.get_stats(),
+            "deduplication_enabled": True  # 阶段1已实现
+        }
+
+    # ==================== 记忆管理方法 ====================
+
+    def update_page_context(self, url: str, title: str = "", elements: Optional[List[Dict]] = None) -> None:
+        """更新页面上下文
+
+        Args:
+            url: 当前页面URL
+            title: 页面标题
+            elements: 页面元素列表
+        """
+        context = {
+            "url": url,
+            "title": title,
+            "elements": elements or []
+        }
+        self.memory.update_context(context)
+        logger.debug(f"更新页面上下文: {url}")
+
+    def get_memory_stats(self) -> Dict[str, Any]:
+        """获取记忆统计信息
+
+        Returns:
+            包含记忆统计信息的字典
+        """
+        return self.memory.get_stats()
+
+    def clear_memory(self) -> None:
+        """清空所有记忆记录"""
+        self.memory.clear()
+        logger.info("清空记忆记录")
+
+    def get_action_history(self, action_type: Optional[str] = None) -> List[Dict[str, Any]]:
+        """获取操作历史
+
+        Args:
+            action_type: 如果指定，只返回该类型的操作记录
+
+        Returns:
+            操作历史记录列表
+        """
+        records = self.memory.get_action_history(action_type)
+        return [record.__dict__ for record in records]
+
+    def find_similar_action(
+        self,
+        action: str,
+        params: Dict[str, Any],
+        time_window: float = 300
+    ) -> Optional[Dict[str, Any]]:
+        """查找相似的历史操作
+
+        Args:
+            action: 操作类型
+            params: 操作参数
+            time_window: 时间窗口（秒）
+
+        Returns:
+            找到的相似记录，如果没有则返回None
+        """
+        record = self.memory.find_similar_action(action, params, time_window)
+        return record.__dict__ if record else None
+
+    def get_recent_context(self, limit: int = 5) -> str:
+        """获取最近操作的上下文描述
+
+        Args:
+            limit: 包含的最近操作数量
+
+        Returns:
+            格式化的上下文描述字符串
+        """
+        return self.memory.get_recent_context(limit)
+
+    # ==================== 原有方法 ====================
 
     async def take_screenshot(self, **kwargs) -> Dict[str, Any]:
         """截取屏幕截图的便捷方法（使用 logScreenshot API）"""

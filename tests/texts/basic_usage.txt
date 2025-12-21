@@ -4,8 +4,8 @@
 @web:
   url: https://midscenejs.com/zh/introduction
   headless: false
-  viewportWidth: 1920
-  viewportHeight: 1080
+  viewportWidth: 1280
+  viewportHeight: 768
 
 @task: 基础网页自动化示例
 

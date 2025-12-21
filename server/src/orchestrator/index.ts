@@ -28,6 +28,7 @@ import { createSession, validateSession, destroySession, getActiveSessions } fro
 import { executeAction } from './actions/execute.js';
 import { executeQuery } from './queries/execute.js';
 import { getSessionHistory, healthCheck, shutdown } from './system.js';
+import { ActionDeduplicator, type DeduplicationConfig } from './middleware/deduplication.js';
 
 class MidsceneOrchestrator implements OrchestratorInterface {
   sessions: Map<string, Session>;
@@ -36,11 +37,20 @@ class MidsceneOrchestrator implements OrchestratorInterface {
 
   logger: winston.Logger;
 
+  deduplicator: ActionDeduplicator;
+
   constructor() {
     this.sessions = new Map();
     this.actionHistory = new Map();
     this.logger = initializeLogger();
     ensureLogDirectory();
+
+    // 初始化去重中间件
+    this.deduplicator = new ActionDeduplicator(this.logger, {
+      timeWindow: 5000, // 5秒内不重复执行相同操作
+      maxCacheSize: 1000, // 最大缓存1000个操作
+      enableLogging: true, // 启用日志记录
+    });
   }
 
   /**
@@ -67,7 +77,25 @@ class MidsceneOrchestrator implements OrchestratorInterface {
     options: ActionOptions = {}
   ): Promise<ActionResult> {
     const session = this.validateSession(sessionId);
-    return executeAction(
+
+    // 1. 检查是否应该执行操作（去重检查）
+    if (!this.deduplicator.shouldExecute(sessionId, action, params)) {
+      // 如果是重复操作，返回缓存的结果
+      const cachedResult = this.deduplicator.getCachedResult(sessionId, action, params);
+      if (cachedResult) {
+        this.logger.info('跳过重复操作，返回缓存结果', {
+          sessionId,
+          action,
+          params,
+          cachedResult,
+        });
+        return cachedResult;
+      }
+    }
+
+    // 2. 执行操作
+    const startTime = Date.now();
+    const result = await executeAction(
       session,
       sessionId,
       action,
@@ -76,6 +104,17 @@ class MidsceneOrchestrator implements OrchestratorInterface {
       this.actionHistory,
       this.logger
     );
+
+    // 3. 记录操作结果到去重缓存
+    const duration = Date.now() - startTime;
+    const resultWithDuration: ActionResult = {
+      ...result,
+      duration,
+    };
+
+    this.deduplicator.record(sessionId, action, params, resultWithDuration);
+
+    return resultWithDuration;
   }
 
   /**
@@ -170,9 +209,39 @@ class MidsceneOrchestrator implements OrchestratorInterface {
   }
 
   /**
+   * 获取去重中间件统计信息
+   */
+  getDeduplicationStats(): {
+    cacheSize: number;
+    maxCacheSize: number;
+    timeWindow: number;
+    config: DeduplicationConfig;
+  } {
+    return this.deduplicator.getStats();
+  }
+
+  /**
+   * 清理去重缓存中的过期项
+   */
+  cleanExpiredDeduplicationCache(): number {
+    return this.deduplicator.cleanExpired();
+  }
+
+  /**
+   * 清空去重缓存
+   */
+  clearDeduplicationCache(): void {
+    this.deduplicator.clear();
+  }
+
+  /**
    * 优雅关闭
    */
   async shutdown(): Promise<void> {
+    // 在关闭前清理去重缓存
+    this.logger.info('正在清理去重缓存...');
+    this.clearDeduplicationCache();
+
     return shutdown(this.sessions, this.actionHistory, this.logger, (sessionId: string) =>
       destroySession(this.sessions, this.actionHistory, sessionId, this.logger)
     );
