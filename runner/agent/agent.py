@@ -83,7 +83,9 @@ class MidsceneAgent:
         self.tool_set = tool_set
         self.enable_websocket = enable_websocket
         self.timeout = timeout
-        self.session_id = session_id or f"session_{int(asyncio.get_event_loop().time())}"
+        self.session_id = (
+            session_id or f"session_{int(asyncio.get_event_loop().time())}"
+        )
         self.enable_memory_saver = enable_memory_saver
 
         # 初始化 HTTP 客户端
@@ -360,14 +362,14 @@ class MidsceneAgent:
             self.checkpointer = MemorySaver()
             logger.info("✅ MemorySaver 已启用 - 支持跨调用状态持久化")
             return builder.compile(
-                interrupt_before=[],
-                interrupt_after=[],
-                checkpointer=self.checkpointer
+                interrupt_before=[], interrupt_after=[], checkpointer=self.checkpointer
             )
         else:
             return builder.compile(interrupt_before=[], interrupt_after=[])
 
-    async def execute(self, user_input: str, stream: bool = True, thread_id: Optional[str] = None) -> AsyncGenerator:
+    async def execute(
+        self, user_input: str, stream: bool = True, thread_id: Optional[str] = None
+    ) -> AsyncGenerator:
         """
         执行任务
 
@@ -391,14 +393,14 @@ class MidsceneAgent:
         logger.info(f"\n🚀 开始执行任务")
         logger.info(f"📝 任务: {user_input}")
         logger.info(f"🧵 线程ID: {actual_thread_id}")
-        logger.info(f"💾 状态持久化: {'✅ 启用' if self.enable_memory_saver else '❌ 禁用'}\n")
+        logger.info(
+            f"💾 状态持久化: {'✅ 启用' if self.enable_memory_saver else '❌ 禁用'}\n"
+        )
 
         try:
             # 1. 构建记忆上下文
             memory_context = self.memory_builder.build_execution_context(
-                current_task=user_input,
-                include_history=True,
-                include_stats=False
+                current_task=user_input, include_history=True, include_stats=False
             )
 
             # 2. 构建完整的消息，包含系统提示和记忆上下文
@@ -412,7 +414,7 @@ class MidsceneAgent:
                 "recursion_limit": 100,
                 "configurable": {
                     "thread_id": actual_thread_id  # 关键：用于状态持久化的线程ID
-                }
+                },
             }
 
             # 4. 执行任务
@@ -443,7 +445,7 @@ class MidsceneAgent:
                 params={"user_input": user_input, "thread_id": actual_thread_id},
                 result="执行成功",
                 success=True,
-                context={"session_id": self.session_id, "thread_id": actual_thread_id}
+                context={"session_id": self.session_id, "thread_id": actual_thread_id},
             )
 
         except Exception as e:
@@ -460,14 +462,16 @@ class MidsceneAgent:
                 result=str(e),
                 success=False,
                 error_message=str(e),
-                context={"session_id": self.session_id, "thread_id": actual_thread_id}
+                context={"session_id": self.session_id, "thread_id": actual_thread_id},
             )
 
             yield {"error": error_msg, "traceback": traceback.format_exc()}
 
     # ==================== 状态持久化管理方法 ====================
 
-    async def get_thread_state(self, thread_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    async def get_thread_state(
+        self, thread_id: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
         """获取线程状态
 
         Args:
@@ -523,12 +527,14 @@ class MidsceneAgent:
             "enable_memory_saver": self.enable_memory_saver,
             "checkpointer_enabled": self.checkpointer is not None,
             "memory_stats": self.memory.get_stats(),
-            "deduplication_enabled": True  # 阶段1已实现
+            "deduplication_enabled": True,  # 阶段1已实现
         }
 
     # ==================== 记忆管理方法 ====================
 
-    def update_page_context(self, url: str, title: str = "", elements: Optional[List[Dict]] = None) -> None:
+    def update_page_context(
+        self, url: str, title: str = "", elements: Optional[List[Dict]] = None
+    ) -> None:
         """更新页面上下文
 
         Args:
@@ -536,11 +542,7 @@ class MidsceneAgent:
             title: 页面标题
             elements: 页面元素列表
         """
-        context = {
-            "url": url,
-            "title": title,
-            "elements": elements or []
-        }
+        context = {"url": url, "title": title, "elements": elements or []}
         self.memory.update_context(context)
         logger.debug(f"更新页面上下文: {url}")
 
@@ -557,7 +559,9 @@ class MidsceneAgent:
         self.memory.clear()
         logger.info("清空记忆记录")
 
-    def get_action_history(self, action_type: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_action_history(
+        self, action_type: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
         """获取操作历史
 
         Args:
@@ -570,10 +574,7 @@ class MidsceneAgent:
         return [record.__dict__ for record in records]
 
     def find_similar_action(
-        self,
-        action: str,
-        params: Dict[str, Any],
-        time_window: float = 300
+        self, action: str, params: Dict[str, Any], time_window: float = 300
     ) -> Optional[Dict[str, Any]]:
         """查找相似的历史操作
 
@@ -620,8 +621,8 @@ class MidsceneAgent:
 
         return {"success": True}
 
-    async def get_session_info(self) -> Dict[str, Any]:
-        """获取会话信息"""
+    async def get_server_sessions(self) -> Dict[str, Any]:
+        """获取服务器端会话信息"""
         sessions = await self.http_client.get_sessions()
         history = await self.http_client.get_session_history()
         return {"active_sessions": sessions, "session_history": history}

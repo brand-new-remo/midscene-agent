@@ -116,6 +116,15 @@ const handleGetTabs = async (
   return Promise.all(tabPromises);
 };
 
+// getLogContent 查询处理
+const handleGetLogContent = async (
+  agent: PlaywrightAgent,
+  params: QueryParams
+): Promise<unknown> => {
+  const { msgType, level } = params;
+  return agent._unstableLogContent();
+};
+
 const processQuery = async (
   agent: PlaywrightAgent,
   page: Page,
@@ -149,6 +158,9 @@ const processQuery = async (
 
     case 'getTabs':
       return handleGetTabs(page);
+
+    case 'getLogContent':
+      return handleGetLogContent(agent, params);
 
     default:
       throw new Error(`Unknown query: ${query}`);

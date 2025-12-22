@@ -16,12 +16,13 @@ logger = logging.getLogger(__name__)
 @dataclass
 class MemoryRecord:
     """记忆记录"""
+
     timestamp: float
     action: str
     params: Dict[str, Any]
     result: Any
     context: Dict[str, Any]  # 页面上下文
-    success: bool = True     # 操作是否成功
+    success: bool = True  # 操作是否成功
     error_message: Optional[str] = None  # 错误信息（如果有）
 
 
@@ -49,7 +50,7 @@ class SimpleMemory:
         result: Any,
         context: Optional[Dict[str, Any]] = None,
         success: bool = True,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
     ) -> None:
         """添加记忆记录
 
@@ -68,7 +69,7 @@ class SimpleMemory:
             result=result,
             context=context or self.page_context,
             success=success,
-            error_message=error_message
+            error_message=error_message,
         )
 
         self.records.append(record)
@@ -111,10 +112,7 @@ class SimpleMemory:
         return successful_records[-limit:] if successful_records else []
 
     def find_similar_action(
-        self,
-        action: str,
-        params: Dict[str, Any],
-        time_window: float = 300  # 5分钟
+        self, action: str, params: Dict[str, Any], time_window: float = 300  # 5分钟
     ) -> Optional[MemoryRecord]:
         """查找相似的历史操作
 
@@ -154,11 +152,15 @@ class SimpleMemory:
         # 简单实现：检查JSON序列化后是否相等
         # 未来可以扩展为更智能的相似度匹配
         try:
-            return json.dumps(params1, sort_keys=True) == json.dumps(params2, sort_keys=True)
+            return json.dumps(params1, sort_keys=True) == json.dumps(
+                params2, sort_keys=True
+            )
         except (TypeError, ValueError):
             return False
 
-    def get_action_history(self, action_type: Optional[str] = None) -> List[MemoryRecord]:
+    def get_action_history(
+        self, action_type: Optional[str] = None
+    ) -> List[MemoryRecord]:
         """获取操作历史
 
         Args:
@@ -236,7 +238,7 @@ class SimpleMemory:
         """
         if isinstance(result, dict):
             # 如果是字典，只显示关键字段
-            key_fields = ['success', 'message', 'title', 'url']
+            key_fields = ["success", "message", "title", "url"]
             formatted = {k: v for k, v in result.items() if k in key_fields}
             return str(formatted) if formatted else str(result)[:100]
         elif isinstance(result, str) and len(result) > 100:
@@ -253,7 +255,7 @@ class SimpleMemory:
             "records": [asdict(r) for r in self.records],
             "page_context": self.page_context,
             "max_size": self.max_size,
-            "created_at": time.time()
+            "created_at": time.time(),
         }
 
     def from_dict(self, data: Dict[str, Any]) -> None:
@@ -299,7 +301,7 @@ class SimpleMemory:
             "max_size": self.max_size,
             "current_size": total_count,
             "action_counts": action_counts,
-            "page_context": self.page_context.copy()
+            "page_context": self.page_context.copy(),
         }
 
     def cleanup_old_records(self, max_age: float = 3600) -> int:
@@ -337,7 +339,7 @@ class MemoryContextBuilder:
         self,
         current_task: str,
         include_history: bool = True,
-        include_stats: bool = False
+        include_stats: bool = False,
     ) -> str:
         """构建执行上下文
 
@@ -369,11 +371,7 @@ class MemoryContextBuilder:
 
         return "\n".join(parts)
 
-    def build_action_guidance(
-        self,
-        current_action: str,
-        params: Dict[str, Any]
-    ) -> str:
+    def build_action_guidance(self, current_action: str, params: Dict[str, Any]) -> str:
         """构建操作指导
 
         Args:

@@ -26,7 +26,9 @@ export type ActionType =
   | 'freezePageContext' /** 冻结页面上下文 - 暂停页面交互 */
   | 'unfreezePageContext' /** 解冻页面上下文 - 恢复页面交互 */
   | 'runYaml' /** 运行 YAML 脚本 - 执行 Midscene YAML 脚本 */
-  | 'setAIActionContext'; /** 设置 AI 动作上下文 - 为后续 AI 动作设置上下文信息 */
+  | 'setAIActionContext' /** 设置 AI 动作上下文 - 为后续 AI 动作设置上下文信息 */
+  | 'recordToReport' /** 记录截图到报告 - 将当前截图记录到测试报告中 */
+  | 'getLogContent'; /** 获取日志内容 - 获取页面控制台日志 */
 
 /**
  * 动作参数接口
@@ -46,12 +48,18 @@ export interface ActionParams {
   value?: string;
 
   // 滚动相关参数
-  /** 滚动方向：'up' | 'down' | 'left' | 'right' */
+  /** 滚动参数对象，包含 direction、scrollType、distance 属性 */
+  scrollParam?: {
+    direction?: 'up' | 'down' | 'left' | 'right';
+    scrollType?: 'singleAction' | 'scrollToBottom' | 'scrollToTop' | 'scrollToRight' | 'scrollToLeft';
+    distance?: number | string | null;
+  };
+  /** 滚动方向：'up' | 'down' | 'left' | 'right'（向后兼容，建议使用 scrollParam） */
   direction?: 'up' | 'down' | 'left' | 'right';
-  /** 滚动类型：'once' 单次滚动 | 'untilBottom' 滚动到底部 | 'untilTop' 滚动到顶部 */
-  scrollType?: 'once' | 'untilBottom' | 'untilTop';
-  /** 滚动距离（像素或字符串数值） */
-  distance?: number | string;
+  /** 滚动类型：'singleAction' | 'scrollToBottom' | 'scrollToTop' | 'scrollToRight' | 'scrollToLeft'（向后兼容，建议使用 scrollParam） */
+  scrollType?: 'singleAction' | 'scrollToBottom' | 'scrollToTop' | 'scrollToRight' | 'scrollToLeft';
+  /** 滚动距离（像素），设置为 null 表示由 AI 自动决定（向后兼容，建议使用 scrollParam） */
+  distance?: number | string | null;
 
   // 键盘相关参数
   /** 要按下的键名或按键组合（如 'Enter', 'Tab', 'Control+C'） */
@@ -60,7 +68,7 @@ export interface ActionParams {
   // 等待断言相关参数
   /** AI 断言描述（aiWaitFor 动作必需） */
   assertion?: string;
-  /** 等待超时时间（毫秒，默认：30000） */
+  /** 等待超时时间（毫秒，默认：15000） */
   timeoutMs?: number;
   /** 检查间隔时间（毫秒，默认：3000） */
   checkIntervalMs?: number;
@@ -80,6 +88,8 @@ export interface ActionParams {
   // 截图相关参数
   /** 截图标题或文件名（logScreenshot 动作可选） */
   title?: string;
+  /** 截图描述信息 */
+  content?: string;
 
   // YAML 脚本相关参数
   /** Midscene YAML 脚本内容（runYaml 动作必需） */
@@ -88,6 +98,32 @@ export interface ActionParams {
   // AI 上下文相关参数
   /** 为后续 AI 动作设置的上下文信息 */
   context?: string;
+
+  // 增强的交互参数
+  /** 是否开启深度思考模式（对新一代模型收益不明显） */
+  deepThink?: boolean;
+  /** 目标元素的 xpath 路径，优先级：xpath > 缓存 > AI 模型 */
+  xpath?: string;
+  /** 是否允许缓存当前 API 调用结果 */
+  cacheable?: boolean;
+
+  // aiInput 特殊参数
+  /** 键盘是否在输入文本后自动关闭（仅 Android/iOS 有效） */
+  autoDismissKeyboard?: boolean;
+  /** 输入模式：'replace'(先清空再输入) | 'clear'(仅清空) | 'append'(追加) */
+  mode?: 'replace' | 'clear' | 'append';
+
+  // 增强的查询参数
+  /** 是否向模型发送精简后的 DOM 信息 */
+  domIncluded?: boolean | 'visible-only';
+  /** 是否向模型发送截图 */
+  screenshotIncluded?: boolean;
+
+  // 日志相关参数
+  /** 日志类型过滤（如 'error', 'warn', 'info' 等） */
+  msgType?: string;
+  /** 日志级别过滤 */
+  level?: string;
 
   // 通用选项参数
   /** 其他动作特定的选项配置 */
@@ -128,8 +164,14 @@ export interface ActionResult {
   result?: unknown;
   /** 截图标题 */
   title?: string;
+  /** 截图描述信息 */
+  content?: string;
   /** 设置的上下文信息 */
   context?: string;
+  /** 日志类型过滤 */
+  msgType?: string;
+  /** 日志级别过滤 */
+  level?: string;
 
   // 时间相关字段（用于去重和性能监控）
   /** 动作执行时间戳（Unix 毫秒时间戳） */
@@ -180,9 +222,9 @@ export interface ActionOptions {
  */
 export interface ScrollOptions {
   /** 滚动方向 */
-  direction: 'up' | 'down' | 'left' | 'right';
+  direction?: 'up' | 'down' | 'left' | 'right';
   /** 滚动类型 */
-  scrollType: 'singleAction' | 'scrollToBottom' | 'scrollToTop';
-  /** 滚动距离（像素） */
-  distance: number;
+  scrollType?: 'singleAction' | 'scrollToBottom' | 'scrollToTop' | 'scrollToRight' | 'scrollToLeft';
+  /** 滚动距离（像素），设置为 null 表示由 AI 自动决定 */
+  distance?: number | null;
 }

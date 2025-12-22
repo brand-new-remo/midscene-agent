@@ -26,7 +26,10 @@ TOOL_DEFINITIONS = {
     "midscene_aiTap": {
         "description": "使用 AI 智能定位并点击页面元素。可以通过自然语言描述要点击的元素，如'点击登录按钮'、'点击搜索框'等",
         "params": {
-            "locate": "要点击元素的自然语言描述，支持中文和英文，如'搜索按钮'、'登录链接'、'确认按钮'等"
+            "locate": "要点击元素的自然语言描述，支持中文和英文，如'搜索按钮'、'登录链接'、'确认按钮'等",
+            "deepThink?": "是否开启深度思考模式，如果为 true，AI 会调用模型两次以精确定位元素，默认 false",
+            "xpath?": "目标元素的 xpath 路径，如果提供，优先级：xpath > 缓存 > AI 模型",
+            "cacheable?": "当启用缓存功能时，是否允许缓存当前 API 调用结果，默认 true",
         },
         "category": TOOL_CATEGORY_INTERACTION,
         "required": True,
@@ -36,16 +39,23 @@ TOOL_DEFINITIONS = {
         "params": {
             "value": "要输入的文本内容",
             "locate": "输入框的自然语言描述，如'搜索框'、'邮箱输入框'、'密码框'等",
+            "deepThink?": "是否开启深度思考模式，如果为 true，AI 会调用模型两次以精确定位元素，默认 false",
+            "xpath?": "目标元素的 xpath 路径，如果提供，优先级：xpath > 缓存 > AI 模型",
+            "cacheable?": "当启用缓存功能时，是否允许缓存当前 API 调用结果，默认 true",
+            "autoDismissKeyboard?": "键盘是否在输入文本后自动关闭，仅在 Android/iOS 中有效，默认 true",
+            "mode?": "输入模式：'replace'(先清空再输入) | 'clear'(仅清空) | 'append'(追加到现有内容)，默认 'replace'",
         },
         "category": TOOL_CATEGORY_INTERACTION,
         "required": True,
     },
     "midscene_aiScroll": {
-        "description": "使用 AI 执行页面滚动操作，可以指定滚动方向和距离",
+        "description": "使用 AI 执行页面滚动操作，可以指定滚动方向、距离和滚动目标元素",
         "params": {
-            "direction": "滚动方向，必须为英文值：'up'(向上)、'down'(向下)、'left'(向左)、'right'(向右)",
-            "scrollType": "滚动类型：'once'表示固定距离，'untilBottom'表示滚动到底部，'untilTop'表示滚动到顶部",
-            "distance?": "滚动距离（数字类型，像素），默认 500",
+            "scrollParam": "滚动参数对象，必须是字典格式，包含 direction、scrollType、distance 属性。示例：{\"direction\": \"down\", \"scrollType\": \"singleAction\", \"distance\": 500}",
+            "locate?": "可选，用自然语言描述的要滚动的元素定位，如'页面内容区域'、'聊天窗口'等，未指定则在当前视窗滚动",
+            "deepThink?": "是否开启深度思考模式，如果为 true，AI 会调用模型两次以精确定位元素，默认 false",
+            "xpath?": "目标元素的 xpath 路径，如果提供，优先级：xpath > 缓存 > AI 模型",
+            "cacheable?": "当启用缓存功能时，是否允许缓存当前 API 调用结果，默认 true",
         },
         "category": TOOL_CATEGORY_INTERACTION,
         "required": True,
@@ -55,6 +65,9 @@ TOOL_DEFINITIONS = {
         "params": {
             "key": "按键名称，如 'Enter'、'Tab'、'Escape'、' '（空格）等",
             "locate?": "可选，指定按键操作的目标元素",
+            "deepThink?": "是否开启深度思考模式，如果为 true，AI 会调用模型两次以精确定位元素，默认 false",
+            "xpath?": "目标元素的 xpath 路径，如果提供，优先级：xpath > 缓存 > AI 模型",
+            "cacheable?": "当启用缓存功能时，是否允许缓存当前 API 调用结果，默认 true",
         },
         "category": TOOL_CATEGORY_INTERACTION,
         "required": True,
@@ -62,17 +75,10 @@ TOOL_DEFINITIONS = {
     "midscene_aiHover": {
         "description": "使用 AI 智能悬停在页面元素上，触发 hover 事件。常用于显示隐藏菜单、工具提示等",
         "params": {
-            "locate": "要悬停元素的自然语言描述，如'用户头像'、'菜单项'、'产品图片'等"
-        },
-        "category": TOOL_CATEGORY_INTERACTION,
-        "required": True,
-    },
-    "midscene_aiWaitFor": {
-        "description": "使用 AI 智能等待页面满足指定条件，如等待元素出现、等待文本可见、等待页面加载完成等",
-        "params": {
-            "assertion": "等待条件的自然语言描述，如'等待登录按钮出现'、'等待页面加载完成'、'等待错误提示消失'等",
-            "timeoutMs?": "最大等待时间（毫秒），默认 30000（30 秒）",
-            "checkIntervalMs?": "检查间隔时间（毫秒），默认 1000（1 秒）",
+            "locate": "要悬停元素的自然语言描述，如'用户头像'、'菜单项'、'产品图片'等",
+            "deepThink?": "是否开启深度思考模式，如果为 true，AI 会调用模型两次以精确定位元素，默认 false",
+            "xpath?": "目标元素的 xpath 路径，如果提供，优先级：xpath > 缓存 > AI 模型",
+            "cacheable?": "当启用缓存功能时，是否允许缓存当前 API 调用结果，默认 true",
         },
         "category": TOOL_CATEGORY_INTERACTION,
         "required": True,
@@ -88,7 +94,9 @@ TOOL_DEFINITIONS = {
     "midscene_aiAssert": {
         "description": "使用 AI 智能分析当前页面状态，提取信息或验证条件。可以询问页面内容、提取数据、验证元素等",
         "params": {
-            "assertion": "关于页面内容的问题或验证条件，如'页面标题是什么？'、'显示的价格是多少？'、'是否有登录按钮？'等"
+            "assertion": "关于页面内容的问题或验证条件，如'页面标题是什么？'、'显示的价格是多少？'、'是否有登录按钮？'等",
+            "domIncluded?": "是否向模型发送精简后的 DOM 信息，用于提取 UI 中不可见的属性，默认 false，'visible-only' 表示只发送可见元素",
+            "screenshotIncluded?": "是否向模型发送截图，默认 true",
         },
         "category": TOOL_CATEGORY_QUERY,
         "required": True,
@@ -115,7 +123,8 @@ TOOL_DEFINITIONS = {
         "description": "使用 AI 模型对当前页面发起提问，获得字符串形式的回答",
         "params": {
             "prompt": "用自然语言描述的询问内容",
-            "options?": "可选配置项，包含 domIncluded 和 screenshotIncluded",
+            "domIncluded?": "是否向模型发送精简后的 DOM 信息，用于提取 UI 中不可见的属性，默认 false，'visible-only' 表示只发送可见元素",
+            "screenshotIncluded?": "是否向模型发送截图，默认 true",
         },
         "category": TOOL_CATEGORY_QUERY,
         "required": True,
@@ -124,7 +133,8 @@ TOOL_DEFINITIONS = {
         "description": "直接从 UI 提取结构化数据，支持字符串、数字、JSON、数组等格式",
         "params": {
             "dataDemand": "描述预期的返回值和格式",
-            "options?": "可选配置项，包含 domIncluded 和 screenshotIncluded",
+            "domIncluded?": "是否向模型发送精简后的 DOM 信息，用于提取 UI 中不可见的属性，默认 false，'visible-only' 表示只发送可见元素",
+            "screenshotIncluded?": "是否向模型发送截图，默认 true",
         },
         "category": TOOL_CATEGORY_QUERY,
         "required": True,
@@ -133,7 +143,8 @@ TOOL_DEFINITIONS = {
         "description": "从 UI 中提取一个布尔值",
         "params": {
             "prompt": "用自然语言描述的期望值",
-            "options?": "可选配置项，包含 domIncluded 和 screenshotIncluded",
+            "domIncluded?": "是否向模型发送精简后的 DOM 信息，用于提取 UI 中不可见的属性，默认 false，'visible-only' 表示只发送可见元素",
+            "screenshotIncluded?": "是否向模型发送截图，默认 true",
         },
         "category": TOOL_CATEGORY_QUERY,
         "required": True,
@@ -142,7 +153,8 @@ TOOL_DEFINITIONS = {
         "description": "从 UI 中提取一个数字",
         "params": {
             "prompt": "用自然语言描述的期望值",
-            "options?": "可选配置项，包含 domIncluded 和 screenshotIncluded",
+            "domIncluded?": "是否向模型发送精简后的 DOM 信息，用于提取 UI 中不可见的属性，默认 false，'visible-only' 表示只发送可见元素",
+            "screenshotIncluded?": "是否向模型发送截图，默认 true",
         },
         "category": TOOL_CATEGORY_QUERY,
         "required": True,
@@ -151,15 +163,43 @@ TOOL_DEFINITIONS = {
         "description": "从 UI 中提取一个字符串",
         "params": {
             "prompt": "用自然语言描述的期望值",
-            "options?": "可选配置项，包含 domIncluded 和 screenshotIncluded",
+            "domIncluded?": "是否向模型发送精简后的 DOM 信息，用于提取 UI 中不可见的属性，默认 false，'visible-only' 表示只发送可见元素",
+            "screenshotIncluded?": "是否向模型发送截图，默认 true",
         },
         "category": TOOL_CATEGORY_QUERY,
         "required": True,
     },
     "midscene_aiLocate": {
         "description": "通过自然语言定位页面元素，获取元素的坐标和大小信息",
-        "params": {"locate": "用自然语言描述的元素定位", "options?": "可选配置项"},
+        "params": {
+            "locate": "用自然语言描述的元素定位",
+            "deepThink?": "是否开启深度思考模式，如果为 true，AI 会调用模型两次以精确定位元素，默认 false",
+            "xpath?": "目标元素的 xpath 路径，如果提供，优先级：xpath > 缓存 > AI 模型",
+            "cacheable?": "当启用缓存功能时，是否允许缓存当前 API 调用结果，默认 true",
+        },
         "category": TOOL_CATEGORY_QUERY,
+        "required": True,
+    },
+    "midscene_aiDoubleClick": {
+        "description": "使用 AI 智能定位并双击页面元素",
+        "params": {
+            "locate": "要双击元素的自然语言描述",
+            "deepThink?": "是否开启深度思考模式，如果为 true，AI 会调用模型两次以精确定位元素，默认 false",
+            "xpath?": "目标元素的 xpath 路径，如果提供，优先级：xpath > 缓存 > AI 模型",
+            "cacheable?": "当启用缓存功能时，是否允许缓存当前 API 调用结果，默认 true",
+        },
+        "category": TOOL_CATEGORY_INTERACTION,
+        "required": True,
+    },
+    "midscene_aiRightClick": {
+        "description": "使用 AI 智能定位并右键点击页面元素",
+        "params": {
+            "locate": "要右键点击元素的自然语言描述",
+            "deepThink?": "是否开启深度思考模式，如果为 true，AI 会调用模型两次以精确定位元素，默认 false",
+            "xpath?": "目标元素的 xpath 路径，如果提供，优先级：xpath > 缓存 > AI 模型",
+            "cacheable?": "当启用缓存功能时，是否允许缓存当前 API 调用结果，默认 true",
+        },
+        "category": TOOL_CATEGORY_INTERACTION,
         "required": True,
     },
     "midscene_aiWaitFor": {
@@ -204,6 +244,24 @@ TOOL_DEFINITIONS = {
             "title?": "截图的标题，如'登录页面'、'搜索结果'等",
             "content?": "截图的描述信息，如'用户 A 的操作截图'",
         },
+        "category": TOOL_CATEGORY_TEST,
+        "required": False,
+    },
+    "midscene_recordToReport": {
+        "description": "记录截图到测试报告中",
+        "params": {
+            "title?": "截图标题，默认为 'untitled'",
+            "content?": "截图描述",
+        },
+        "category": TOOL_CATEGORY_TEST,
+        "required": False,
+    },
+    "midscene_getLogContent": {
+        "description": "获取页面控制台日志内容",
+        "params": {
+            "msgType?": "日志类型过滤，如 'error'、'warn'、'info' 等",
+            "level?": "日志级别过滤",
+        },
         "category": TOOL_CATEGORY_QUERY,
         "required": False,
     },
@@ -247,6 +305,8 @@ TOOL_CATEGORIES = {
         "description": "页面元素交互：点击、输入、滚动、按键、悬停、等待",
         "tools": [
             "midscene_aiTap",
+            "midscene_aiDoubleClick",
+            "midscene_aiRightClick",
             "midscene_aiInput",
             "midscene_aiScroll",
             "midscene_aiKeyboardPress",
@@ -267,6 +327,7 @@ TOOL_CATEGORIES = {
             "midscene_aiLocate",
             "midscene_getTabs",
             "midscene_getConsoleLogs",
+            "midscene_getLogContent",
             "midscene_playwright_example",
         ],
     },
@@ -277,6 +338,7 @@ TOOL_CATEGORIES = {
             "midscene_playwright_example",
             "midscene_evaluateJavaScript",
             "midscene_logScreenshot",
+            "midscene_recordToReport",
             "midscene_freezePageContext",
             "midscene_unfreezePageContext",
             "midscene_runYaml",

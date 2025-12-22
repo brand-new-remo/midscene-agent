@@ -33,21 +33,21 @@ def test_simple_memory():
         action="navigate",
         params={"url": "https://example.com"},
         result={"success": True, "title": "Example"},
-        context={"url": "https://example.com", "title": "Example"}
+        context={"url": "https://example.com", "title": "Example"},
     )
 
     memory.add_record(
         action="click",
         params={"locate": "button"},
         result={"success": True},
-        context={"url": "https://example.com", "title": "Example"}
+        context={"url": "https://example.com", "title": "Example"},
     )
 
     memory.add_record(
         action="input",
         params={"locate": "search", "value": "test"},
         result={"success": True},
-        context={"url": "https://example.com", "title": "Example"}
+        context={"url": "https://example.com", "title": "Example"},
     )
 
     # 测试获取最近操作
@@ -70,9 +70,7 @@ def test_simple_memory():
     # 测试查找相似操作
     print("\n4. 查找相似操作:")
     similar = memory.find_similar_action(
-        action="click",
-        params={"locate": "button"},
-        time_window=60
+        action="click", params={"locate": "button"}, time_window=60
     )
     if similar:
         print(f"   找到相似操作: {similar.action}")
@@ -83,9 +81,7 @@ def test_simple_memory():
     print("\n5. 上下文构建器:")
     builder = MemoryContextBuilder(memory)
     execution_context = builder.build_execution_context(
-        current_task="点击搜索按钮",
-        include_history=True,
-        include_stats=True
+        current_task="点击搜索按钮", include_history=True, include_stats=True
     )
     print(execution_context)
 
@@ -104,7 +100,7 @@ def test_memory_serialization():
         action="test",
         params={"key": "value"},
         result={"success": True},
-        context={"url": "https://test.com"}
+        context={"url": "https://test.com"},
     )
 
     # 序列化
@@ -144,10 +140,7 @@ def test_deduplication_typescript():
 
     def record(key: str, result: Dict[str, Any]):
         """记录操作结果"""
-        cache[key] = {
-            "result": result,
-            "timestamp": time.time() * 1000
-        }
+        cache[key] = {"result": result, "timestamp": time.time() * 1000}
 
     # 测试场景1: 第一次执行
     key1 = "navigate:https://example.com"
@@ -220,6 +213,7 @@ def main():
     except Exception as e:
         print(f"\n❌ 测试失败: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 

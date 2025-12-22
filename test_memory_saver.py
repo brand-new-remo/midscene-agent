@@ -46,18 +46,14 @@ async def test_memory_saver_basic():
         # 模拟第二次调用 - 保持状态
         print("\n第二次调用 - 状态保持:")
         new_human_msg = HumanMessage(content="后续消息")
-        state_2 = {
-            "messages": state_1["messages"] + [new_human_msg]
-        }
+        state_2 = {"messages": state_1["messages"] + [new_human_msg]}
         print(f"  输入消息: {new_human_msg.content}")
         print(f"  累计状态: {len(state_2['messages'])} 条消息")
 
         # 模拟第三次调用
         print("\n第三次调用 - 继续累积:")
         another_ai_msg = AIMessage(content="AI 继续回复")
-        state_3 = {
-            "messages": state_2["messages"] + [another_ai_msg]
-        }
+        state_3 = {"messages": state_2["messages"] + [another_ai_msg]}
         print(f"  最终状态: {len(state_3['messages'])} 条消息")
 
         print("\n✅ MemorySaver 基本功能测试通过")
@@ -93,12 +89,14 @@ async def test_session_persistence():
     context_1 = "无历史记录"
     result_1 = {"action": "navigate", "success": True, "url": "https://example.com"}
 
-    execution_history.append({
-        "task": task_1,
-        "context": context_1,
-        "result": result_1,
-        "message_count": 2  # 人类消息 + AI响应
-    })
+    execution_history.append(
+        {
+            "task": task_1,
+            "context": context_1,
+            "result": result_1,
+            "message_count": 2,  # 人类消息 + AI响应
+        }
+    )
 
     print(f"   任务: {task_1}")
     print(f"   历史: {context_1}")
@@ -110,12 +108,14 @@ async def test_session_persistence():
     context_2 = f"历史: navigate → {result_1['url']}"
     result_2 = {"action": "click", "success": True, "element": "登录按钮"}
 
-    execution_history.append({
-        "task": task_2,
-        "context": context_2,
-        "result": result_2,
-        "message_count": 4  # 累积消息
-    })
+    execution_history.append(
+        {
+            "task": task_2,
+            "context": context_2,
+            "result": result_2,
+            "message_count": 4,  # 累积消息
+        }
+    )
 
     print(f"   任务: {task_2}")
     print(f"   历史: {context_2}")
@@ -127,12 +127,14 @@ async def test_session_persistence():
     context_3 = f"历史: navigate → click(登录按钮)"
     result_3 = {"action": "input", "success": True, "fields": ["用户名", "密码"]}
 
-    execution_history.append({
-        "task": task_3,
-        "context": context_3,
-        "result": result_3,
-        "message_count": 6  # 累积消息
-    })
+    execution_history.append(
+        {
+            "task": task_3,
+            "context": context_3,
+            "result": result_3,
+            "message_count": 6,  # 累积消息
+        }
+    )
 
     print(f"   任务: {task_3}")
     print(f"   历史: {context_3}")
@@ -182,20 +184,24 @@ async def test_deduplication_with_memory():
     def record_operation(action: str, params: Dict[str, Any], result: Dict[str, Any]):
         """记录操作"""
         key = f"{action}:{str(params)}"
-        operation_cache[key] = {
-            "result": result,
-            "timestamp": time.time() * 1000
-        }
+        operation_cache[key] = {"result": result, "timestamp": time.time() * 1000}
 
-    def add_memory(action: str, params: Dict[str, Any], result: Dict[str, Any], success: bool = True):
+    def add_memory(
+        action: str,
+        params: Dict[str, Any],
+        result: Dict[str, Any],
+        success: bool = True,
+    ):
         """添加到记忆"""
-        memory_records.append({
-            "timestamp": time.time(),
-            "action": action,
-            "params": params,
-            "result": result,
-            "success": success
-        })
+        memory_records.append(
+            {
+                "timestamp": time.time(),
+                "action": action,
+                "params": params,
+                "result": result,
+                "success": success,
+            }
+        )
 
     # 模拟执行场景
     scenarios = [
@@ -247,7 +253,7 @@ async def test_thread_state_management():
     threads = {
         "thread_001": {"tasks": 3, "messages": 10},
         "thread_002": {"tasks": 2, "messages": 6},
-        "thread_003": {"tasks": 5, "messages": 18}
+        "thread_003": {"tasks": 5, "messages": 18},
     }
 
     print("\n🧵 多线程状态管理:")
@@ -264,7 +270,7 @@ async def test_thread_state_management():
         state = {
             "thread_id": thread_id,
             "message_count": threads[thread_id]["messages"],
-            "last_activity": time.time()
+            "last_activity": time.time(),
         }
         print(f"   {thread_id}: {state['message_count']} 条消息")
 
@@ -327,6 +333,7 @@ async def main():
     except Exception as e:
         print(f"\n❌ 测试失败: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 

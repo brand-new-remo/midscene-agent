@@ -12,9 +12,16 @@ from typing import Any, Dict, List, Optional
 
 # 复制简化的MemoryRecord类
 class MemoryRecord:
-    def __init__(self, timestamp: float, action: str, params: Dict[str, Any],
-                 result: Any, context: Dict[str, Any], success: bool = True,
-                 error_message: Optional[str] = None):
+    def __init__(
+        self,
+        timestamp: float,
+        action: str,
+        params: Dict[str, Any],
+        result: Any,
+        context: Dict[str, Any],
+        success: bool = True,
+        error_message: Optional[str] = None,
+    ):
         self.timestamp = timestamp
         self.action = action
         self.params = params
@@ -31,9 +38,15 @@ class SimpleMemory:
         self.records: List[MemoryRecord] = []
         self.page_context: Dict[str, Any] = {}
 
-    def add_record(self, action: str, params: Dict[str, Any], result: Any,
-                   context: Optional[Dict[str, Any]] = None,
-                   success: bool = True, error_message: Optional[str] = None):
+    def add_record(
+        self,
+        action: str,
+        params: Dict[str, Any],
+        result: Any,
+        context: Optional[Dict[str, Any]] = None,
+        success: bool = True,
+        error_message: Optional[str] = None,
+    ):
         record = MemoryRecord(
             timestamp=time.time(),
             action=action,
@@ -41,7 +54,7 @@ class SimpleMemory:
             result=result,
             context=context or self.page_context,
             success=success,
-            error_message=error_message
+            error_message=error_message,
         )
         self.records.append(record)
 
@@ -59,7 +72,11 @@ class SimpleMemory:
         lines = ["=== 最近操作历史 ==="]
         for record in recent_actions:
             status = "✅" if record.success else "❌"
-            result_str = str(record.result)[:50] + "..." if len(str(record.result)) > 50 else str(record.result)
+            result_str = (
+                str(record.result)[:50] + "..."
+                if len(str(record.result)) > 50
+                else str(record.result)
+            )
             lines.append(
                 f"{status} [{record.action}] "
                 f"参数: {record.params}, "
@@ -84,10 +101,12 @@ class SimpleMemory:
             "success_rate": successful_count / total_count if total_count > 0 else 1.0,
             "max_size": self.max_size,
             "current_size": total_count,
-            "action_counts": action_counts
+            "action_counts": action_counts,
         }
 
-    def find_similar_action(self, action: str, params: Dict[str, Any], time_window: float = 300) -> Optional[MemoryRecord]:
+    def find_similar_action(
+        self, action: str, params: Dict[str, Any], time_window: float = 300
+    ) -> Optional[MemoryRecord]:
         current_time = time.time()
         for record in reversed(self.records):
             if current_time - record.timestamp > time_window:
@@ -112,7 +131,7 @@ def test_simple_memory():
         action="navigate",
         params={"url": "https://example.com"},
         result={"success": True, "title": "Example"},
-        context={"url": "https://example.com", "title": "Example"}
+        context={"url": "https://example.com", "title": "Example"},
     )
     print("   ✅ 添加导航操作")
 
@@ -120,7 +139,7 @@ def test_simple_memory():
         action="click",
         params={"locate": "button"},
         result={"success": True},
-        context={"url": "https://example.com", "title": "Example"}
+        context={"url": "https://example.com", "title": "Example"},
     )
     print("   ✅ 添加点击操作")
 
@@ -128,7 +147,7 @@ def test_simple_memory():
         action="input",
         params={"locate": "search", "value": "test"},
         result={"success": True},
-        context={"url": "https://example.com", "title": "Example"}
+        context={"url": "https://example.com", "title": "Example"},
     )
     print("   ✅ 添加输入操作")
 
@@ -157,9 +176,7 @@ def test_simple_memory():
     # 测试查找相似操作
     print("\n5. 查找相似操作:")
     similar = memory.find_similar_action(
-        action="click",
-        params={"locate": "button"},
-        time_window=60
+        action="click", params={"locate": "button"}, time_window=60
     )
     if similar:
         print(f"   ✅ 找到相似操作: {similar.action}")
@@ -176,7 +193,7 @@ def test_simple_memory():
         result={"success": False, "error": "Connection failed"},
         context={"url": "https://invalid-url.com", "title": "Invalid"},
         success=False,
-        error_message="Connection failed"
+        error_message="Connection failed",
     )
     print("   ✅ 添加失败导航操作")
 
@@ -213,10 +230,7 @@ def test_deduplication_simulation():
 
     def record(key: str, result: Dict[str, Any]):
         """记录操作结果"""
-        cache[key] = {
-            "result": result,
-            "timestamp": time.time() * 1000
-        }
+        cache[key] = {"result": result, "timestamp": time.time() * 1000}
 
     # 测试场景
     test_cases = [
@@ -291,6 +305,7 @@ def main():
     except Exception as e:
         print(f"\n❌ 测试失败: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 

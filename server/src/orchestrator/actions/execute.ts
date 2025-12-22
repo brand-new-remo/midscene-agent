@@ -59,14 +59,24 @@ const handleInput = async (agent: PlaywrightAgent, params: ActionParams): Promis
   if (!value) {
     throw new Error('aiInput requires "value" parameter');
   }
-  await agent.aiInput(locate, { ...params.options, value });
+
+  const inputOptions: any = { ...params.options, value };
+
+  if (params.autoDismissKeyboard !== undefined) {
+    inputOptions.autoDismissKeyboard = params.autoDismissKeyboard;
+  }
+  if (params.mode) {
+    inputOptions.mode = params.mode;
+  }
+
+  await agent.aiInput(locate, inputOptions);
   return { success: true, action: 'input', value };
 };
 
 /**
  * 处理滚动动作
  * @param agent PlaywrightAgent 实例
- * @param params 动作参数，包含 direction（方向）、scrollType（滚动类型）、distance（距离）
+ * @param params 动作参数，包含 scrollParam（滚动参数对象）、locate（可选）
  * @returns 动作执行结果
  * @description 使用 AI 定位元素并进行滚动操作，支持指定方向和距离
  */
@@ -74,10 +84,35 @@ const handleScroll = async (
   agent: PlaywrightAgent,
   params: ActionParams
 ): Promise<ActionResult> => {
-  const { direction } = params;
-  if (!direction) {
-    throw new Error('aiScroll requires "direction" parameter');
+  // 处理 scrollParam，可能被 JSON.stringify 处理过
+  let resolvedScrollParam: any;
+
+  if (params.scrollParam) {
+    // 如果 scrollParam 是字符串，尝试解析为对象
+    if (typeof params.scrollParam === 'string') {
+      try {
+        resolvedScrollParam = JSON.parse(params.scrollParam);
+      } catch (e) {
+        throw new Error(`Invalid scrollParam JSON: ${params.scrollParam}`);
+      }
+    } else {
+      resolvedScrollParam = params.scrollParam;
+    }
+  } else {
+    // 兼容单独的参数（向后兼容）
+    resolvedScrollParam = {
+      direction: params.direction,
+      scrollType: params.scrollType,
+      distance: params.distance,
+    };
   }
+
+  const { direction, scrollType, distance } = resolvedScrollParam;
+
+  if (!direction) {
+    throw new Error('aiScroll requires "direction" parameter in scrollParam');
+  }
+
   // v1.0.1 兼容性：scrollType 值变化
   const scrollTypeMap: Record<string, string> = {
     once: 'singleAction',
@@ -85,16 +120,18 @@ const handleScroll = async (
     untilTop: 'scrollToTop',
   };
 
-  const mappedScrollType = scrollTypeMap[params.scrollType || 'once'] || 'singleAction';
+  const mappedScrollType = scrollTypeMap[scrollType || 'once'] || 'singleAction';
 
-  // 先尝试最简单的调用方式
+  // 构建滚动选项对象
   const scrollOptions: ScrollOptions = {
     direction,
-    scrollType: mappedScrollType as 'singleAction' | 'scrollToBottom' | 'scrollToTop',
+    scrollType: mappedScrollType as ScrollOptions['scrollType'],
     distance:
-      typeof params.distance === 'string' ? parseInt(params.distance, 10) : params.distance || 500,
+      typeof distance === 'string' ? parseInt(distance, 10) : (distance ?? 500),
   };
-  await agent.aiScroll(params.locate || undefined, scrollOptions);
+
+  // 根据官方文档，aiScroll(scrollParam, locate?, options?)
+  await agent.aiScroll(scrollOptions, params.locate, params.options);
   return { success: true, action: 'scroll', direction };
 };
 
@@ -319,6 +356,50 @@ const handleSetAIActionContext = async (
 };
 
 /**
+ * 处理记录截图到报告动作
+ * @param agent PlaywrightAgent 实例
+ * @param params 动作参数，包含 title（截图标题）和 content（截图描述）
+ * @returns 动作执行结果
+ * @description 将当前页面截图记录到测试报告中，可添加标题和描述信息
+ */
+const handleRecordToReport = async (
+  agent: PlaywrightAgent,
+  params: ActionParams
+): Promise<ActionResult> => {
+  const { title, content } = params;
+  const result = await agent.recordToReport(title, content ? { content } : undefined);
+  return {
+    success: true,
+    action: 'recordToReport',
+    title: title || 'untitled',
+    content,
+    result,
+  };
+};
+
+/**
+ * 处理获取日志内容动作
+ * @param agent PlaywrightAgent 实例
+ * @param params 动作参数，包含 msgType（日志类型）和 level（日志级别）
+ * @returns 动作执行结果
+ * @description 获取页面的控制台日志内容，支持按类型和级别过滤
+ */
+const handleGetLogContent = async (
+  agent: PlaywrightAgent,
+  params: ActionParams
+): Promise<ActionResult> => {
+  const { msgType, level } = params;
+  const result = agent._unstableLogContent();
+  return {
+    success: true,
+    action: 'getLogContent',
+    msgType,
+    level,
+    result,
+  };
+};
+
+/**
  * 直接执行动作（无流式）
  * @param agent PlaywrightAgent 实例
  * @param page Playwright 页面对象
@@ -386,6 +467,12 @@ const executeActionDirect = async (
 
     case 'setAIActionContext':
       return handleSetAIActionContext(agent, params);
+
+    case 'recordToReport':
+      return handleRecordToReport(agent, params);
+
+    case 'getLogContent':
+      return handleGetLogContent(agent, params);
 
     default:
       throw new Error(`Unknown action: ${action}`);
