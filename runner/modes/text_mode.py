@@ -20,9 +20,9 @@ async def run_text_tests() -> None:
     print("=" * 70 + "\n")
 
     # 显示可用的文本文件
-    texts_dir = get_tests_dir("texts")
+    texts_dir = get_tests_dir()
     if not os.path.exists(texts_dir):
-        print("❌ texts 目录不存在")
+        print("❌ tests 目录不存在")
         return
 
     txt_files = [f for f in os.listdir(texts_dir) if f.endswith(".txt")]
@@ -120,9 +120,9 @@ async def run_all_text_tests() -> None:
     print("=" * 70 + "\n")
 
     try:
-        texts_dir = get_tests_dir("texts")
+        texts_dir = get_tests_dir()
         if not os.path.exists(texts_dir):
-            print("❌ texts 目录不存在")
+            print("❌ tests 目录不存在")
             return
 
         txt_files = [f for f in os.listdir(texts_dir) if f.endswith(".txt")]

@@ -59,7 +59,8 @@
       "Bash(findstr:*)",
       "Bash(taskkill:*)",
       "Bash(wmic:*)",
-      "Bash(midscene-text tests/texts/basic_usage.txt)"
+      "Bash(midscene-text tests/texts/basic_usage.txt)",
+      "Bash(move:*)"
     ],
     "deny": [],
     "ask": []

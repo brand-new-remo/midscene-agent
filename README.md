@@ -281,7 +281,7 @@ uv run midscene
 
 ```bash
 # 执行自然语言测试
-midscene-text tests/texts/basic_usage.txt
+midscene-text tests/basic_usage.txt
 ```
 
 ### 格式化代码
@@ -319,17 +319,17 @@ uv run ./typecheck.py
 
 **转换单个 XMind 文件**:
 ```bash
-python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/
+uv run python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/
 ```
 
 **批量转换目录**:
 ```bash
-uv run python -m converter.cli -i xmind/ -o tests/texts/
+uv run python -m converter.cli -i xmind/ -o tests/
 ```
 
 **详细输出模式**:
 ```bash
-uv run python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/ --verbose
+uv run python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/ --verbose
 ```
 
 **使用 uv 调用**:
@@ -337,12 +337,12 @@ uv run python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/ 
 source .venv/Scripts/activate  # Windows
 # 或
 source .venv/bin/activate       # Linux/macOS
-uv run python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/
+uv run python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/
 ```
 
 #### 功能特点
 
-- ✅ **XMind → 自然语言测试文件**：将 XMind 思维导图转换为 tests/texts/ 格式
+- ✅ **XMind → 自然语言测试文件**：将 XMind 思维导图转换为 tests/ 格式
 - ✅ **模块化输出**：每个模块生成独立的 .txt 文件
 - ✅ **占位符配置**：@web 配置使用占位符，便于后续填写
 - ✅ **零依赖**：仅使用 Python 标准库
@@ -380,7 +380,7 @@ uv run python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/
 
 ### 测试文件格式
 
-#### 自然语言测试 (位于 `tests/texts/`)
+#### 自然语言测试 (位于 `tests/`)
 
 ```
 @web:

@@ -51,7 +51,7 @@ TOOL_DEFINITIONS = {
     "midscene_aiScroll": {
         "description": "使用 AI 执行页面滚动操作，可以指定滚动方向、距离和滚动目标元素",
         "params": {
-            "scrollParam": "滚动参数对象，必须是字典格式，包含 direction、scrollType、distance 属性。示例：{\"direction\": \"down\", \"scrollType\": \"singleAction\", \"distance\": 500}",
+            "scrollParam": '滚动参数对象，必须是字典格式，包含 direction、scrollType、distance 属性。示例：{"direction": "down", "scrollType": "singleAction", "distance": 500}',
             "locate?": "可选，用自然语言描述的要滚动的元素定位，如'页面内容区域'、'聊天窗口'等，未指定则在当前视窗滚动",
             "deepThink?": "是否开启深度思考模式，如果为 true，AI 会调用模型两次以精确定位元素，默认 false",
             "xpath?": "目标元素的 xpath 路径，如果提供，优先级：xpath > 缓存 > AI 模型",

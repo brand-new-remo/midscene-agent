@@ -4,7 +4,7 @@
 
 ## 功能特点
 
-- ✅ **XMind → 自然语言测试文件**：将 XMind 思维导图转换为 tests/texts/ 格式
+- ✅ **XMind → 自然语言测试文件**：将 XMind 思维导图转换为 tests/ 格式
 - ✅ **模块化输出**：每个模块生成独立的 .txt 文件
 - ✅ **占位符配置**：@web 配置使用占位符，便于后续填写
 - ✅ **零依赖**：仅使用 Python 标准库
@@ -26,19 +26,19 @@ python --version
 #### 转换单个 XMind 文件
 
 ```bash
-python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/
+python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/
 ```
 
 #### 批量转换目录
 
 ```bash
-python -m converter.cli -i xmind/ -o tests/texts/
+python -m converter.cli -i xmind/ -o tests/
 ```
 
 #### 详细输出模式
 
 ```bash
-python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/ --verbose
+python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/ --verbose
 ```
 
 ### 命令行参数
@@ -100,7 +100,7 @@ V5.60测试用例
             1. 验证页面是否正确显示了 API 端点信息
 ```
 
-### 输出：tests/texts/登录管理.txt
+### 输出：tests/登录管理.txt
 
 ```txt
 # 登录管理
@@ -132,7 +132,7 @@ document = parser.parse_file(Path("V5.60测试用例.xmind"))
 
 # 生成文本文件
 generator = TextGenerator()
-output_files = generator.generate(document, Path("tests/texts/"))
+output_files = generator.generate(document, Path("tests/"))
 ```
 
 ## 异常处理

@@ -607,15 +607,15 @@ def parse_arguments():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例:
-  %(prog)s tests/texts/basic_usage.txt
-  %(prog)s tests/texts/*.txt --concurrent 4
-  %(prog)s tests/texts/basic_usage.txt --headed
-  %(prog)s tests/texts/*.txt --continue-on-error --summary output.json
+  %(prog)s tests/basic_usage.txt
+  %(prog)s tests/*.txt --concurrent 4
+  %(prog)s tests/basic_usage.txt --headed
+  %(prog)s tests/*.txt --continue-on-error --summary output.json
         """,
     )
 
     parser.add_argument(
-        "files", nargs="+", help="要执行的文本文件或模式（如 tests/texts/*.txt）"
+        "files", nargs="+", help="要执行的文本文件或模式（如 tests/*.txt）"
     )
 
     parser.add_argument(

@@ -112,7 +112,7 @@
 - 更新 processQuery switch 语句
 
 ### 阶段 5: 测试和验证
-**文件：** `tests/texts/enhanced_parameters_test.txt`
+**文件：** `tests/enhanced_parameters_test.txt`
 **耗时：** 45分钟
 
 **任务：**

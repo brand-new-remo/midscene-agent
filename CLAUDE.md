@@ -225,7 +225,7 @@ uv pip install -e .
 midscene
 
 # 直接执行自然语言测试
-midscene-text tests/texts/basic_usage.txt
+midscene-text tests/basic_usage.txt
 
 # 检查配置
 midscene-check
@@ -250,13 +250,13 @@ uv run ./typecheck.py
 
 ```bash
 # 转换单个 XMind 文件
-uv run python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/
+uv run python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/
 
 # 批量转换目录
-uv run python -m converter.cli -i xmind/ -o tests/texts/
+uv run python -m converter.cli -i xmind/ -o tests/
 
 # 详细输出模式
-uv run python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/ --verbose
+uv run python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/ --verbose
 ```
 
 ### Chat UI (chat/ 目录)
@@ -338,7 +338,7 @@ midscene
 # 选择选项 1，然后选择特定测试
 
 # 方法 2: 直接执行自然语言测试
-midscene-text tests/texts/basic_usage.txt
+midscene-text tests/basic_usage.txt
 
 # 方法 3: 自定义任务
 midscene
@@ -370,7 +370,7 @@ langgraph dev
 
 4. **运行/测试 Python 代码** (从项目根目录):
    ```bash
-   midscene-text tests/texts/your_test.txt
+   midscene-text tests/your_test.txt
    ```
 
 5. **检查代码质量** (在 `server/` 目录中):
@@ -435,7 +435,7 @@ langgraph dev
 
 项目使用自然语言测试格式:
 
-#### 自然语言测试格式 (位于 `tests/texts/`)
+#### 自然语言测试格式 (位于 `tests/`)
 
 使用自然语言描述的测试，AI 自动规划执行:
 
@@ -454,7 +454,7 @@ langgraph dev
 
 ### 测试文件
 
-**自然语言测试** (位于 `tests/texts/`):
+**自然语言测试** (位于 `tests/`):
 - `basic_usage.txt` - 基础自动化示例
 - `github_interaction.txt` - GitHub 自动化
 - `baidu_query_demo.txt` - 搜索查询演示
@@ -467,7 +467,7 @@ langgraph dev
 
 #### 功能特点
 
-- ✅ **XMind → 自然语言测试文件**：将 XMind 思维导图转换为 tests/texts/ 格式
+- ✅ **XMind → 自然语言测试文件**：将 XMind 思维导图转换为 tests/ 格式
 - ✅ **模块化输出**：每个模块生成独立的 .txt 文件
 - ✅ **占位符配置**：@web 配置使用占位符，便于后续填写
 - ✅ **零依赖**：仅使用 Python 标准库
@@ -477,17 +477,17 @@ langgraph dev
 
 **转换单个 XMind 文件**:
 ```bash
-uv run python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/
+uv run python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/
 ```
 
 **批量转换目录**:
 ```bash
-uv run python -m converter.cli -i xmind/ -o tests/texts/
+uv run python -m converter.cli -i xmind/ -o tests/
 ```
 
 **详细输出模式**:
 ```bash
-uv run python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/texts/ --verbose
+uv run python -m converter.cli -i xmind/V5.60测试用例.xmind -o tests/ --verbose
 ```
 
 #### XMind 结构要求

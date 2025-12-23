@@ -120,7 +120,7 @@
 
 任务清单：
 1. 创建 Python 端测试
-   - 创建 tests/texts/enhanced_parameters_test.txt
+   - 创建 tests/enhanced_parameters_test.txt
    - 测试所有新参数功能
 
 2. 创建 Node.js 端测试
