@@ -14,9 +14,6 @@
         "**/.next": true,
     },
     "editor.formatOnSave": true,
-    "editor.rulers": [
-        88
-    ],
     "editor.codeActionsOnSave": {
         "source.fixAll": "explicit"
     },
