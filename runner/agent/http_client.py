@@ -32,6 +32,7 @@ class SessionConfig:
     headless: bool = True
     viewport_width: int = 1920
     viewport_height: int = 1080
+    device_scale_factor: Optional[float] = None
 
 
 @dataclass

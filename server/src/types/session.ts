@@ -20,6 +20,9 @@ export interface SessionConfig {
   /** 浏览器视口高度（默认：1080px） */
   viewport_height?: number;
 
+  /** 浏览器 deviceScaleFactor（用于 Mac 等高分屏，默认：1） */
+  device_scale_factor?: number;
+
   /** Midscene 使用的 AI 模型名称（默认：从环境变量 MIDSCENE_MODEL_NAME 获取） */
   model?: string;
 

@@ -134,6 +134,7 @@ class MidsceneAgent:
                 headless=self.midscene_config.get("headless", True),
                 viewport_width=self.midscene_config.get("viewport_width", 1920),
                 viewport_height=self.midscene_config.get("viewport_height", 1080),
+                device_scale_factor=self.midscene_config.get("device_scale_factor"),
             )
 
             await self.http_client.create_session(session_config)

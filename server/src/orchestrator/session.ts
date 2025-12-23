@@ -14,12 +14,16 @@ import type { MidsceneConfig, Session, SessionConfig, SessionInfo, ActionRecord 
  */
 const buildPlaywrightConfig = (
   config: SessionConfig
-): { headless: boolean; viewport: { width: number; height: number } } => {
+): {
+  headless: boolean;
+  viewport: { width: number; height: number; deviceScaleFactor?: number };
+} => {
   return {
     headless: config.headless !== false,
     viewport: {
       width: config.viewport_width || 1920,
       height: config.viewport_height || 1080,
+      deviceScaleFactor: config.device_scale_factor,
     },
   };
 };
@@ -74,7 +78,15 @@ export const createSession = async (
     const playwrightConfig = buildPlaywrightConfig(config);
 
     // 创建 Playwright 浏览器实例
-    const browser = await chromium.launch({ headless: false });
+    // 添加启动参数减少 headed 模式下的闪烁问题
+    const browser = await chromium.launch({
+      headless: false,
+      args: [
+        '--use-gl=desktop',
+        '--enable-webgl',
+        '--ignore-gpu-blocklist',
+      ],
+    });
 
     // 创建新页面
     const page = await browser.newPage({

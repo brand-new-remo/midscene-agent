@@ -6,6 +6,8 @@
   headless: false
   viewportWidth: 1280
   viewportHeight: 768
+  deviceScaleFactor: 2
+
 
 @task: 基础网页自动化示例
 

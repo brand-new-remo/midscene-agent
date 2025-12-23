@@ -65,6 +65,11 @@ class TextTestExecutor:
         elif "viewportHeight" in web_config:
             midscene_config["viewport_height"] = web_config["viewportHeight"]
 
+        if hasattr(self.args, "web_deviceScaleFactor") and self.args.web_deviceScaleFactor:
+            midscene_config["device_scale_factor"] = self.args.web_deviceScaleFactor
+        elif "deviceScaleFactor" in web_config:
+            midscene_config["device_scale_factor"] = web_config["deviceScaleFactor"]
+
         # 创建 Agent
         deepseek_api_key = os.getenv("DEEPSEEK_API_KEY") or ""
         deepseek_base_url = (
@@ -156,6 +161,8 @@ class TextTestExecutor:
                         config["web"][key] = value.lower() in ["true", "1", "yes", "on"]
                     elif key in ["viewportWidth", "viewportHeight"]:
                         config["web"][key] = int(value)
+                    elif key in ["deviceScaleFactor"]:
+                        config["web"][key] = float(value)
                     else:
                         config["web"][key] = value
 
@@ -658,6 +665,12 @@ def parse_arguments():
         "--web.viewportHeight",
         type=int,
         help="设置浏览器视口高度，将覆盖所有脚本文件中的 web.viewportHeight 参数",
+    )
+
+    parser.add_argument(
+        "--web.deviceScaleFactor",
+        type=float,
+        help="设置浏览器 deviceScaleFactor（用于 Mac 等高分屏），将覆盖所有脚本文件中的 web.deviceScaleFactor 参数",
     )
 
     args = parser.parse_args()
