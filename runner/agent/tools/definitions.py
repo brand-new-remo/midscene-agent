@@ -220,16 +220,15 @@ TOOL_DEFINITIONS = {
         "required": False,
     },
     # ========== AI 自动规划工具 ==========
-    # "midscene_aiAction": {
-    #     "description": "使用 AI 自动规划并执行一系列 UI 动作。这是 Midscene 的核心 API，AI 会自动分解任务并执行",
-    #     "params": {
-    #         "prompt": "要执行的 UI 动作描述，可以使用自然语言，如'在搜索框中输入 JavaScript，然后点击搜索按钮'",
-    #         "cacheable?": "是否启用缓存，默认 True",
-    #     },
-    #     "category": TOOL_CATEGORY_INTERACTION,
-    #     "required": True,
-    # },
-    # 已禁用 - 通用工具容易卡住，使用具体工具（aiScroll、aiTap 等）代替
+    "midscene_aiAction": {
+        "description": "使用 AI 自动规划并执行一系列 UI 动作。通过自然语言描述任务，AI 会自动分解并执行多个步骤。这是 Midscene 的核心 API，适用于复杂的自动化任务",
+        "params": {
+            "prompt": "要执行的 UI 动作描述，可以使用自然语言，如'在搜索框中输入 JavaScript，然后点击搜索按钮'",
+            "cacheable?": "是否启用缓存，默认 True",
+        },
+        "category": TOOL_CATEGORY_INTERACTION,
+        "required": True,
+    },
     "midscene_evaluateJavaScript": {
         "description": "在当前页面上下文中执行 JavaScript 表达式，并返回结果",
         "params": {
@@ -302,8 +301,9 @@ TOOL_CATEGORIES = {
     },
     TOOL_CATEGORY_INTERACTION: {
         "name": "交互工具",
-        "description": "页面元素交互：点击、输入、滚动、按键、悬停、等待",
+        "description": "页面元素交互：点击、输入、滚动、按键、悬停、等待、AI自动规划",
         "tools": [
+            "midscene_aiAction",
             "midscene_aiTap",
             "midscene_aiDoubleClick",
             "midscene_aiRightClick",
@@ -366,9 +366,10 @@ RECOMMENDED_TOOL_SETS = {
     },
     "advanced": {
         "name": "高级工具集",
-        "description": "包含基础工具 + 高级交互工具（hover、waitFor 等）",
+        "description": "包含基础工具 + 高级交互工具（hover、waitFor 等）+ AI自动规划",
         "tools": [
             "midscene_navigate",
+            "midscene_aiAction",
             "midscene_aiTap",
             "midscene_aiDoubleClick",
             "midscene_aiRightClick",
@@ -378,7 +379,6 @@ RECOMMENDED_TOOL_SETS = {
             "midscene_aiHover",
             "midscene_aiWaitFor",
             "midscene_aiAssert",
-            # "midscene_aiAction",  # 已禁用 - 通用工具容易卡住
             "midscene_aiLocate",
             "midscene_logScreenshot",
             "midscene_getTabs",

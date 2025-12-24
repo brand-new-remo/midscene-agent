@@ -238,6 +238,7 @@ class MidsceneAgent:
                 # 动作类 API - 通过 executeAction 调用
                 action_apis = {
                     "navigate",
+                    "aiAction",
                     "aiTap",
                     "aiDoubleClick",
                     "aiRightClick",
@@ -246,7 +247,6 @@ class MidsceneAgent:
                     "aiKeyboardPress",
                     "aiHover",
                     "aiWaitFor",
-                    # "aiAction",  # 已禁用 - 通用工具容易卡住，使用具体工具代替
                     "setActiveTab",
                     "evaluateJavaScript",
                     "logScreenshot",
