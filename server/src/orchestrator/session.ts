@@ -29,6 +29,48 @@ const buildPlaywrightConfig = (
 };
 
 /**
+ * 获取视觉模型配置
+ * @description 根据 VISION_MODEL 环境变量返回对应的模型配置
+ */
+const getVisionModelConfig = (): { model: string; baseURL: string; apiKey: string } => {
+  const visionModel = process.env.VISION_MODEL || 'doubao';
+
+  // 记录当前使用的视觉模型配置
+  console.log('==========================================');
+  console.log('视觉模型配置信息');
+  console.log('==========================================');
+  console.log(`当前选择的模型类型: ${visionModel}`);
+  console.log('==========================================');
+
+  switch (visionModel) {
+    case 'qwen':
+      // 通义千问配置
+      console.log('✓ 使用通义千问视觉模型 (OpenAI 兼容模式)');
+      console.log(`  - API URL: ${process.env.QWEN_API_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}`);
+      console.log(`  - 模型: ${process.env.QWEN_MODEL || 'qwen3-vl-plus'}`);
+      console.log('==========================================');
+      return {
+        model: process.env.QWEN_MODEL || 'qwen3-vl-plus',
+        baseURL: process.env.QWEN_API_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+        apiKey: process.env.QWEN_API_KEY || '',
+      };
+
+    case 'doubao':
+    default:
+      // 豆包配置（默认）
+      console.log('✓ 使用豆包视觉模型');
+      console.log(`  - API URL: ${process.env.DOUBAO_API_URL || process.env.OPENAI_BASE_URL || 'https://ark.cn-beijing.volces.com/api/v3'}`);
+      console.log(`  - 模型: ${process.env.DOUBAO_MODEL || process.env.MIDSCENE_MODEL_NAME || 'doubao-seed-1.6-vision'}`);
+      console.log('==========================================');
+      return {
+        model: process.env.DOUBAO_MODEL || process.env.MIDSCENE_MODEL_NAME || 'doubao-seed-1.6-vision',
+        baseURL: process.env.DOUBAO_API_URL || process.env.OPENAI_BASE_URL || '',
+        apiKey: process.env.DOUBAO_API_KEY || process.env.OPENAI_API_KEY || '',
+      };
+  }
+};
+
+/**
  * 构建 Midscene 配置
  * @param config 会话配置选项
  * @returns Midscene 配置对象
@@ -40,10 +82,24 @@ const buildPlaywrightConfig = (
  * - 动作执行超时时间
  */
 const buildMidsceneConfig = (config: SessionConfig): MidsceneConfig => {
+  // 如果用户显式指定了配置，优先使用用户配置
+  if (config.model || config.baseURL || config.apiKey) {
+    return {
+      model: config.model || process.env.MIDSCENE_MODEL_NAME || 'doubao-seed-1.6-vision',
+      baseURL: config.baseURL || process.env.OPENAI_BASE_URL,
+      apiKey: config.apiKey || process.env.OPENAI_API_KEY,
+      waitForNetworkIdleTimeout: config.waitForNetworkIdleTimeout || 2000,
+      actionTimeout: config.actionTimeout || 30000,
+    };
+  }
+
+  // 根据 VISION_MODEL 环境变量获取配置
+  const visionConfig = getVisionModelConfig();
+
   return {
-    model: config.model || process.env.MIDSCENE_MODEL_NAME || 'doubao-seed-1.6-vision',
-    baseURL: config.baseURL || process.env.OPENAI_BASE_URL,
-    apiKey: config.apiKey || process.env.OPENAI_API_KEY,
+    model: visionConfig.model,
+    baseURL: visionConfig.baseURL,
+    apiKey: visionConfig.apiKey,
     waitForNetworkIdleTimeout: config.waitForNetworkIdleTimeout || 2000,
     actionTimeout: config.actionTimeout || 30000,
   };
